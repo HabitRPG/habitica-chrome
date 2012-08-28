@@ -3,10 +3,11 @@
   "name": "HabitRPG Chrome Extension",
   "version": "0.0.1",
   "description": "Plugs into various websites to give you Exp for positive tasks.",
+  "options_page": "options.html",
   "content_scripts": [
   	{
       "matches": ["http://workflowy.com/*","https://workflowy.com/*"],
-      "js": ["jquery.js","habitrpg-workflowy.js"],
+      "js": ["jquery.js", "habitrpg-options.js", "habitrpg-workflowy.js"],
       "runat":"document_end"
     }
   ]

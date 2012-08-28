@@ -7,7 +7,10 @@ jQuery(document).ready(function(){
       if (a.is(".done")) {
         // TODO undo up-vote here
       } else {
-        jQuery.ajax({url:'http://habitrpg.com/9/up'});
+        // var habitrpg_uid = localStorage["habitrpg_uid"];
+        // if (habitrpg_uid) {
+        jQuery.ajax({url:'http://habitrpg.com/9/up'});  
+        // }
       }
       realCompleteIt.apply(this, arguments);
     }
