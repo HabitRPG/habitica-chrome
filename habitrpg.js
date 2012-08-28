@@ -14,19 +14,19 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
       time: '' // (int | optional) the time you want it to be alive for before fading out
     }
     
-    var scoreDown = function() {
+    var scoreDown = function(message) {
       jQuery.gritter.add( 
         jQuery.extend(gritterDefaults, {
-          text: '<img src="'+chrome.extension.getURL("img/remove.png")+'" /> (-1 HP) for visiting a vice-website.',
+          text: '<img src="'+chrome.extension.getURL("img/remove.png")+'" /> [-1 HP] ' + message,
         }) 
       );
       jQuery.ajax({url: habitrpgUrl+'/down'});
     }
     
-    var scoreUp = function() {
+    var scoreUp = function(message) {
       jQuery.gritter.add( 
         jQuery.extend(gritterDefaults, {
-          text: '<img src="'+chrome.extension.getURL("img/add.png")+'" /> (+1 Exp, GP)',
+          text: '<img src="'+chrome.extension.getURL("img/add.png")+'" /> [+1 Exp, GP] ' + message,
         }) 
       );
       jQuery.ajax({url: habitrpgUrl+'/up'}); 
@@ -39,8 +39,10 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
     var badHosts = viceDomains.concat(wwwViceDomains);
     if (_.include(badHosts, window.location.hostname)) {
       // Dock points once they enter the site, and every 5 minutes they're on the site
-      scoreDown();
-      setInterval(scoreDown, 300000);
+      scoreDown('Visiting a vice website');
+      setInterval(function(){
+        scoreDown('Lingering on a vice website');
+      }, 300000);
     }
     
     // Give points for completing Workflowy tasks 
