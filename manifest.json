@@ -6,8 +6,18 @@
   "options_page": "options.html",
   "content_scripts": [
   	{
-      "matches": ["http://workflowy.com/*","https://workflowy.com/*"],
-      "js": ["jquery.js", "habitrpg-options.js", "habitrpg-workflowy.js"],
+      "matches": [
+        "http://workflowy.com/*","https://workflowy.com/*",
+        "http://9gag.com/*",
+        "http://www.reddit.com/*", 
+        "http://www.facebook.com/*"
+       ],
+      "js": [
+        "jquery.js", 
+        "underscore.js", 
+        "habitrpg-options.js", 
+        "habitrpg-workflowy.js"
+       ],
       "runat":"document_end"
     }
   ]

@@ -1,20 +1,34 @@
 jQuery(document).ready(function(){
   
-  injectScript(function() {
-    var realCompleteIt = jQuery.fn.completeIt;
-    jQuery.fn.completeIt = function(){
-      var a = $(this);
-      if (a.is(".done")) {
-        // TODO undo up-vote here
-      } else {
-        // var habitrpg_uid = localStorage["habitrpg_uid"];
-        // if (habitrpg_uid) {
-        jQuery.ajax({url:'http://habitrpg.com/9/up'});  
-        // }
+  var habitrpgUrl = 'http://habitrpg.com/9';
+  
+  if (window.location.hostname === 'workflowy.com') {
+    injectScript(function() {
+      var realCompleteIt = jQuery.fn.completeIt;
+      jQuery.fn.completeIt = function(){
+        var a = $(this);
+        if (a.is(".done")) {
+          // TODO undo up-vote here
+        } else {
+          // var habitrpg_uid = localStorage["habitrpg_uid"];
+          // if (habitrpg_uid) {
+          jQuery.ajax({url: habitrpgUrl+'/up'});  
+          // }
+        }
+        realCompleteIt.apply(this, arguments);
       }
-      realCompleteIt.apply(this, arguments);
-    }
-  });
+    });
+  }
+  
+  var badHosts = ['www.reddit.com', '9gag.com', 'www.facebook.com'];
+  if (_.include(badHosts, window.location.hostname)) {
+    // Dock points once they enter the site, and every 5 minutes they're on the site
+    jQuery.ajax({url: habitrpgUrl+'/down'});
+    setInterval(function(){
+      alert("HabitRPG: You're losing HP, back to work!");
+      jQuery.ajax({url: habitrpgUrl+'/down'});
+    }, 300000);
+  }
   
 });
 //////////////////////////////////////////////////////////////////////////////////////////////
