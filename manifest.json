@@ -5,7 +5,7 @@
   "description": "Plugs into various websites to give you Exp for positive tasks.",
   "options_page": "options.html",
   "page_action": {
-    "default_icon": "img/icon.png",
+    "default_icon": "img/icon-19.png",
     "default_title": "HabitRPG"
   },
   "permissions": ["tabs", "http://habitrpg.com/"],
@@ -27,8 +27,9 @@
   //  "scripts": ["habitrpg.js"]
   //},
   "icons": {
-    "48" : "img/armor0.png",
-    "128" : "img/armor0.png"
+    "19" : "img/icon-19.png",
+    "48" : "img/icon-48.png",
+    "128" : "img/icon-128.png"
   },
   "web_accessible_resources": [ 
     "vendor/Gritter/images/gritter.png",
@@ -38,6 +39,6 @@
     "vendor/Gritter/images/trees.png", 
     "img/add.png", 
     "img/remove.png", 
-    "img/icon.png" 
+    "img/icon-48.png" 
   ]
 }

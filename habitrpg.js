@@ -3,7 +3,7 @@ jQuery(document).ready(function(){
   var habitrpgUrl = 'http://habitrpg.com/9';
   var gritterDefaults = {
     title:'HabitRPG', 
-    image: chrome.extension.getURL("img/icon.png"),
+    image: chrome.extension.getURL("img/icon-48.png"),
     sticky: false, // (bool | optional) if you want it to fade out on its own or just sit there
     time: '' // (int | optional) the time you want it to be alive for before fading out
   }
