@@ -1,67 +1,66 @@
-jQuery(document).ready(function(){
-  
-  var habitrpgUrl = null;
-  chrome.extension.sendMessage({method: "getLocalStorage", key: "habitrpg_uid"}, function(response) {
-    if(response.data) {
-      habitrpgUrl = 'http://habitrpg.com/'+response.data
-    }
-  });
-  if (!habitrpgUrl){
+var habitrpgUrl = null;
+chrome.extension.sendMessage({method: "getLocalStorage", key: "habitrpg_uid"}, function(response) {
+  if (!response.data) {
     console.log("To use the HabitRPG extension, input your UID in the options page.");
     return; //require them to input their UID, else ignore this extension
-  }
-  
-  var gritterDefaults = {
-    title:'HabitRPG', 
-    image: chrome.extension.getURL("img/icon-48.png"),
-    sticky: false, // (bool | optional) if you want it to fade out on its own or just sit there
-    time: '' // (int | optional) the time you want it to be alive for before fading out
-  }
-  
-  var scoreDown = function() {
-    jQuery.gritter.add( 
-      jQuery.extend(gritterDefaults, {
-        text: '<img src="'+chrome.extension.getURL("img/remove.png")+'" /> (-1 HP) for visiting a vice-website.',
-      }) 
-    );
-    jQuery.ajax({url: habitrpgUrl+'/down'});
-  }
-  
-  var scoreUp = function() {
-    jQuery.gritter.add( 
-      jQuery.extend(gritterDefaults, {
-        text: '<img src="'+chrome.extension.getURL("img/add.png")+'" /> (+1 Exp, GP)',
-      }) 
-    );
-    jQuery.ajax({url: habitrpgUrl+'/up'}); 
-  }
-  
-  if (window.location.hostname === 'workflowy.com') {
-    injectScript(function() {
-      var realCompleteIt = jQuery.fn.completeIt;
-      jQuery.fn.completeIt = function(){
-        var a = $(this);
-        if (a.is(".done")) {
-          // TODO undo up-vote here
-        } else {
-          // var habitrpg_uid = localStorage["habitrpg_uid"];
-          // if (habitrpg_uid) {
-          scoreUp();  
-          // }
+  } else {  
+    
+    habitrpgUrl = 'http://habitrpg.com/' + response.data;
+    
+    var gritterDefaults = {
+      title:'HabitRPG', 
+      image: chrome.extension.getURL("img/icon-48.png"),
+      sticky: false, // (bool | optional) if you want it to fade out on its own or just sit there
+      time: '' // (int | optional) the time you want it to be alive for before fading out
+    }
+    
+    var scoreDown = function() {
+      jQuery.gritter.add( 
+        jQuery.extend(gritterDefaults, {
+          text: '<img src="'+chrome.extension.getURL("img/remove.png")+'" /> (-1 HP) for visiting a vice-website.',
+        }) 
+      );
+      jQuery.ajax({url: habitrpgUrl+'/down'});
+    }
+    
+    var scoreUp = function() {
+      jQuery.gritter.add( 
+        jQuery.extend(gritterDefaults, {
+          text: '<img src="'+chrome.extension.getURL("img/add.png")+'" /> (+1 Exp, GP)',
+        }) 
+      );
+      jQuery.ajax({url: habitrpgUrl+'/up'}); 
+    }
+    
+    if (window.location.hostname === 'workflowy.com') {
+      injectScript(function() {
+        var realCompleteIt = jQuery.fn.completeIt;
+        jQuery.fn.completeIt = function(){
+          var a = $(this);
+          if (a.is(".done")) {
+            // TODO undo up-vote here
+          } else {
+            // var habitrpg_uid = localStorage["habitrpg_uid"];
+            // if (habitrpg_uid) {
+            scoreUp();  
+            // }
+          }
+          realCompleteIt.apply(this, arguments);
         }
-        realCompleteIt.apply(this, arguments);
-      }
-    });
+      });
+    }
+    
+    var badHosts = ['www.reddit.com', '9gag.com', 'www.facebook.com'];
+    if (_.include(badHosts, window.location.hostname)) {
+      // Dock points once they enter the site, and every 5 minutes they're on the site
+      scoreDown();
+      setInterval(scoreDown, 300000);
+    }
   }
-  
-  var badHosts = ['www.reddit.com', '9gag.com', 'www.facebook.com'];
-  if (_.include(badHosts, window.location.hostname)) {
-    // Dock points once they enter the site, and every 5 minutes they're on the site
-    scoreDown();
-    setInterval(scoreDown, 300000);
-  }
-  
 });
+
+
+  
 //////////////////////////////////////////////////////////////////////////////////////////////
 // Copyright(C) 2010 Abdullah Ali, voodooattack@hotmail.com                                 //
 //////////////////////////////////////////////////////////////////////////////////////////////
