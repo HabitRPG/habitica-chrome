@@ -1,13 +1,30 @@
 jQuery(document).ready(function(){
   
   var habitrpgUrl = 'http://habitrpg.com/9';
+  var gritterDefaults = {
+    title:'HabitRPG', 
+    image: chrome.extension.getURL("img/icon.png"),
+    sticky: false, // (bool | optional) if you want it to fade out on its own or just sit there
+    time: '' // (int | optional) the time you want it to be alive for before fading out
+  }
   
   var scoreDown = function() {
-    alert('HP -1')
+
+    jQuery.gritter.add( 
+      jQuery.extend(gritterDefaults, {
+        text: '<img src="'+chrome.extension.getURL("img/remove.png")+'" /> (-1 HP) for visiting a vice-website.',
+      }) 
+    );
+   
     jQuery.ajax({url: habitrpgUrl+'/down'});
   }
   
   var scoreUp = function() {
+    jQuery.gritter.add( 
+      jQuery.extend(gritterDefaults, {
+        text: '<img src="'+chrome.extension.getURL("img/add.png")+'" /> (+1 Exp, GP)',
+      }) 
+    );
     jQuery.ajax({url: habitrpgUrl+'/up'}); 
   }
   

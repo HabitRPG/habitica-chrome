@@ -1,24 +1,43 @@
 {
   "manifest_version": 2,
-  "name": "HabitRPG Chrome Extension",
+  "name": "HabitRPG",
   "version": "0.0.1",
   "description": "Plugs into various websites to give you Exp for positive tasks.",
   "options_page": "options.html",
+  "page_action": {
+    "default_icon": "img/icon.png",
+    "default_title": "HabitRPG"
+  },
+  "permissions": ["tabs", "http://habitrpg.com/"],
   "content_scripts": [
   	{
-      "matches": [
-        "http://workflowy.com/*","https://workflowy.com/*",
-        "http://9gag.com/*",
-        "http://www.reddit.com/*", 
-        "http://www.facebook.com/*"
-       ],
+      "matches": [ "http://*/*", "https://*/*" ], // needed since timing many websites
+      "css": [ "vendor/Gritter/css/jquery.gritter.css" ], 
       "js": [
-        "jquery.js", 
-        "underscore.js", 
-        "habitrpg-options.js", 
-        "habitrpg-workflowy.js"
+        "vendor/jquery-1.8.0.min.js", 
+        "vendor/underscore-min.js",
+        "vendor/Gritter/js/jquery.gritter.js", 
+        "habitrpg-options.js",
+        "habitrpg.js"
        ],
       "runat":"document_end"
     }
+  ],
+  //"background": {
+  //  "scripts": ["habitrpg.js"]
+  //},
+  "icons": {
+    "48" : "img/armor0.png",
+    "128" : "img/armor0.png"
+  },
+  "web_accessible_resources": [ 
+    "vendor/Gritter/images/gritter.png",
+    "vendor/Gritter/images/gritter-light.png", 
+    "vendor/Gritter/images/gritter-long.png", 
+    "vendor/Gritter/images/ie-spacer.gif", 
+    "vendor/Gritter/images/trees.png", 
+    "img/add.png", 
+    "img/remove.png", 
+    "img/icon.png" 
   ]
 }
