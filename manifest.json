@@ -17,15 +17,15 @@
         "vendor/jquery-1.8.0.min.js", 
         "vendor/underscore-min.js",
         "vendor/Gritter/js/jquery.gritter.js", 
-        "habitrpg-options.js",
-        "habitrpg.js"
+        "habitrpg.js",
+        "options.js"
        ],
       "runat":"document_end"
     }
   ],
-  //"background": {
-  //  "scripts": ["habitrpg.js"]
-  //},
+  "background": {
+    "scripts": ["background.js"]
+  },
   "icons": {
     "19" : "img/icon-19.png",
     "48" : "img/icon-48.png",

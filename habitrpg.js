@@ -1,6 +1,16 @@
 jQuery(document).ready(function(){
   
-  var habitrpgUrl = 'http://habitrpg.com/9';
+  var habitrpgUrl = null;
+  chrome.extension.sendMessage({method: "getLocalStorage", key: "habitrpg_uid"}, function(response) {
+    if(response.data) {
+      habitrpgUrl = 'http://habitrpg.com/'+response.data
+    }
+  });
+  if (!habitrpgUrl){
+    console.log("To use the HabitRPG extension, input your UID in the options page.");
+    return; //require them to input their UID, else ignore this extension
+  }
+  
   var gritterDefaults = {
     title:'HabitRPG', 
     image: chrome.extension.getURL("img/icon-48.png"),
@@ -9,13 +19,11 @@ jQuery(document).ready(function(){
   }
   
   var scoreDown = function() {
-
     jQuery.gritter.add( 
       jQuery.extend(gritterDefaults, {
         text: '<img src="'+chrome.extension.getURL("img/remove.png")+'" /> (-1 HP) for visiting a vice-website.',
       }) 
     );
-   
     jQuery.ajax({url: habitrpgUrl+'/down'});
   }
   
