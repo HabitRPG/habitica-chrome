@@ -1,11 +1,11 @@
 var habitrpgUrl = null;
-chrome.extension.sendMessage({method: "getLocalStorage", key: "habitrpg_uid"}, function(response) {
-  if (!response.data) {
+chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
+  if (!response.data.uid) {
     console.log("To use the HabitRPG extension, input your UID in the options page.");
     return; //require them to input their UID, else ignore this extension
   } else {  
-    
-    habitrpgUrl = 'http://habitrpg.com/' + response.data;
+    options = response.data;
+    habitrpgUrl = 'http://habitrpg.com/' + options.uid;
     
     var gritterDefaults = {
       title:'HabitRPG', 
@@ -50,7 +50,12 @@ chrome.extension.sendMessage({method: "getLocalStorage", key: "habitrpg_uid"}, f
       });
     }
     
-    var badHosts = ['www.reddit.com', '9gag.com', 'www.facebook.com'];
+    var viceDomains = options.viceDomains.split('\n');
+    var wwwViceDomains = _.map(viceDomains, function(domain){
+      return 'www.'+domain
+    });
+    var badHosts = viceDomains.concat(wwwViceDomains);
+    console.log('badHosts',badHosts);
     if (_.include(badHosts, window.location.hostname)) {
       // Dock points once they enter the site, and every 5 minutes they're on the site
       scoreDown();

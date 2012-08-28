@@ -1,18 +1,16 @@
 jQuery('document').ready(function(){
       
-  // Restores select box state to saved value from localStorage.
-  var uid = localStorage["habitrpg_uid"];
-  if (uid) {
-    $('#habitrpg-uid').val(uid);
-  }
+  // Restore saved values
+  $('#uid').val(localStorage.uid);
+  $('#viceDomains').val(localStorage.viceDomains);
   
   // Saves options to localStorage.
-  jQuery('#save').click(function(){
-    localStorage["habitrpg_uid"] = $('#habitrpg-uid').val();
+  jQuery('#habitrpgForm').submit(function(){
+    localStorage["uid"] = $('#uid').val();
+    localStorage["viceDomains"] = $('#viceDomains').val();
+    console.log(localStorage);
     $("#status").html("Options Saved.");
-    setTimeout(function() {
-      $("#status").html("");
-    }, 750);
+    return false; //don't refresh page
   });
   
 });

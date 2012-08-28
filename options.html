@@ -6,8 +6,15 @@
   </script>
 </head>
 <body>
-  <div id="status"></div>
-  HabitRPG UserId: <input id="habitrpg-uid" type="text" value=""></input>
-  <button id="save">Save</button>
+  <div style="background-color:green;" id="status"></div>
+  <form id="habitrpgForm">
+    <p>HabitRPG UserId: <input id="uid" type="text"></input></p>
+    <p>Websites where you procrastinate (one domain per line)</p>
+    <p><textarea id="viceDomains" rows="10">
+reddit.com
+9gag.com
+facebook.com</textarea></p>
+    <p><button type="submit">Save</button></p>
+  </form>
 </body>
 </html>
