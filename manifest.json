@@ -34,9 +34,6 @@
     "128" : "img/icon-128.png"
   },
   "web_accessible_resources": [ 
-    "img/add.png", 
-    "img/remove.png", 
-    "img/icon-48.png",
     "img/icon-48-up.png", 
     "img/icon-48-down.png" 
   ]
