@@ -7,28 +7,26 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
     options = response.data;
     habitrpgUrl = 'http://habitrpg.com/' + options.uid;
     
-    var gritterDefaults = {
+    var notificationDefaults = {
       title:'HabitRPG', 
-      image: chrome.extension.getURL("img/icon-48.png"),
-      sticky: false, // (bool | optional) if you want it to fade out on its own or just sit there
-      time: '' // (int | optional) the time you want it to be alive for before fading out
+      time: 6000
     }
     
     var scoreDown = function(message) {
-      jQuery.gritter.add( 
-        jQuery.extend(gritterDefaults, {
-          text: '<img src="'+chrome.extension.getURL("img/remove.png")+'" /> [-1 HP] ' + message,
-        }) 
-      );
+      notification = jQuery.extend(notificationDefaults, {
+        icon: "img/icon-48-down.png", 
+        text: "[-1 HP] " + message
+      });
+      chrome.extension.sendMessage({method: "showNotification", notification: notification}, function(response) {}); 
       jQuery.ajax({url: habitrpgUrl+'/down'});
     }
     
     var scoreUp = function(message) {
-      jQuery.gritter.add( 
-        jQuery.extend(gritterDefaults, {
-          text: '<img src="'+chrome.extension.getURL("img/add.png")+'" /> [+1 Exp, GP] ' + message,
-        }) 
-      );
+      notification = jQuery.extend(notificationDefaults, {
+        icon: 'img/icon-48-up.png', 
+        text: '[+1 Exp, GP] ' + message
+      });
+      chrome.extension.sendMessage({method: "showNotification", notification: notification}, function(response) {}); 
       jQuery.ajax({url: habitrpgUrl+'/up'}); 
     }
     
@@ -46,15 +44,10 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
     }
     
     // Give points for completing Workflowy tasks 
-    if (window.location.hostname === 'workflowy.com') {
-      //TODO: figure out how to catch task completion
-      /*document.documentElement.addEventListener('DOMAttrModified', function(e){
-        if (e.attrName === 'class') {
-          console.log('prevValue: ' + e.prevValue, 'newValue: ' + e.newValue);
-        }
-      }, false);
-      
-      document.documentElement.style.display = 'block';*/
-    }
+    /*if (window.location.hostname === 'workflowy.com') {
+      jQuery(".editor").watch('text-decoration', function(){
+        console.log(jQuery(this));
+      });
+    }*/
   }
 });
