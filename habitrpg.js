@@ -9,7 +9,7 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
     
     var notificationDefaults = {
       title:'HabitRPG', 
-      time: 6000
+      time: 5000
     }
     
     var scoreDown = function(message) {

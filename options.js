@@ -2,7 +2,9 @@ jQuery('document').ready(function(){
       
   // Restore saved values
   $('#uid').val(localStorage.uid);
-  $('#viceDomains').val(localStorage.viceDomains);
+  if(localStorage.viceDomains) {
+    $('#viceDomains').val(localStorage.viceDomains);
+  }
   
   // Saves options to localStorage.
   jQuery('#habitrpgForm').submit(function(){
