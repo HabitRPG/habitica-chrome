@@ -8,35 +8,26 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
       habitrpgUrl = "https://habitrpg.com/users/" + jQuery.trim(options.uid) + "/tasks/productivity",
       notificationDefaults = {
         title:'HabitRPG', 
-        time: 5000
+        time: 3000
       };
 
-    var scoreDown = function(message) {
+    var score = function(direction, message) {
       jQuery.ajax({
-        url: habitrpgUrl + '/down',
+        url: habitrpgUrl + '/' + direction,
         type: 'POST'
       }).done(function(data){
+        var effectedStats = 'HP';
+        if (direction==='up') {
+          effectedStats = 'Exp, GP';
+        }
         var notification = jQuery.extend(notificationDefaults, {
-          icon: "img/icon-48-down.png", 
-          text: "[" + data.delta.toFixed(2) + " HP] " + message
-        });
-        chrome.extension.sendMessage({method: "showNotification", notification: notification}, function(response) {}); 
-      });
-    };
-    
-    var scoreUp = function(message) {
-      jQuery.ajax({
-        url: habitrpgUrl + '/up',
-        type: 'POST'
-      }).done(function(data){
-        var notification = jQuery.extend(notificationDefaults, {
-          icon: 'img/icon-48-up.png', 
-          text: '[' + data.delta.toFixed(2) + ' Exp, GP] ' + message
+          icon: "/img/icon-48-" + direction + ".png", 
+          text: "[" + data.delta.toFixed(2) + " " + effectedStats + "] " + message
         });
         chrome.extension.sendMessage({method: "showNotification", notification: notification}, function(response) {}); 
       });
     }
-    
+
     var viceDomains = options.viceDomains.split('\n');
     var wwwViceDomains = _.map(viceDomains, function(domain){
       return 'www.'+domain
@@ -44,9 +35,9 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
     var badHosts = viceDomains.concat(wwwViceDomains);
     if (_.include(badHosts, window.location.hostname)) {
       // Dock points once they enter the site, and every 5 minutes they're on the site
-      scoreDown('Visiting a vice website');
+      score('down', 'Visiting a vice website');
       setInterval(function(){
-        scoreDown('Lingering on a vice website');
+        score('down', 'Lingering on a vice website');
       }, 300000);
     }
     
