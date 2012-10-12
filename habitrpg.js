@@ -4,30 +4,37 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
     console.log("To use the HabitRPG extension, input your UID in the options page.");
     return; //require them to input their UID, else ignore this extension
   } else {  
-    options = response.data;
-    habitrpgUrl = 'http://habitrpg.com/' + options.uid;
-    
-    var notificationDefaults = {
-      title:'HabitRPG', 
-      time: 5000
-    }
-    
+    var options = response.data,
+      habitrpgUrl = "https://habitrpg.com/users/" + options.uid + "/tasks/productivity",
+      notificationDefaults = {
+        title:'HabitRPG', 
+        time: 5000
+      };
+
     var scoreDown = function(message) {
-      notification = jQuery.extend(notificationDefaults, {
-        icon: "img/icon-48-down.png", 
-        text: "[-1 HP] " + message
+      jQuery.ajax({
+        url: habitrpgUrl + '/down',
+        type: 'POST'
+      }).done(function(data){
+        var notification = jQuery.extend(notificationDefaults, {
+          icon: "img/icon-48-down.png", 
+          text: "[" + data.delta.toFixed(2) + " HP] " + message
+        });
+        chrome.extension.sendMessage({method: "showNotification", notification: notification}, function(response) {}); 
       });
-      chrome.extension.sendMessage({method: "showNotification", notification: notification}, function(response) {}); 
-      jQuery.ajax({url: habitrpgUrl+'/down'});
-    }
+    };
     
     var scoreUp = function(message) {
-      notification = jQuery.extend(notificationDefaults, {
-        icon: 'img/icon-48-up.png', 
-        text: '[+1 Exp, GP] ' + message
+      jQuery.ajax({
+        url: habitrpgUrl + '/up',
+        type: 'POST'
+      }).done(function(data){
+        var notification = jQuery.extend(notificationDefaults, {
+          icon: 'img/icon-48-up.png', 
+          text: '[' + data.delta.toFixed(2) + ' Exp, GP] ' + message
+        });
+        chrome.extension.sendMessage({method: "showNotification", notification: notification}, function(response) {}); 
       });
-      chrome.extension.sendMessage({method: "showNotification", notification: notification}, function(response) {}); 
-      jQuery.ajax({url: habitrpgUrl+'/up'}); 
     }
     
     var viceDomains = options.viceDomains.split('\n');
