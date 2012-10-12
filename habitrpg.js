@@ -5,7 +5,7 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
     return; //require them to input their UID, else ignore this extension
   } else {  
     var options = response.data,
-      habitrpgUrl = "https://habitrpg.com/users/" + options.uid + "/tasks/productivity",
+      habitrpgUrl = "https://habitrpg.com/users/" + jQuery.trim(options.uid) + "/tasks/productivity",
       notificationDefaults = {
         title:'HabitRPG', 
         time: 5000
