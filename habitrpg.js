@@ -17,7 +17,7 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
         type: 'POST'
       }).done(function(data){
         
-  	var effectedStats = 'HP';
+		var effectedStats = 'HP';
         if (direction==='up') {
           effectedStats = 'Exp, GP';
         }
@@ -44,33 +44,21 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
     });
     var goodHosts = goodDomains.concat(wwwgoodDomains);
 
-	
-    	
-		
 		if (_.include(badHosts, window.location.hostname)) {
       // Dock points once they enter the site, and every 5 minutes they're on the site
       score('down', 'Visiting a vice website');
       setInterval(function(){
         score('down', 'Lingering on a vice website');
       }, 300000);
-	  
-	  }
-	  
-	  if(_.include(goodHosts, window.location.hostname)){
+	  else if(_.include(goodHosts, window.location.hostname)){
 	  // Score points once they enter the site, and every 5 minutes they're on the site
       score('up', 'Visting a productive website');
       setInterval(function(){
         score('up', 'Continuing on a productivity website');
-      }, 300000);
-	  
-	  
+      }, 300000); 
 	  }
+	}
 	  
-    
-    	
-	
-	
-	
     // Give points for completing Workflowy tasks 
     /*if (window.location.hostname === 'workflowy.com') {
       jQuery(".editor").watch('text-decoration', function(){
