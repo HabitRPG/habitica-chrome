@@ -55,7 +55,7 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
 	  // Score points once they enter the site, and every 5 minutes they're on the site
       score('up', 'Visting a productive website');
       setInterval(function(){
-        score('up', 'Continuing on a productivity website');
+        score('up', 'Spending time on a productive website');
       }, 300000); 
 	  }
 	  
