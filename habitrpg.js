@@ -63,7 +63,7 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
       return 'www.'+domain
     });
     var badHosts = viceDomains.concat(wwwViceDomains);
-	
+
 	// Variables for Good Domains
 	var goodDomains = options.goodDomains.split('\n');
     var wwwgoodDomains = _.map(goodDomains, function(domain){
@@ -73,11 +73,27 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
 
 		if (_.include(badHosts, window.location.hostname)) {
       // Dock points once they enter the site, and every 5 minutes they're on the site
-      score('down', 'Visiting a vice website');
-      setInterval(function(){
-        score('down', 'Lingering on a vice website');
-      }, 300000);
+      if(getCookie(window.location.hostname + "_firstVisit") == "1"){
+			setCookie(window.location.hostname+ "_firstVisit", 1 ,30);
+			console.log("Been on the website in the last 30mins, resetting time.");
+		}
+		//React if there the user hasn't been on the website
+		else{
+			setCookie(window.location.hostname + "_firstVisit", 1 ,30);
+			setCookie(window.location.hostname + "_lastVisit", 1 ,5);
+			console.log("Cookies Made!");
+			score('down', 'Visiting a vice website'); 
+			
+			//Timer which constantly calls itself every five mins to check if the user is still on the website.
+			setInterval(function(){
+				if(getCookie(window.location.hostname + "_lastVisit") == "1"){
+				setCookie(window.location.hostname + "_lastVisit", 1 ,5);
+				score('down', 'Lingering on a vice website');
+				}
+				}, 300000); 
+		}
 	  }
+	  
 	  else if(_.include(goodHosts, window.location.hostname)){
 	  // Score points once they enter the site, and every 5 minutes they're on the site
 		//Check if user has been on the website in the last 30mins and then react if there is one
@@ -90,13 +106,13 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
 			setCookie(window.location.hostname + "_firstVisit", 1 ,30);
 			setCookie(window.location.hostname + "_lastVisit", 1 ,5);
 			console.log("Cookies Made!");
-			score('up', 'Visiting a productive website ' + window.location.hostname); 
+			score('up', 'Visiting a productive website'); 
 			
 			//Timer which constantly calls itself every five mins to check if the user is still on the website.
 			setInterval(function(){
 				if(getCookie(window.location.hostname + "_lastVisit") == "1"){
 				setCookie(window.location.hostname + "_lastVisit", 1 ,5);
-				score('up', 'Continuing on productivity website ' + window.location.hostname);
+				score('up', 'Continuing on productivity website');
 				}
 				}, 300000); 
 		}
