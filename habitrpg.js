@@ -21,8 +21,7 @@ function getCookie(c_name){
     }
   }
 }
-		
-		
+	
 		
 
 var habitrpgUrl = null;
@@ -80,15 +79,16 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
 		//React if there the user hasn't been on the website
 		else{
 			setCookie(window.location.hostname + "_firstVisit", 1 ,30);
-			setCookie(window.location.hostname + "_lastVisit", 1 ,5);
+			setCookie(window.location.hostname + "_lastVisit", 1 ,6);
 			console.log("Cookies Made!");
 			score('down', 'Visiting a vice website'); 
 			
 			//Timer which constantly calls itself every five mins to check if the user is still on the website.
 			setInterval(function(){
 				if(getCookie(window.location.hostname + "_lastVisit") == "1"){
-				setCookie(window.location.hostname + "_lastVisit", 1 ,5);
+				setCookie(window.location.hostname + "_lastVisit", 1 ,6);
 				score('down', 'Lingering on a vice website');
+				console.log("Good Website Interval");
 				}
 				}, 300000); 
 		}
@@ -104,15 +104,16 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
 		//React if there the user hasn't been on the website
 		else{
 			setCookie(window.location.hostname + "_firstVisit", 1 ,30);
-			setCookie(window.location.hostname + "_lastVisit", 1 ,5);
+			setCookie(window.location.hostname + "_lastVisit", 1 ,6);
 			console.log("Cookies Made!");
 			score('up', 'Visiting a productive website'); 
 			
 			//Timer which constantly calls itself every five mins to check if the user is still on the website.
 			setInterval(function(){
 				if(getCookie(window.location.hostname + "_lastVisit") == "1"){
-				setCookie(window.location.hostname + "_lastVisit", 1 ,5);
+				setCookie(window.location.hostname + "_lastVisit", 1 ,6);
 				score('up', 'Continuing on productivity website');
+				console.log("Good Website Interval");
 				}
 				}, 300000); 
 		}
