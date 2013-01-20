@@ -58,7 +58,6 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
         score('up', 'Continuing on a productivity website');
       }, 300000); 
 	  }
-	}
 	  
     // Give points for completing Workflowy tasks 
     /*if (window.location.hostname === 'workflowy.com') {
