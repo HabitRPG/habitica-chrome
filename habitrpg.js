@@ -16,11 +16,13 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
         url: habitrpgUrl + '/' + direction,
         type: 'POST'
       }).done(function(data){
-        var effectedStats = 'HP';
+        
+  	var effectedStats = 'HP';
         if (direction==='up') {
           effectedStats = 'Exp, GP';
         }
-        var notification = jQuery.extend(notificationDefaults, {
+        
+		var notification = jQuery.extend(notificationDefaults, {
           icon: "/img/icon-48-" + direction + ".png", 
           text: "[" + data.delta.toFixed(2) + " " + effectedStats + "] " + message
         });
@@ -28,19 +30,47 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
       });
     }
 
+	// Variables for Bad Domains
     var viceDomains = options.viceDomains.split('\n');
     var wwwViceDomains = _.map(viceDomains, function(domain){
       return 'www.'+domain
     });
     var badHosts = viceDomains.concat(wwwViceDomains);
-    if (_.include(badHosts, window.location.hostname)) {
+	
+	// Variables for Good Domains
+	var goodDomains = options.goodDomains.split('\n');
+    var wwwgoodDomains = _.map(goodDomains, function(domain){
+      return 'www.'+domain
+    });
+    var goodHosts = goodDomains.concat(wwwgoodDomains);
+
+	
+    	
+		
+		if (_.include(badHosts, window.location.hostname)) {
       // Dock points once they enter the site, and every 5 minutes they're on the site
       score('down', 'Visiting a vice website');
       setInterval(function(){
         score('down', 'Lingering on a vice website');
       }, 300000);
-    }
+	  
+	  }
+	  
+	  if(_.include(goodHosts, window.location.hostname)){
+	  // Score points once they enter the site, and every 5 minutes they're on the site
+      score('up', 'Visting a productive website');
+      setInterval(function(){
+        score('up', 'Continuing on a productivity website');
+      }, 300000);
+	  
+	  
+	  }
+	  
     
+    	
+	
+	
+	
     // Give points for completing Workflowy tasks 
     /*if (window.location.hostname === 'workflowy.com') {
       jQuery(".editor").watch('text-decoration', function(){
