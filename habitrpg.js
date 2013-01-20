@@ -1,3 +1,30 @@
+function setCookie(name,value,mins) {
+	if (mins) {
+		var date = new Date();
+		date.setTime(date.getTime()+(mins*60*1000));
+		var expires = "; expires="+date;
+	}
+	else var expires = "";
+	document.cookie = name+"="+value+expires+"; path=/";
+}
+		
+function getCookie(c_name){
+	var i,x,y,ARRcookies=document.cookie.split(";");
+	for (i=0;i<ARRcookies.length;i++)
+	{
+	x=ARRcookies[i].substr(0,ARRcookies[i].indexOf("="));
+	y=ARRcookies[i].substr(ARRcookies[i].indexOf("=")+1);
+	x=x.replace(/^\s+|\s+$/g,"");
+	if (x==c_name)
+    {
+    return unescape(y);
+    }
+  }
+}
+		
+		
+		
+
 var habitrpgUrl = null;
 chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
   if (!response.data.uid) {
@@ -53,11 +80,29 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
 	  }
 	  else if(_.include(goodHosts, window.location.hostname)){
 	  // Score points once they enter the site, and every 5 minutes they're on the site
-      score('up', 'Visting a productive website');
-      setInterval(function(){
-        score('up', 'Spending time on a productive website');
-      }, 300000); 
+		//Check if user has been on the website in the last 30mins and then react if there is one
+		if(getCookie(window.location.hostname + "_firstVisit") == "1"){
+			setCookie(window.location.hostname+ "_firstVisit", 1 ,30);
+			console.log("Been on the website in the last 30mins, resetting time.");
+		}
+		//React if there the user hasn't been on the website
+		else{
+			setCookie(window.location.hostname + "_firstVisit", 1 ,30);
+			setCookie(window.location.hostname + "_lastVisit", 1 ,5);
+			console.log("Cookies Made!");
+			score('up', 'Visiting a productive website ' + window.location.hostname); 
+			
+			//Timer which constantly calls itself every five mins to check if the user is still on the website.
+			setInterval(function(){
+				if(getCookie(window.location.hostname + "_lastVisit") == "1"){
+				setCookie(window.location.hostname + "_lastVisit", 1 ,5);
+				score('up', 'Continuing on productivity website ' + window.location.hostname);
+				}
+				}, 300000); 
+		}
 	  }
+	  
+ 
 	  
     // Give points for completing Workflowy tasks 
     /*if (window.location.hostname === 'workflowy.com') {
