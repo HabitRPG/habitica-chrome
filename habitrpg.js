@@ -50,6 +50,7 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
       setInterval(function(){
         score('down', 'Lingering on a vice website');
       }, 300000);
+	  }
 	  else if(_.include(goodHosts, window.location.hostname)){
 	  // Score points once they enter the site, and every 5 minutes they're on the site
       score('up', 'Visting a productive website');
