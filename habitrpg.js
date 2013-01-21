@@ -75,24 +75,31 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
       if(getCookie(window.location.hostname + "_firstVisit") == "1"){
 			setCookie(window.location.hostname+ "_firstVisit", 1 ,30);
 			console.log("Been on the website in the last 30mins, resetting time.");
+			
+			setInterval(function(){
+				if(getCookie(window.location.hostname + "_lastVisit") == null){
+				setCookie(window.location.hostname + "_lastVisit", 1 ,5);
+				score('down', 'Lingering on a vice website');
+			}
+		}, 30000); 
+			
 		}
 		//React if there the user hasn't been on the website
 		else{
 			setCookie(window.location.hostname + "_firstVisit", 1 ,30);
-			setCookie(window.location.hostname + "_lastVisit", 1 ,6);
+			setCookie(window.location.hostname + "_lastVisit", 1 ,5);
 			console.log("Cookies Made!");
 			score('down', 'Visiting a vice website'); 
 			
-			//Timer which constantly calls itself every five mins to check if the user is still on the website.
+			//Website Timer - Checks every 30seconds on the website to check if cookie exists. If it doesn't exist, makes a new cookie & punishes user.
 			setInterval(function(){
-				if(getCookie(window.location.hostname + "_lastVisit") == "1"){
-				setCookie(window.location.hostname + "_lastVisit", 1 ,6);
+				if(getCookie(window.location.hostname + "_lastVisit") == null){
+				setCookie(window.location.hostname + "_lastVisit", 1 ,5);
 				score('down', 'Lingering on a vice website');
-				console.log("Good Website Interval");
 				}
-				}, 300000); 
+			}, 30000); 
 		}
-	  }
+		}
 	  
 	  else if(_.include(goodHosts, window.location.hostname)){
 	  // Score points once they enter the site, and every 5 minutes they're on the site
@@ -100,23 +107,36 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
 		if(getCookie(window.location.hostname + "_firstVisit") == "1"){
 			setCookie(window.location.hostname+ "_firstVisit", 1 ,30);
 			console.log("Been on the website in the last 30mins, resetting time.");
+			
+		//Website Timer - Checks every 30seconds on the website to check if cookie exists. If it doesn't exist, makes a new cookie & rewards user.
+			setInterval(function(){
+				if(getCookie(window.location.hostname + "_lastVisit") == null){
+				setCookie(window.location.hostname + "_lastVisit", 1 ,5);
+				score('up', 'Continuing on productivity website');
+				}else {
+				}
+				}, 30000);
+			
 		}
 		//React if there the user hasn't been on the website
 		else{
 			setCookie(window.location.hostname + "_firstVisit", 1 ,30);
-			setCookie(window.location.hostname + "_lastVisit", 1 ,6);
+			setCookie(window.location.hostname + "_lastVisit", 1 ,5);
 			console.log("Cookies Made!");
 			score('up', 'Visiting a productive website'); 
 			
-			//Timer which constantly calls itself every five mins to check if the user is still on the website.
+			//Website Timer - Checks every 30seconds on the website to check if cookie exists. If it doesn't exist, makes a new cookie & rewards user.
 			setInterval(function(){
-				if(getCookie(window.location.hostname + "_lastVisit") == "1"){
-				setCookie(window.location.hostname + "_lastVisit", 1 ,6);
+				if(getCookie(window.location.hostname + "_lastVisit") == null){
+				setCookie(window.location.hostname + "_lastVisit", 1 ,5);
 				score('up', 'Continuing on productivity website');
 				console.log("Good Website Interval");
+				}else {
+				console.log("30 seconds pass");
 				}
-				}, 300000); 
+				}, 30000); 
 		}
+		
 	  }
 	  
  
