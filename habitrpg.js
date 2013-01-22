@@ -21,15 +21,14 @@ function getCookie(c_name){
     }
   }
 }
-	
-		
+
 
 var habitrpgUrl = null;
 chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
   if (!response.data.uid) {
     console.log("To use the HabitRPG extension, input your UID in the options page.");
     return; //require them to input their UID, else ignore this extension
-  } else {  
+  } else {
     var options = response.data,
       habitrpgUrl = "https://habitrpg.com/users/" + jQuery.trim(options.uid) + "/tasks/productivity",
       notificationDefaults = {
@@ -72,74 +71,59 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
 
 		if (_.include(badHosts, window.location.hostname)) {
       // Dock points once they enter the site, and every 5 minutes they're on the site
-      if(getCookie(window.location.hostname + "_firstVisit") == "1"){
+     if(getCookie(window.location.hostname + "_firstVisit") == "1"){
 			setCookie(window.location.hostname+ "_firstVisit", 1 ,30);
+			setCookie(window.location.hostname + "_lastVisit", 1 ,2);
 			console.log("Been on the website in the last 30mins, resetting time.");
-			
+
 			setInterval(function(){
-				if(getCookie(window.location.hostname + "_lastVisit") == null){
-				setCookie(window.location.hostname + "_lastVisit", 1 ,5);
-				score('down', 'Lingering on a vice website');
-			}
-		}, 30000); 
+				chrome.extension.sendMessage({method: "websiteCheck", type: "updateSite", site: window.location.hostname, direction: "down"}, function(response) {});
+				}, 30000); 
 			
 		}
 		//React if there the user hasn't been on the website
 		else{
 			setCookie(window.location.hostname + "_firstVisit", 1 ,30);
-			setCookie(window.location.hostname + "_lastVisit", 1 ,5);
+			setCookie(window.location.hostname + "_lastVisit", 1 ,2);
 			console.log("Cookies Made!");
-			score('down', 'Visiting a vice website'); 
+			score('down', 'Visitng a vice Website'); 
 			
-			//Website Timer - Checks every 30seconds on the website to check if cookie exists. If it doesn't exist, makes a new cookie & punishes user.
+			chrome.extension.sendMessage({method: "websiteCheck", type:"newSite", site: window.location.hostname, direction: "down"}, function(response) {});
 			setInterval(function(){
-				if(getCookie(window.location.hostname + "_lastVisit") == null){
-				setCookie(window.location.hostname + "_lastVisit", 1 ,5);
-				score('down', 'Lingering on a vice website');
-				}
-			}, 30000); 
+				chrome.extension.sendMessage({method: "websiteCheck", type:"updateSite", site: window.location.hostname, direction: "down"}, function(response) {});
+				}, 30000); 
 		}
 		}
 	  
 	  else if(_.include(goodHosts, window.location.hostname)){
 	  // Score points once they enter the site, and every 5 minutes they're on the site
-		//Check if user has been on the website in the last 30mins and then react if there is one
+		//Been on site before
 		if(getCookie(window.location.hostname + "_firstVisit") == "1"){
 			setCookie(window.location.hostname+ "_firstVisit", 1 ,30);
 			console.log("Been on the website in the last 30mins, resetting time.");
 			
-		//Website Timer - Checks every 30seconds on the website to check if cookie exists. If it doesn't exist, makes a new cookie & rewards user.
-			setInterval(function(){
-				if(getCookie(window.location.hostname + "_lastVisit") == null){
-				setCookie(window.location.hostname + "_lastVisit", 1 ,5);
-				score('up', 'Continuing on productivity website');
-				}else {
-				}
-				}, 30000);
+		setInterval(function(){
+				chrome.extension.sendMessage({method: "websiteCheck", type: "updateSite", site: window.location.hostname, direction: "down"}, function(response) {});
+				}, 30000); 
+			
+			
 			
 		}
-		//React if there the user hasn't been on the website
+		//Not been on site before
 		else{
 			setCookie(window.location.hostname + "_firstVisit", 1 ,30);
-			setCookie(window.location.hostname + "_lastVisit", 1 ,5);
+			setCookie(window.location.hostname + "_lastVisit", 1 ,2);
 			console.log("Cookies Made!");
 			score('up', 'Visiting a productive website'); 
 			
-			//Website Timer - Checks every 30seconds on the website to check if cookie exists. If it doesn't exist, makes a new cookie & rewards user.
+			chrome.extension.sendMessage({method: "websiteCheck", type:"newSite", site: window.location.hostname, direction: "up"}, function(response) {});
 			setInterval(function(){
-				if(getCookie(window.location.hostname + "_lastVisit") == null){
-				setCookie(window.location.hostname + "_lastVisit", 1 ,5);
-				score('up', 'Continuing on productivity website');
-				console.log("Good Website Interval");
-				}else {
-				console.log("30 seconds pass");
-				}
+				chrome.extension.sendMessage({method: "websiteCheck", type:"updateSite", site: window.location.hostname, direction: "up"}, function(response) {});
 				}, 30000); 
+			
 		}
 		
 	  }
-	  
- 
 	  
     // Give points for completing Workflowy tasks 
     /*if (window.location.hostname === 'workflowy.com') {
