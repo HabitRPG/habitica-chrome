@@ -72,54 +72,31 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
 		if (_.include(badHosts, window.location.hostname)) {
       // Dock points once they enter the site, and every 5 minutes they're on the site
      if(getCookie(window.location.hostname + "_firstVisit") == "1"){
-			setCookie(window.location.hostname+ "_firstVisit", 1 ,30);
-			setCookie(window.location.hostname + "_lastVisit", 1 ,2);
-			console.log("Been on the website in the last 30mins, resetting time.");
-
-			setInterval(function(){
-				chrome.extension.sendMessage({method: "websiteCheck", type: "updateSite", site: window.location.hostname, direction: "down"}, function(response) {});
-				}, 30000); 
 			
-		}
-		//React if there the user hasn't been on the website
-		else{
-			setCookie(window.location.hostname + "_firstVisit", 1 ,30);
-			setCookie(window.location.hostname + "_lastVisit", 1 ,2);
-			console.log("Cookies Made!");
-			score('down', 'Visitng a vice Website'); 
-			
-			chrome.extension.sendMessage({method: "websiteCheck", type:"newSite", site: window.location.hostname, direction: "down"}, function(response) {});
-			setInterval(function(){
-				chrome.extension.sendMessage({method: "websiteCheck", type:"updateSite", site: window.location.hostname, direction: "down"}, function(response) {});
-				}, 30000); 
-		}
-		}
-	  
-	  else if(_.include(goodHosts, window.location.hostname)){
-	  // Score points once they enter the site, and every 5 minutes they're on the site
-		//Been on site before
-		if(getCookie(window.location.hostname + "_firstVisit") == "1"){
-			setCookie(window.location.hostname+ "_firstVisit", 1 ,30);
-			console.log("Been on the website in the last 30mins, resetting time.");
-			
-		setInterval(function(){
-				chrome.extension.sendMessage({method: "websiteCheck", type: "updateSite", site: window.location.hostname, direction: "down"}, function(response) {});
-				}, 30000); 
-			
-			
-			
+			console.log("Been on the website in the last 5mins.");
 		}
 		//Not been on site before
 		else{
-			setCookie(window.location.hostname + "_firstVisit", 1 ,30);
-			setCookie(window.location.hostname + "_lastVisit", 1 ,2);
-			console.log("Cookies Made!");
-			score('up', 'Visiting a productive website'); 
+			//setCookie(window.location.hostname + "_firstVisit", 1 ,5);
+			//console.log("Cookies Made for website" + window.location.hostname);
+			//score('up', 'Visiting a productive website'); 
+			setCookie(window.location.hostname+ "_firstVisit", 1 ,5);
+			chrome.extension.sendMessage({method: "newSite", site: window.location.hostname, protocol: window.location.protocol, direction: "down"}, function(response) {});
 			
-			chrome.extension.sendMessage({method: "websiteCheck", type:"newSite", site: window.location.hostname, direction: "up"}, function(response) {});
-			setInterval(function(){
-				chrome.extension.sendMessage({method: "websiteCheck", type:"updateSite", site: window.location.hostname, direction: "up"}, function(response) {});
-				}, 30000); 
+		}
+		} else if(_.include(goodHosts, window.location.hostname)){
+	  // Score points once they enter the site, and every 5 minutes they're on the site
+		//Been on site before
+		if(getCookie(window.location.hostname + "_firstVisit") == "1"){
+			console.log("Been on the website in the last 5mins.");
+		}
+		//Not been on site before
+		else{
+			//setCookie(window.location.hostname + "_firstVisit", 1 ,5);
+			setCookie(window.location.hostname+ "_firstVisit", 1 ,5);
+			console.log("Cookies Made for website as first visit" + window.location.hostname);
+			//score('up', 'Visiting a productive website'); 
+			chrome.extension.sendMessage({method: "newSite", site: window.location.hostname, protocol: window.location.protocol, direction: "up"}, function(response) {});
 			
 		}
 		
