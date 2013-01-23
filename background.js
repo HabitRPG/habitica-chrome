@@ -81,9 +81,9 @@ chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
 		
 		
 		if(direction == "up"){
-		directionMessage = "Continuing a productive Website";
+		directionMessage = "Using a Productive Website";
 		}else if (direction == "down"){
-		directionMessage = "Linguring on a vice Website";
+		directionMessage = "Linguring on a Vice Website";
 		}
 				
 		var timer = setInterval(function(){
@@ -105,7 +105,7 @@ chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
 					}
 			});
 			
-		}, 8000); 
+		}, 300000); 
 						
 		} else {
       sendResponse({}); // snub them.
