@@ -72,6 +72,7 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
 		if (_.include(badHosts, window.location.hostname)) {
       // Dock points once they enter the site, and every 5 minutes they're on the site
      if(getCookie(window.location.hostname + "_firstVisit") == "1"){
+		setCookie(window.location.hostname+ "_firstVisit", 1 ,5);
 			
 			console.log("Been on the website in the last 5mins.");
 		}
@@ -88,6 +89,7 @@ chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
 	  // Score points once they enter the site, and every 5 minutes they're on the site
 		//Been on site before
 		if(getCookie(window.location.hostname + "_firstVisit") == "1"){
+			setCookie(window.location.hostname+ "_firstVisit", 1 ,5);
 			console.log("Been on the website in the last 5mins.");
 		}
 		//Not been on site before
