@@ -25,7 +25,7 @@ var notificationDefaults = null;
 
 //Functions that allow background.js to affect the users HabitRPG.com character.
   if (!localStorage.uid) {
-    alert("To use the HabitRPG extension, input your UID in the options page.");
+    console.log("To use the HabitRPG extension, input your UID in the options page.");
     
   } else {
   
