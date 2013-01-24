@@ -24,10 +24,7 @@ var habitrpgUrl = null;
 var notificationDefaults = null;
 
 //Functions that allow background.js to affect the users HabitRPG.com character.
-  if (!localStorage.uid) {
-    console.log("To use the HabitRPG extension, input your UID in the options page.");
-    
-  } else {
+
   
     var options = localStorage,
 	habitrpgUrl = "https://habitrpg.com/users/" + jQuery.trim(options.uid) + "/tasks/productivity",
@@ -111,5 +108,3 @@ chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
       sendResponse({}); // snub them.
     }
 });
-
-}
