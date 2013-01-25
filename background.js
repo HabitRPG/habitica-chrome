@@ -2,7 +2,7 @@
 function AlwaysonActivator(changeStateFn) {
     this.changeStateFn = changeStateFn;
 }
-FromOptionsActivator.prototype.setState = function() { this.changeStateFn(true); };
+AlwaysonActivator.prototype.setState = function() { this.changeStateFn(true); };
 
 
 
