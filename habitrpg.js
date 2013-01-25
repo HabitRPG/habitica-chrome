@@ -1,114 +1,168 @@
-function setCookie(name,value,mins) {
-	if (mins) {
-		var date = new Date();
-		date.setTime(date.getTime()+(mins*60*1000));
-		var expires = "; expires="+date;
-	}
-	else var expires = "";
-	document.cookie = name+"="+value+expires+"; path=/";
-}
-		
-function getCookie(c_name){
-	var i,x,y,ARRcookies=document.cookie.split(";");
-	for (i=0;i<ARRcookies.length;i++)
-	{
-	x=ARRcookies[i].substr(0,ARRcookies[i].indexOf("="));
-	y=ARRcookies[i].substr(ARRcookies[i].indexOf("=")+1);
-	x=x.replace(/^\s+|\s+$/g,"");
-	if (x==c_name)
-    {
-    return unescape(y);
-    }
-  }
-}
 
+var habitRPG = (function(){
 
-var habitrpgUrl = null;
-chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
-  if (!response.data.uid) {
-    console.log("To use the HabitRPG extension, input your UID in the options page.");
-    return; //require them to input their UID, else ignore this extension
-  } else {
-    var options = response.data,
-      habitrpgUrl = "https://habitrpg.com/users/" + jQuery.trim(options.uid) + "/tasks/productivity",
-      notificationDefaults = {
-        title:'HabitRPG', 
-        time: 3000
-      };
+    var habitrpg = {
 
-    var score = function(direction, message) {
-      jQuery.ajax({
-        url: habitrpgUrl + '/' + direction,
-        type: 'POST'
-      }).done(function(data){
+        isSandBox: false,
+
+        sendInterval: 15000,
+        sendIntervalID: -1,
+
+        goodTimeMultiplier: 0.05,
+        badTimeMultiplier: 0.1,
         
-		var effectedStats = 'HP';
-        if (direction==='up') {
-          effectedStats = 'Exp, GP';
+        isActive: false,
+        activators: undefined,
+        activator: undefined,
+        uid: undefined,
+
+        score: 0,
+
+        host: undefined,
+        timestamp: new Date().getTime(),
+        
+        habitUrl: 'alma',
+        sourceHabitUrl: "https://habitrpg.com/users/{UID}/tasks/productivity/",
+
+        init: function() {
+            this.setActiveState();
+
+            this.activators = {
+                'alwayson': new AlwaysonActivator(this.setActiveState),
+                'fromOptions': new FromOptionsActivator(this.setActiveState)
+            };
+        },
+
+        setOptions: function(params) {
+            
+            if (params.uid) {
+                this.uid = params.uid;
+                this.habitUrl = this.sourceHabitUrl.replace('{UID}', this.uid);
+            }
+
+            this.setValue(params, 'viceDomains');
+            this.badHosts = this.viceDomains.split('\n');
+
+            this.setValue(params, 'goodDomains');
+            this.goodHosts = this.goodDomains.split('\n');
+
+            if (!this.isSandBox) {
+                if (params.sendInterval) 
+                    this.sendInterval = params.sendInterval * 1000 * 60;
+                
+                if (this.sendInterval < 60000 ) this.sendInterval = 60000;
+            }
+            
+            this.setValue(params, 'activatorName');
+            this.setActivator(this.activatorName);
+
+            if (params.isActive && this.activatorName == 'fromOptions') {
+                this.activator.setState(params.isActive);
+            }
+            
+        },
+
+        setValue: function(params, name) { 
+            if (params[name]) this[name] = params[name];
+        },
+
+        checkNewPage: function(url) {
+            if (!this.isActive) return;
+
+            var host = url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1'), spentTime;
+
+            if (host == this.host) return;
+
+            this.addScoreFromSpentTime(this.getandResetSpentTime());
+
+            this.host = host;
+
+        },
+
+        addScoreFromSpentTime: function(spentTime) {
+            var score = 0;
+            if (this.goodHosts.indexOf(this.host) != -1)
+                score = spentTime * this.goodTimeMultiplier;
+            else if (this.badHosts.indexOf(this.host) != -1)
+                score = (spentTime * this.badTimeMultiplier) * -1;
+
+            this.score += score;
+        },
+
+        getandResetSpentTime: function() {
+            var spent = new Date().getTime() - this.timestamp;
+
+            this.timestamp = new Date().getTime();
+
+            return spent * 0.001 / 60;
+        },
+
+        canSend: function() { return this.score !== 0; },
+
+        sendToHabitRPGHost: function() {
+
+            this.addScoreFromSpentTime(this.getandResetSpentTime());
+
+            if (this.canSend()) {
+                
+                if (this.isSandBox) {
+                    if (this.scoreSendCallback)
+                        this.scoreSendCallback(this.score);
+                } else {
+                    var sc = this.score;
+                    
+                    $.ajax({
+                        type: 'POST',
+                        url: this.habitUrl + (sc < 0 ? 'down' : 'up')
+                        
+                    }).done(function(){
+                        habitrpg.scoreSendCallback(sc);
+                    });
+                }
+                this.score = 0;
+            }
+        },
+
+        setActivator: function(name) {
+            this.activator = this.activators[name] || 'alwayson';
+        },
+
+        setActiveState: function(value) {
+            var self = this;
+
+            this.setActiveState = function(value) {
+                if (self.isActive && !value) {
+                    self.isActive = false;
+                    self.sendToHabitRPGHost();
+                    self.turnOffTheSender();
+
+                } else if (!self.isActive && value) {
+                    if (self.uid) {
+                        self.isActive = true;
+                        self.turnOnTheSender();
+                    }
+                }
+            };
+        },
+
+        turnOnTheSender: function() {
+            this.sendIntervalID = setInterval(function(){habitrpg.sendToHabitRPGHost();}, this.sendInterval);
+        },
+
+        turnOffTheSender: function() {
+            clearInterval(this.sendIntervalID);
+        },
+
+        setScoreSendCallback: function(scoreSendCallback) {
+            this.scoreSendCallback = scoreSendCallback;
         }
-        
-		var notification = jQuery.extend(notificationDefaults, {
-          icon: "/img/icon-48-" + direction + ".png", 
-          text: "[" + data.delta.toFixed(2) + " " + effectedStats + "] " + message
-        });
-        chrome.extension.sendMessage({method: "showNotification", notification: notification}, function(response) {}); 
-      });
-    }
+    };
 
-	// Variables for Bad Domains
-    var viceDomains = options.viceDomains.split('\n');
-    var wwwViceDomains = _.map(viceDomains, function(domain){
-      return 'www.'+domain
-    });
-    var badHosts = viceDomains.concat(wwwViceDomains);
+    habitrpg.init();
 
-	// Variables for Good Domains
-	var goodDomains = options.goodDomains.split('\n');
-    var wwwgoodDomains = _.map(goodDomains, function(domain){
-      return 'www.'+domain
-    });
-    var goodHosts = goodDomains.concat(wwwgoodDomains);
-
-		if (_.include(badHosts, window.location.hostname)) {
-      // Dock points once they enter the site, and every 5 minutes they're on the site
-     if(getCookie(window.location.hostname + "_firstVisit") == "1"){
-		setCookie(window.location.hostname+ "_firstVisit", 1 ,5);
-			
-			console.log("Been on the website in the last 5mins.");
-		}
-		//Not been on site before
-		else{
-			//setCookie(window.location.hostname + "_firstVisit", 1 ,5);
-			//console.log("Cookies Made for website" + window.location.hostname);
-			//score('up', 'Visiting a productive website'); 
-			setCookie(window.location.hostname+ "_firstVisit", 1 ,5);
-			chrome.extension.sendMessage({method: "newSite", site: window.location.hostname, protocol: window.location.protocol, direction: "down"}, function(response) {});
-			
-		}
-		} else if(_.include(goodHosts, window.location.hostname)){
-	  // Score points once they enter the site, and every 5 minutes they're on the site
-		//Been on site before
-		if(getCookie(window.location.hostname + "_firstVisit") == "1"){
-			setCookie(window.location.hostname+ "_firstVisit", 1 ,5);
-			console.log("Been on the website in the last 5mins.");
-		}
-		//Not been on site before
-		else{
-			//setCookie(window.location.hostname + "_firstVisit", 1 ,5);
-			setCookie(window.location.hostname+ "_firstVisit", 1 ,5);
-			console.log("Cookies Made for website as first visit" + window.location.hostname);
-			//score('up', 'Visiting a productive website'); 
-			chrome.extension.sendMessage({method: "newSite", site: window.location.hostname, protocol: window.location.protocol, direction: "up"}, function(response) {});
-			
-		}
-		
-	  }
-	  
-    // Give points for completing Workflowy tasks 
-    /*if (window.location.hostname === 'workflowy.com') {
-      jQuery(".editor").watch('text-decoration', function(){
-        console.log(jQuery(this));
-      });
-    }*/
-  }
-});
+    return {
+        checkNewPage: function(url) { habitrpg.checkNewPage(url); },
+        setOptions: function(params) { habitrpg.setOptions(params); },
+        setScoreSendCallback: function(callback) { habitrpg.setScoreSendCallback(callback); }
+    };
+})();

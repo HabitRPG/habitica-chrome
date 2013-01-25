@@ -1,7 +1,15 @@
 # HabitRPG Chrome Extension
 
-Think Stayfocusd for [HabitRPG](http://habitrpg.com). Lose HP for visiting vice domains (procrastination websites), lingering on vice domains each 5m, etc. To use, enter your [HabitRPG user ID](https://img.skitch.com/20120829-qimntrn2qkra78wytxpujrh12a.jpg) in the options page. [Hit me up with suggestions](https://github.com/lefnire/habitrpg-chrome/issues) on what else the extension could track. I was thinking marking items complete in Pivotal Tracker, Workflowy, etc. would give you Exp, but then you wouldn't gain those points if the tickets were handled outside Chrome (phone app, etc).
+The main purpuse same as the [original](https://github.com/lefnire/habitrpg-chrome)
 
-Please bear with me on the current bugs, I'm still stablizing HabitRPG's API, then I'll come back & improve this extension. See the [roadmap here](https://workflowy.com/shared/b5eecfbd-4e76-cdcf-624e-529cd65f6ada/).
+Differences:
+    - complete code rewrite ( only the app.js contains chrome code, so hopfully easy to transfer to other browsers )
+    - the score counting was unified. the script run in the background and watch for tab activation and window focus change. if that detect a listed site store in the memory and do nothing until you the change tab/domain or chrome lost the focus. if it happend the extension compute the score based.
+    - the reached score send to the server only every 5 minutes (or whatever based on the user settings (min 1 minutes)). so if you spend 2.5 min on a bad site and 2.5 min on a good side you lost some HP because the bad site worth more in negative context :)
+    - user data in cloud (2 comment line (app.js/options.js))
 
-![-1 HP for visiting Reddit.com](https://img.skitch.com/20120829-cbb1x1m4kym58pwg95akcxi31p.jpg)
+
+Roadmap:
+    - Pomodoro activator ( with tomato.es )
+    - Day activator (the script auto active itself based on the user settings (which day, which time interval))
+    - styled options
