@@ -3,7 +3,7 @@ var App = {
 	activeTabId: -1,
 	hasFocus: true,
 
-	habitrpg: habitRPG(),
+	habitrpg: habitRPG,
 	invalidTransitionTypes: ['auto_subframe', 'form_submit'],
 	notificationShowTime: 4000,
 
