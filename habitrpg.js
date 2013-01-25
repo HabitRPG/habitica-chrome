@@ -3,9 +3,9 @@ var habitRPG = (function(){
 
     var habitrpg = {
 
-        isSandBox: false,
+        isSandBox: true,
 
-        sendInterval: 15000,
+        sendInterval: 5000,
         sendIntervalID: -1,
 
         goodTimeMultiplier: 0.05,
@@ -73,6 +73,9 @@ var habitRPG = (function(){
 
             if (host == this.host) return;
 
+            if (this.activator.handleUrl) 
+                this.activator.handleUrl(url);
+
             this.addScoreFromSpentTime(this.getandResetSpentTime());
 
             this.host = host;
@@ -124,7 +127,11 @@ var habitRPG = (function(){
         },
 
         setActivator: function(name) {
-            this.activator = this.activators[name] || 'alwayson';
+            name = this.activators[name] ? name : 'alwayson';
+            this.activator = this.activators[name];
+            if (name == 'alwayson')
+                this.activator.setState();
+
         },
 
         setActiveState: function(value) {
