@@ -26,7 +26,7 @@ function getCookie(c_name){
 var habitrpgUrl = null;
 chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
   if (!response.data.uid) {
-    console.log("To use the HabitRPG extension, input your UID in the options page.");
+    alert("To use the HabitRPG extension, input your UID in the options page.");
     return; //require them to input their UID, else ignore this extension
   } else {
     var options = response.data,
