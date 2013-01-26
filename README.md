@@ -5,6 +5,7 @@ The main purpuse same as the [original](https://github.com/lefnire/habitrpg-chro
 
 Note:
 The extension only use the background and options javascript files (and jquery).
+(Don't forget change the sandbox state)
 
 Differences:
 ------------
