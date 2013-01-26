@@ -75,6 +75,7 @@ chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
 		var siteProtocol = request.protocol
 		var direction = request.direction;
 		var directionMessage;
+		console.log("interval is currently set to " + localStorage.interval + " minutes");
 		
 		
 		if(direction == "up"){
@@ -102,7 +103,7 @@ chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
 					}
 			});
 			
-		}, 300000); 
+		}, localStorage.interval*60000); 
 						
 		} else {
       sendResponse({}); // snub them.
