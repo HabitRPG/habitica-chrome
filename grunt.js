@@ -14,7 +14,7 @@ module.exports = function(grunt) {
 		watch: {
 			background: {
 				files: ['activators.js', 'habitrpg.js', 'app.js', 'test/*.js'],
-				tasks: ['lint', 'jasmine', 'concat:background', 'clean:jasmine']
+				tasks: ['lint', 'jasmine', 'concat:background', 'clean:test']
 			},
 			options: {
 				files: ['options.js', 'options.html'],
@@ -25,6 +25,9 @@ module.exports = function(grunt) {
 			src : ['activators.js', 'habitrpg.js'],
 			specs : 'test/*.js',
 			timeout : 1000
+		},
+		clean: {
+			test: ['_SpecRunner.html']
 		},
 		copy: {
 			extension: {
@@ -39,7 +42,7 @@ module.exports = function(grunt) {
 
 	grunt.registerTask('cpExt', 'copy:extension');
 
-	grunt.registerTask('default', ['lint', 'jasmine', 'clean:jasmine']);
+	grunt.registerTask('default', ['lint', 'jasmine', 'clean:test']);
 	
 
 };

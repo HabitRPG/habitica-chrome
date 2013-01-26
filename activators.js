@@ -87,10 +87,6 @@ var Activators = (function() {
         this.pageOpened();
     };
 
-    PageLinkActivator.prototype.handleSetOptions = function() {
-        this.pageOpened();
-    };
-
     PageLinkActivator.prototype.handleNewUrl = function(url) {
         if (!url && !this.url)
             this.changeStateFn(true);
@@ -123,10 +119,73 @@ var Activators = (function() {
         
     };
 
+     /* ---------------- Days activator ------------ */
+
+    function DaysActivator() {
+        this.days = undefined;
+        this.today = undefined;
+
+        this.runLookForActivationTime();
+    }
+    DaysActivator.prototype.setChangeStateFn = AlwaysonActivator.prototype.setChangeStateFn;
+    DaysActivator.dayList = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+    DaysActivator.prototype.setDays = function(days) {
+        this.days = days;
+        this.lookForActivationTime();
+    };
+
+    DaysActivator.prototype.runLookForActivationTime = function(){
+        var self = this;
+        this.runLookForActivationTime = function() { 
+            self.lookForActivationTime(); 
+        };
+    };
+
+    DaysActivator.prototype.lookForActivationTime = function() {
+        var now = new Date();
+        var today = this.days[DaysActivator.dayList[now.getDay()-1]];
+
+        this.changeStateFn(false);
+
+        if (today.active) {
+            var st = new Date(now.getFullYear(), now.getMonth(), now.getDate(), today.start[0], today.start[1]),
+                et = new Date(now.getFullYear(), now.getMonth(), now.getDate(), today.end[0], today.end[1]);
+                if (st > et) {
+                    var t = st;
+                    st = et;
+                    et = s;
+                }
+            // before today start time
+            if (now < st) {
+                setTimeout(this.runLookForActivationTime, st.getTime() - now.getTime() + 100);
+
+            } else {
+                // beyond today end time
+                if ( now > et) {
+                    et.setDate(et.getDate() + 1);
+                    today = this.days[DaysActivator.dayList[now.getDay() > DaysActivator.dayList.length ? 0 : now.getDay()]];
+                    et.setHours( today.start[0]);
+                    et.setMinutes( today.start[1]);
+
+                } else {
+                    // between the range
+                    this.changeStateFn(true);        
+                }
+
+                setTimeout(this.runLookForActivationTime, et.getTime() - now.getTime() + 100);
+
+            }
+        }
+    };
+
+    /* ---------------- Return -------------------- */
+
     return {
+            'days': new DaysActivator(),
+            'webpage': new PageLinkActivator(),
             'alwayson': new AlwaysonActivator(),
-            'fromOptions': new FromOptionsActivator(),
-            'webpage': new PageLinkActivator()
+            'fromOptions': new FromOptionsActivator()
             };
 
 })();

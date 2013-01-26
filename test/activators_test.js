@@ -76,4 +76,29 @@ describe('Activators', function(){
 
     });
 
+    xdescribe('Days ans Hours', function(){
+
+        var activator = Activators.days,
+            todayDate = new Date(),
+            days = {
+              'Monday': { active: true, start: [8,0], end: [16,30] },
+              'Tuesday': { active: true, start: [8,0], end: [16,30] },
+              'Wednesday': { active: true, start: [8,0], end: [16,30] },
+              'Thursday': { active: true, start: [8,0], end: [16,30] },
+              'Friday': { active: true, start: [8,0], end: [16,30] },
+              'Saturday': { active: false, start: [8,0], end: [16,30] },
+              'Sunday': { active: false, start: [8,0], end: [16,30] }
+            },
+            dayList = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+            today = days[dayList[todayDate.getDate()]];
+
+        it('Before start', function(){
+
+            today.start[0] = todayDate.getHours();
+            today.start[1] = todayDate.getMinutes();
+
+        });
+
+    });
+
 });

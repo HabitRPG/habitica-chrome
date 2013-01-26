@@ -59,6 +59,9 @@ var habitRPG = (function(){
 
             if (params.watchedUrl !== undefined && this.activator.setUrl)
                 this.activator.setUrl(params.watchedUrl);
+
+            else if (params.days !== undefined && this.activator.setDays)
+                this.activator.setDays(params.days);
                         
             if (params.isActive && this.activatorName == 'fromOptions')
                 this.activator.setState(params.isActive);            

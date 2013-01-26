@@ -20,9 +20,9 @@ Differences:
     - user data can store in the cloud (change the comment line in the app.js/options.js)
     - ability to setting a control website (or the chrome focus lost). if this website present in a chrome window, then
       the script will watch for good and bad sites.
-
+    - Day activator (the script auto active itself based on the user settings (which day, which time interval))
+    
 Roadmap:
 --------
     - Pomodoro activator ( with tomato.es )
-    - Day activator (the script auto active itself based on the user settings (which day, which time interval))
     - styled options
