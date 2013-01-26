@@ -5,7 +5,7 @@ var habitRPG = (function(){
 
         isSandBox: true,
 
-        sendInterval: 5000,
+        sendInterval: 1000,
         sendIntervalID: -1,
 
         goodTimeMultiplier: 0.05,
@@ -21,20 +21,21 @@ var habitRPG = (function(){
         host: undefined,
         timestamp: new Date().getTime(),
         
-        habitUrl: 'alma',
+        habitUrl: '',
         sourceHabitUrl: "https://habitrpg.com/users/{UID}/tasks/productivity/",
 
         init: function() {
+
             this.setActiveState();
 
-            this.activators = {
-                'alwayson': new AlwaysonActivator(this.setActiveState),
-                'fromOptions': new FromOptionsActivator(this.setActiveState)
-            };
+            this.activators = Activators;
+
+            for (var name in this.activators) 
+                this.activators[name].setChangeStateFn(this.setActiveState);
         },
 
         setOptions: function(params) {
-            
+
             if (params.uid) {
                 this.uid = params.uid;
                 this.habitUrl = this.sourceHabitUrl.replace('{UID}', this.uid);
@@ -52,14 +53,15 @@ var habitRPG = (function(){
                 
                 if (this.sendInterval < 60000 ) this.sendInterval = 60000;
             }
-            
+
             this.setValue(params, 'activatorName');
             this.setActivator(this.activatorName);
 
-            if (params.isActive && this.activatorName == 'fromOptions') {
-                this.activator.setState(params.isActive);
-            }
-            
+            if (params.watchedUrl !== undefined && this.activator.setUrl)
+                this.activator.setUrl(params.watchedUrl);
+                        
+            if (params.isActive && this.activatorName == 'fromOptions')
+                this.activator.setState(params.isActive);            
         },
 
         setValue: function(params, name) { 
@@ -67,18 +69,18 @@ var habitRPG = (function(){
         },
 
         checkNewPage: function(url) {
+            
+            var host = url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1');
+            
+            if (host == this.host) return;
+            this.host = host;
+
+            if (this.activator.handleNewUrl) 
+                this.activator.handleNewUrl(url);
+
             if (!this.isActive) return;
 
-            var host = url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1'), spentTime;
-
-            if (host == this.host) return;
-
-            if (this.activator.handleUrl) 
-                this.activator.handleUrl(url);
-
             this.addScoreFromSpentTime(this.getandResetSpentTime());
-
-            this.host = host;
 
         },
 
@@ -109,8 +111,8 @@ var habitRPG = (function(){
             if (this.canSend()) {
                 
                 if (this.isSandBox) {
-                    if (this.scoreSendCallback)
-                        this.scoreSendCallback(this.score);
+                    if (this.scoreSendedAction)
+                        this.scoreSendedAction(this.score);
                 } else {
                     var sc = this.score;
                     
@@ -119,7 +121,7 @@ var habitRPG = (function(){
                         url: this.habitUrl + (sc < 0 ? 'down' : 'up')
                         
                     }).done(function(){
-                        habitrpg.scoreSendCallback(sc);
+                        habitrpg.scoreSendedAction(sc);
                     });
                 }
                 this.score = 0;
@@ -129,12 +131,13 @@ var habitRPG = (function(){
         setActivator: function(name) {
             name = this.activators[name] ? name : 'alwayson';
             this.activator = this.activators[name];
+
             if (name == 'alwayson')
                 this.activator.setState();
 
         },
 
-        setActiveState: function(value) {
+        setActiveState: function() {
             var self = this;
 
             this.setActiveState = function(value) {
@@ -142,7 +145,6 @@ var habitRPG = (function(){
                     self.isActive = false;
                     self.sendToHabitRPGHost();
                     self.turnOffTheSender();
-
                 } else if (!self.isActive && value) {
                     if (self.uid) {
                         self.isActive = true;
@@ -160,16 +162,20 @@ var habitRPG = (function(){
             clearInterval(this.sendIntervalID);
         },
 
-        setScoreSendCallback: function(scoreSendCallback) {
-            this.scoreSendCallback = scoreSendCallback;
+        setScoreSendedAction: function(scoreSendedAction) {
+            this.scoreSendedAction = scoreSendedAction;
         }
     };
 
     habitrpg.init();
 
     return {
+        getScore: function() { return habitrpg.score; },
+        isActive: function() { return habitrpg.isActive; },
         checkNewPage: function(url) { habitrpg.checkNewPage(url); },
         setOptions: function(params) { habitrpg.setOptions(params); },
-        setScoreSendCallback: function(callback) { habitrpg.setScoreSendCallback(callback); }
+        sendScore: function() { return habitrpg.sendToHabitRPGHost(); },
+        setScoreSendedAction: function(callback) { habitrpg.setScoreSendedAction(callback); }
     };
+
 })();
