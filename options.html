@@ -5,6 +5,7 @@
   <script type="text/javascript" src="options.js"></script>
   </script>
   <style>
+    input[type=number] { width: 50px; }
     .state { display: none; }
     .state.good { background: green; display: block; }
     .state.bad { background: red; display: block; }
@@ -39,18 +40,20 @@ khanacadamy.org</textarea></p>
     <select id="activatorName">
       <option value="alwayson">Always on</option>
       <option value="fromOptions">From here</option>
-      <option value="days">Days and hours</option>
+      <option value="webpage">Via website</option>
       <option value="tomatoes">From http://tomato.es</option>
+      <option value="days">Days and hours</option>
     </select><br />
     <div id="ActivatorOptions">
       <div id="ActOpts-fromOptions">
-        <label for="ActivatorState">Active:</label><input type="checkbox" id="isActive" />
+        <label for="isActive">Active:</label><input type="checkbox" id="isActive" />
+      </div>
+      <div id="ActOpts-webpage">
+        <label for="watchedUrl">Url:</label><input type="text" id="watchedUrl" /> ( Started with 'http://' or 'https://' )
       </div>
       <div id="ActOpts-tomatoes">
-        
       </div>
       <div id="ActOpts-days">
-        
       </div>
     </div>
 

@@ -91,7 +91,9 @@ var Activators = (function() {
     };
 
     PageLinkActivator.prototype.handleNewUrl = function(url) {
-        if (this.url.indexOf(url) === 0)
+        if (!url && !this.url)
+            this.changeStateFn(true);
+        else if (url && this.url && this.url.indexOf(url) === 0)
             this.changeStateFn(true);
     };
 
@@ -187,7 +189,7 @@ var habitRPG = (function(){
             this.setValue(params, 'activatorName');
             this.setActivator(this.activatorName);
 
-            if (params.watchedUrl && this.activator.setUrl)
+            if (params.watchedUrl !== undefined && this.activator.setUrl)
                 this.activator.setUrl(params.watchedUrl);
                         
             if (params.isActive && this.activatorName == 'fromOptions')
@@ -201,6 +203,7 @@ var habitRPG = (function(){
         checkNewPage: function(url) {
             
             var host = url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1');
+            
             if (host == this.host) return;
             this.host = host;
 

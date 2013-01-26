@@ -57,7 +57,7 @@ var habitRPG = (function(){
             this.setValue(params, 'activatorName');
             this.setActivator(this.activatorName);
 
-            if (params.watchedUrl && this.activator.setUrl)
+            if (params.watchedUrl !== undefined && this.activator.setUrl)
                 this.activator.setUrl(params.watchedUrl);
                         
             if (params.isActive && this.activatorName == 'fromOptions')
@@ -71,6 +71,7 @@ var habitRPG = (function(){
         checkNewPage: function(url) {
             
             var host = url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1');
+            
             if (host == this.host) return;
             this.host = host;
 

@@ -5,6 +5,7 @@ jQuery('document').ready(function(){
   
   storage.get({
       uid:'',
+      watchedUrl: '',
       isActive: 'false',
       sendInterval: '5',
       activatorName: 'alwayon',
@@ -13,18 +14,18 @@ jQuery('document').ready(function(){
     }, 
     restore);
 
-   function restore(params) {
+  function restore(params) {
     
-    $('#uid').val(params.uid);
-    $('#activatorName').val(params.activatorName);
+    for (var name in params) {
+      var el = $('#'+name);
 
-    $('#sendInterval').val(params.sendInterval);
-    $('#viceDomains').val(params.viceDomains);
-    $('#goodDomains').val(params.goodDomains);
+      if (el.is('input[type=checkbox]'))
+          el.attr('checked', params[name] == 'true');
+      else 
+        el.val(params[name]);
 
-    if (params.isActive == 'true')
-      $('#isActive').attr('checked', true);
-
+    }
+    
     init();
   }
 
@@ -38,18 +39,27 @@ jQuery('document').ready(function(){
 
   function save () {
 
-    storage.set({
-      uid: $('#uid').val(),
-      viceDomains: $('#viceDomains').val(),
-      goodDomains: $('#goodDomains').val(),
-      sendInterval: $('#sendInterval').val(),
-      activatorName: $('#activatorName').val(),
-      isActive: $('#isActive').is(':checked') ? 'true' : 'false'
+    var data = {};
 
-    }, 
-      function(){
-        $("#status").addClass('good');
-        setTimeout(function() {$("#status").removeClass('good')}, 2000);
+    $('input, textarea, select').each(function(){
+      var el = $(this),
+          name = el.attr('id');
+
+      if (el.is('input[type=checkbox]'))
+        data[name] = el.is(':checked') ? 'true' : 'false';
+          
+      else  
+        data[name] = el.val();
+    
+    });
+
+    // strogae.set only passthrough the really changed data
+    // so this line is a hack for the real formOptions control :(
+    if (data.activatorName != 'fromOptions') data.isActive = true;
+    
+    storage.set(data, function(data) {
+      $("#status").addClass('good');
+      setTimeout(function() {$("#status").removeClass('good')}, 2000);
       }
     );
 

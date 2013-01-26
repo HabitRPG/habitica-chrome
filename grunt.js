@@ -15,6 +15,10 @@ module.exports = function(grunt) {
 			background: {
 				files: ['activators.js', 'habitrpg.js', 'app.js', 'test/*.js'],
 				tasks: ['lint', 'jasmine', 'concat:background', 'clean:jasmine']
+			},
+			options: {
+				files: ['options.js', 'options.html'],
+				tasks: ['copy:extension']
 			}
 		},
 		jasmine : {

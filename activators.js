@@ -91,7 +91,9 @@ var Activators = (function() {
     };
 
     PageLinkActivator.prototype.handleNewUrl = function(url) {
-        if (this.url.indexOf(url) === 0)
+        if (!url && !this.url)
+            this.changeStateFn(true);
+        else if (url && this.url && this.url.indexOf(url) === 0)
             this.changeStateFn(true);
     };
 
