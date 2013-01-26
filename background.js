@@ -1,66 +1,133 @@
 
-function AlwaysonActivator(changeStateFn) {
-    this.changeStateFn = changeStateFn;
-}
-FromOptionsActivator.prototype.setState = function() { this.changeStateFn(true); };
+function getTestChrome() {
+    var getTablist= function() {
+            var tabs = [],
+                arr = typeof arguments[0] == 'object' ? arguments[0] : arguments;
 
-
-
-/*---------------- FromOptionsActivator ------------*/
-
-function FromOptionsActivator(changeStateFn) {
-    this.changeStateFn = changeStateFn;
-}
-
-FromOptionsActivator.prototype.setState = function(value) {
-    if (value == 'true') this.changeStateFn(true);
-    else if (value == 'false') this.changeStateFn(false);
-};
-
-
-
-/*---------------- PageLinkActivator ------------*/
-
-function PageLinkActivator(changeStateFn, url) {
-    this.url = url;
-    this.changeStateFn = changeStateFn;
-    this.isOpened = this.pageIsOpened();
-
-    if (this.isOpened)
-        this.changeStateFn(true);
-    else 
-        this.changeStateFn(false);
-
-    
-    chrome.tabs.onRemoved.addListener(function(tabId) {});
-}
-
-PageLinkActivator.prototype.handleUrl = function(url) {
-    if (url.indexOf(this.url) === 0) {
-
-    }
-};
-
-PageLinkActivator.prototype.pageIsOpened = function() {
-    var self = this, host, win, tab, isOpened = false;
-
-    chrome.windows.getAll({populate:true}, function(windows){
-        for (var wi in windows) {
-            win = windows[wi];
-            for (var ti in win.tabs) {
-                tab = win.tabs[ti];
-                if (tab.url.indexOf(self.url) === 0) {
-                    isOpened = true;
-                    break;
-                }
+            for (var i=0;i<arguments.length;i++)
+                tabs.push({url: arr[i]});
+            
+            return tabs;
+        },
+        getWinList= function() {
+            var wins = [];
+            
+            for (var i=0;i<arguments.length;i++) {
+                wins.push({tabs:getTablist(arguments[i])});
             }
 
-            if (isOpened) break;
-        }
-    });
+            return wins;
+        },
+        wins = getWinList(['http://habitrpg.com/', 'http://gruntjs.com', 'http://github.com'], ['http://facebook.com', 'http://9gag.com']);
 
-    return isOpened;
-};
+    return {
+        getTablist: getTablist,
+        getWinList: getWinList,
+        wins: wins,
+        tabs: {
+            onRemoved: {
+                addListener : function(fn) { this.trigger = fn; }
+                }
+            },
+        windows: {
+            getAll: function(opt, fn) { fn(wins); }
+            }
+    };
+}
+    
+
+var Activators = (function() {
+
+    try {
+        if (chrome) var alma = null;
+    } catch(e) {
+        chrome = getTestChrome();
+    } 
+
+    function AlwaysonActivator() {
+        this.changeStateFn = undefined;
+        this.state = false;
+    }
+    AlwaysonActivator.prototype.setState = function() { this.changeStateFn(true); };
+    AlwaysonActivator.prototype.setChangeStateFn = function(changeStateFn) { 
+        this.changeStateFn = function(value) { 
+            this.state = value;
+            changeStateFn(value);
+        }; 
+    };
+
+
+    /*---------------- FromOptionsActivator ------------*/
+
+    function FromOptionsActivator() {}
+    FromOptionsActivator.prototype.setChangeStateFn = AlwaysonActivator.prototype.setChangeStateFn;
+
+    FromOptionsActivator.prototype.setState = function(value) {
+        if (value == 'true') this.changeStateFn(true);
+        else if (value == 'false') this.changeStateFn(false);
+    };
+
+
+
+    /*---------------- PageLinkActivator ------------*/
+
+    function PageLinkActivator(url) {
+        this.url = url;
+
+        var self = this;
+        chrome.tabs.onRemoved.addListener(function(tabId) {
+            self.pageOpened();
+        });
+    }
+    PageLinkActivator.prototype.setChangeStateFn = AlwaysonActivator.prototype.setChangeStateFn;
+
+    PageLinkActivator.prototype.setUrl = function(url) {
+        this.url = url;
+        this.pageOpened();
+    };
+
+    PageLinkActivator.prototype.handleSetOptions = function() {
+        this.pageOpened();
+    };
+
+    PageLinkActivator.prototype.handleNewUrl = function(url) {
+        if (this.url.indexOf(url) === 0)
+            this.changeStateFn(true);
+    };
+
+    PageLinkActivator.prototype.pageOpened = function() {
+        var self = this, host, win, tab, isOpened = false;
+
+        chrome.windows.getAll({populate:true}, function(windows){
+            for (var wi in windows) {
+                win = windows[wi];
+                for (var ti in win.tabs) {
+                    tab = win.tabs[ti];
+                    if (tab.url.indexOf(self.url) === 0) {
+                        isOpened = true;
+                        break;
+                    }
+                }
+
+                if (isOpened) break;
+            }
+
+            if(isOpened)
+                self.changeStateFn(true);
+            else
+                self.changeStateFn(false);
+        });
+        
+    };
+
+    return {
+            'alwayson': new AlwaysonActivator(),
+            'fromOptions': new FromOptionsActivator(),
+            'webpage': new PageLinkActivator()
+            };
+
+})();
+
 
 var habitRPG = (function(){
 
@@ -68,7 +135,7 @@ var habitRPG = (function(){
 
         isSandBox: true,
 
-        sendInterval: 5000,
+        sendInterval: 1000,
         sendIntervalID: -1,
 
         goodTimeMultiplier: 0.05,
@@ -84,20 +151,21 @@ var habitRPG = (function(){
         host: undefined,
         timestamp: new Date().getTime(),
         
-        habitUrl: 'alma',
+        habitUrl: '',
         sourceHabitUrl: "https://habitrpg.com/users/{UID}/tasks/productivity/",
 
         init: function() {
+
             this.setActiveState();
 
-            this.activators = {
-                'alwayson': new AlwaysonActivator(this.setActiveState),
-                'fromOptions': new FromOptionsActivator(this.setActiveState)
-            };
+            this.activators = Activators;
+
+            for (var name in this.activators) 
+                this.activators[name].setChangeStateFn(this.setActiveState);
         },
 
         setOptions: function(params) {
-            
+
             if (params.uid) {
                 this.uid = params.uid;
                 this.habitUrl = this.sourceHabitUrl.replace('{UID}', this.uid);
@@ -115,14 +183,15 @@ var habitRPG = (function(){
                 
                 if (this.sendInterval < 60000 ) this.sendInterval = 60000;
             }
-            
+
             this.setValue(params, 'activatorName');
             this.setActivator(this.activatorName);
 
-            if (params.isActive && this.activatorName == 'fromOptions') {
-                this.activator.setState(params.isActive);
-            }
-            
+            if (params.watchedUrl && this.activator.setUrl)
+                this.activator.setUrl(params.watchedUrl);
+                        
+            if (params.isActive && this.activatorName == 'fromOptions')
+                this.activator.setState(params.isActive);            
         },
 
         setValue: function(params, name) { 
@@ -130,18 +199,17 @@ var habitRPG = (function(){
         },
 
         checkNewPage: function(url) {
+            
+            var host = url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1');
+            if (host == this.host) return;
+            this.host = host;
+
+            if (this.activator.handleNewUrl) 
+                this.activator.handleNewUrl(url);
+
             if (!this.isActive) return;
 
-            var host = url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1'), spentTime;
-
-            if (host == this.host) return;
-
-            if (this.activator.handleUrl) 
-                this.activator.handleUrl(url);
-
             this.addScoreFromSpentTime(this.getandResetSpentTime());
-
-            this.host = host;
 
         },
 
@@ -172,8 +240,8 @@ var habitRPG = (function(){
             if (this.canSend()) {
                 
                 if (this.isSandBox) {
-                    if (this.scoreSendCallback)
-                        this.scoreSendCallback(this.score);
+                    if (this.scoreSendedAction)
+                        this.scoreSendedAction(this.score);
                 } else {
                     var sc = this.score;
                     
@@ -182,7 +250,7 @@ var habitRPG = (function(){
                         url: this.habitUrl + (sc < 0 ? 'down' : 'up')
                         
                     }).done(function(){
-                        habitrpg.scoreSendCallback(sc);
+                        habitrpg.scoreSendedAction(sc);
                     });
                 }
                 this.score = 0;
@@ -192,12 +260,13 @@ var habitRPG = (function(){
         setActivator: function(name) {
             name = this.activators[name] ? name : 'alwayson';
             this.activator = this.activators[name];
+
             if (name == 'alwayson')
                 this.activator.setState();
 
         },
 
-        setActiveState: function(value) {
+        setActiveState: function() {
             var self = this;
 
             this.setActiveState = function(value) {
@@ -205,7 +274,6 @@ var habitRPG = (function(){
                     self.isActive = false;
                     self.sendToHabitRPGHost();
                     self.turnOffTheSender();
-
                 } else if (!self.isActive && value) {
                     if (self.uid) {
                         self.isActive = true;
@@ -223,18 +291,22 @@ var habitRPG = (function(){
             clearInterval(this.sendIntervalID);
         },
 
-        setScoreSendCallback: function(scoreSendCallback) {
-            this.scoreSendCallback = scoreSendCallback;
+        setScoreSendedAction: function(scoreSendedAction) {
+            this.scoreSendedAction = scoreSendedAction;
         }
     };
 
     habitrpg.init();
 
     return {
+        getScore: function() { return habitrpg.score; },
+        isActive: function() { return habitrpg.isActive; },
         checkNewPage: function(url) { habitrpg.checkNewPage(url); },
         setOptions: function(params) { habitrpg.setOptions(params); },
-        setScoreSendCallback: function(callback) { habitrpg.setScoreSendCallback(callback); }
+        sendScore: function() { return habitrpg.sendToHabitRPGHost(); },
+        setScoreSendedAction: function(callback) { habitrpg.setScoreSendedAction(callback); }
     };
+
 })();
 
 var App = {
@@ -264,7 +336,7 @@ var App = {
 			goodDomains: 'lifehacker.com\ncodeacadamy.com\nkhanacadamy.org'
 		}, this.habitrpg.setOptions);
 
-		this.habitrpg.setScoreSendCallback(this.showNotification);
+		this.habitrpg.setScoreSendedAction(this.showNotification);
 	},
 
 	navCommittedHandler: function(event){
@@ -323,14 +395,15 @@ var App = {
 		App.habitrpg.setOptions(obj);
 	},
 
-	showNotification: function(score) {
+	showNotification: function(score, message) {
 
 		score = score.toFixed(4);
 
 		var notification = webkitNotifications.createNotification(
 			"/img/icon-48-" + (score < 0 ? 'down' : 'up') + ".png", 
 			'HabitRPG', 
-			'You '+(score < 0 ? 'lost' : 'gained')+' '+score+' '+(score < 0 ? 'HP! Work or will die...' : 'Exp/Gold! Keep up the good work!')
+			message ? message :
+			('You '+(score < 0 ? 'lost' : 'gained')+' '+score+' '+(score < 0 ? 'HP! Work or will die...' : 'Exp/Gold! Keep up the good work!'))
 		);
 		notification.show();
 		setTimeout(function(){notification.close();}, App.notificationShowTime);

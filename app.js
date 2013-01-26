@@ -25,7 +25,7 @@ var App = {
 			goodDomains: 'lifehacker.com\ncodeacadamy.com\nkhanacadamy.org'
 		}, this.habitrpg.setOptions);
 
-		this.habitrpg.setScoreSendCallback(this.showNotification);
+		this.habitrpg.setScoreSendedAction(this.showNotification);
 	},
 
 	navCommittedHandler: function(event){
@@ -84,14 +84,15 @@ var App = {
 		App.habitrpg.setOptions(obj);
 	},
 
-	showNotification: function(score) {
+	showNotification: function(score, message) {
 
 		score = score.toFixed(4);
 
 		var notification = webkitNotifications.createNotification(
 			"/img/icon-48-" + (score < 0 ? 'down' : 'up') + ".png", 
 			'HabitRPG', 
-			'You '+(score < 0 ? 'lost' : 'gained')+' '+score+' '+(score < 0 ? 'HP! Work or will die...' : 'Exp/Gold! Keep up the good work!')
+			message ? message :
+			('You '+(score < 0 ? 'lost' : 'gained')+' '+score+' '+(score < 0 ? 'HP! Work or will die...' : 'Exp/Gold! Keep up the good work!'))
 		);
 		notification.show();
 		setTimeout(function(){notification.close();}, App.notificationShowTime);
