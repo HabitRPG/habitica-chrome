@@ -49,15 +49,21 @@ var Activators = (function() {
 
     /* ---------------- Always on activator ------------ */
 
-    function AlwaysonActivator() {
-        this.state = true;
+    function AlwaysActivator(value) {
+        this.state = value;
+        this.enabled = false;
     }
-    AlwaysonActivator.prototype.setOptions = function() {};
-    AlwaysonActivator.prototype.check = function() {this.changeStateFn(true);};
-    AlwaysonActivator.prototype.setChangeStateFn = function(changeStateFn) { 
-        this.changeStateFn = function(value) { 
-            this.state = value;
-            changeStateFn(value);
+    AlwaysActivator.prototype.setOptions = function() {};
+    AlwaysActivator.prototype.deinit = function() { this.enabled = false; };
+    AlwaysActivator.prototype.init = function() { this.enabled = true; this.check(); };
+    AlwaysActivator.prototype.check = function() { this.changeStateFn(this.state); };
+    AlwaysActivator.prototype.getState = function() { return this.enabled ? this.state : false; };
+    AlwaysActivator.prototype.setChangeStateFn = function(changeStateFn) { 
+        this.changeStateFn = function(value) {
+            if (this.enabled) {
+                changeStateFn(value);
+                this.state = value;
+            }
         }; 
     };
 
@@ -65,13 +71,16 @@ var Activators = (function() {
 
     /*---------------- From options activator ------------*/
 
-    function FromOptionsActivator() {}
-    FromOptionsActivator.prototype.setChangeStateFn = AlwaysonActivator.prototype.setChangeStateFn;
+    function FromOptionsActivator() { this.state = false; }
+    FromOptionsActivator.prototype.init = AlwaysActivator.prototype.init;
+    FromOptionsActivator.prototype.deinit = AlwaysActivator.prototype.deinit;
+    FromOptionsActivator.prototype.getState = AlwaysActivator.prototype.getState;
+    FromOptionsActivator.prototype.setChangeStateFn = AlwaysActivator.prototype.setChangeStateFn;
     FromOptionsActivator.prototype.setOptions = function(params) {
-        this.value = params.isActive == 'true' ?  true : false;
+        this.state = params.isActive == 'true' ?  true : false;
     };
-    FromOptionsActivator.prototype.check = function(value) {
-        this.changeStateFn(this.value);
+    FromOptionsActivator.prototype.check = function() {
+        this.changeStateFn(this.state);
     };
 
 
@@ -79,12 +88,14 @@ var Activators = (function() {
     /*---------------- Page link activator ------------*/
 
     function PageLinkActivator() {
+        this.state = false;
         var self = this;
-        chrome.tabs.onRemoved.addListener(function() {
-            self.check();
-        });
+        chrome.tabs.onRemoved.addListener(function() { self.check(); });
     }
-    PageLinkActivator.prototype.setChangeStateFn = AlwaysonActivator.prototype.setChangeStateFn;
+    PageLinkActivator.prototype.init = AlwaysActivator.prototype.init;
+    PageLinkActivator.prototype.deinit = AlwaysActivator.prototype.deinit;
+    PageLinkActivator.prototype.getState = AlwaysActivator.prototype.getState;
+    PageLinkActivator.prototype.setChangeStateFn = AlwaysActivator.prototype.setChangeStateFn;
 
     PageLinkActivator.prototype.handleNewUrl = function(url) {
         if (!url && !this.url)
@@ -125,9 +136,14 @@ var Activators = (function() {
      /* ---------------- Days activator ------------ */
 
     function DaysActivator() {
+        this.state = false;
+        this.timeOutId = -1;
         this.check();
     }
-    DaysActivator.prototype.setChangeStateFn = AlwaysonActivator.prototype.setChangeStateFn;
+    DaysActivator.prototype.init = AlwaysActivator.prototype.init;
+    DaysActivator.prototype.getState = AlwaysActivator.prototype.getState;
+    DaysActivator.prototype.setChangeStateFn = AlwaysActivator.prototype.setChangeStateFn;
+    DaysActivator.prototype.deinit = function() { this.enabled = false; clearTimeout(this.timeOutId); };
     DaysActivator.dayList = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
     DaysActivator.prototype.setOptions = function(params) {
@@ -194,7 +210,8 @@ var Activators = (function() {
         else if (!today.active)
             this.offsetToNextStart(now, start);
         
-        setTimeout(this.check, this.getTimeoutTime(now, start, end));
+        clearTimeout(this.timeOutId);
+        this.timeOutId = setTimeout(this.check, this.getTimeoutTime(now, start, end));
     };
 
 
@@ -203,7 +220,8 @@ var Activators = (function() {
     return {
         'days': new DaysActivator(),
         'webpage': new PageLinkActivator(),
-        'alwayson': new AlwaysonActivator(),
+        'alwayson': new AlwaysActivator(true),
+        'alwaysoff': new AlwaysActivator(false),
         'fromOptions': new FromOptionsActivator()
         };
 
@@ -222,7 +240,6 @@ var habitRPG = (function(){
         goodTimeMultiplier: 0.05,
         badTimeMultiplier: 0.1,
         
-        isActive: false,
         activators: undefined,
         activator: undefined,
         uid: undefined,
@@ -243,6 +260,8 @@ var habitRPG = (function(){
 
             for (var name in this.activators) 
                 this.activators[name].setChangeStateFn(this.setActiveState);
+
+            this.activator = this.activators.alwaysoff;
         },
 
         setOptions: function(params) {
@@ -276,6 +295,14 @@ var habitRPG = (function(){
             if (params[name]) this[name] = params[name];
         },
 
+        setActivator: function(name) {
+            name = this.activators[name] ? name : 'alwayson';
+
+            this.activator.deinit();
+            this.activator = this.activators[name];
+            this.activator.init();
+        },
+
         checkNewPage: function(url) {
             
             var host = url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1');
@@ -286,7 +313,7 @@ var habitRPG = (function(){
             if (this.activator.handleNewUrl) 
                 this.activator.handleNewUrl(url);
 
-            if (!this.isActive) return;
+            if (!this.activator.getState()) return;
 
             this.addScoreFromSpentTime(this.getandResetSpentTime());
 
@@ -336,24 +363,15 @@ var habitRPG = (function(){
             }
         },
 
-        setActivator: function(name) {
-            name = this.activators[name] ? name : 'alwayson';
-            this.activator = this.activators[name];
-
-            this.activator.check();
-        },
-
         setActiveState: function() {
             var self = this;
 
             this.setActiveState = function(value) {
-                if (self.isActive && !value) {
-                    self.isActive = false;
+                if (!value) {
                     self.sendToHabitRPGHost();
                     self.turnOffTheSender();
-                } else if (!self.isActive && value) {
+                } else if (value) {
                     if (self.uid) {
-                        self.isActive = true;
                         self.turnOnTheSender();
                     }
                 }
@@ -361,6 +379,7 @@ var habitRPG = (function(){
         },
 
         turnOnTheSender: function() {
+            this.turnOffTheSender();
             this.sendIntervalID = setInterval(function(){habitrpg.sendToHabitRPGHost();}, this.sendInterval);
         },
 
@@ -376,8 +395,9 @@ var habitRPG = (function(){
     habitrpg.init();
 
     return {
+        get: function() { return habitrpg; },
         getScore: function() { return habitrpg.score; },
-        isActive: function() { return habitrpg.isActive; },
+        isActive: function() { return habitrpg.activator.getState(); },
         checkNewPage: function(url) { habitrpg.checkNewPage(url); },
         setOptions: function(params) { habitrpg.setOptions(params); },
         sendScore: function() { return habitrpg.sendToHabitRPGHost(); },

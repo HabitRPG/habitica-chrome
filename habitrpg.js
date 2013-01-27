@@ -11,7 +11,6 @@ var habitRPG = (function(){
         goodTimeMultiplier: 0.05,
         badTimeMultiplier: 0.1,
         
-        isActive: false,
         activators: undefined,
         activator: undefined,
         uid: undefined,
@@ -32,6 +31,8 @@ var habitRPG = (function(){
 
             for (var name in this.activators) 
                 this.activators[name].setChangeStateFn(this.setActiveState);
+
+            this.activator = this.activators.alwaysoff;
         },
 
         setOptions: function(params) {
@@ -65,6 +66,14 @@ var habitRPG = (function(){
             if (params[name]) this[name] = params[name];
         },
 
+        setActivator: function(name) {
+            name = this.activators[name] ? name : 'alwayson';
+
+            this.activator.deinit();
+            this.activator = this.activators[name];
+            this.activator.init();
+        },
+
         checkNewPage: function(url) {
             
             var host = url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1');
@@ -75,7 +84,7 @@ var habitRPG = (function(){
             if (this.activator.handleNewUrl) 
                 this.activator.handleNewUrl(url);
 
-            if (!this.isActive) return;
+            if (!this.activator.getState()) return;
 
             this.addScoreFromSpentTime(this.getandResetSpentTime());
 
@@ -125,24 +134,15 @@ var habitRPG = (function(){
             }
         },
 
-        setActivator: function(name) {
-            name = this.activators[name] ? name : 'alwayson';
-            this.activator = this.activators[name];
-
-            this.activator.check();
-        },
-
         setActiveState: function() {
             var self = this;
 
             this.setActiveState = function(value) {
-                if (self.isActive && !value) {
-                    self.isActive = false;
+                if (!value) {
                     self.sendToHabitRPGHost();
                     self.turnOffTheSender();
-                } else if (!self.isActive && value) {
+                } else if (value) {
                     if (self.uid) {
-                        self.isActive = true;
                         self.turnOnTheSender();
                     }
                 }
@@ -150,6 +150,7 @@ var habitRPG = (function(){
         },
 
         turnOnTheSender: function() {
+            this.turnOffTheSender();
             this.sendIntervalID = setInterval(function(){habitrpg.sendToHabitRPGHost();}, this.sendInterval);
         },
 
@@ -165,8 +166,9 @@ var habitRPG = (function(){
     habitrpg.init();
 
     return {
+        get: function() { return habitrpg; },
         getScore: function() { return habitrpg.score; },
-        isActive: function() { return habitrpg.isActive; },
+        isActive: function() { return habitrpg.activator.getState(); },
         checkNewPage: function(url) { habitrpg.checkNewPage(url); },
         setOptions: function(params) { habitrpg.setOptions(params); },
         sendScore: function() { return habitrpg.sendToHabitRPGHost(); },
