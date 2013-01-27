@@ -228,6 +228,28 @@ var Activators = (function() {
 })();
 
 
+var Controllers = (function() {
+
+
+    /* ---------------- Always on activator ------------ */
+
+    function BaseController() {
+        this.enabled = false;
+    }
+    BaseController.prototype.setOptions = function() {};
+    BaseController.prototype.deinit = function() { this.enabled = false; };
+    BaseController.prototype.init = function() { this.enabled = true; };
+
+
+
+    return {
+
+    }
+
+})();
+    
+
+
 var habitRPG = (function(){
 
     var habitrpg = {
@@ -240,6 +262,7 @@ var habitRPG = (function(){
         goodTimeMultiplier: 0.05,
         badTimeMultiplier: 0.1,
         
+        controllers: undefined,
         activators: undefined,
         activator: undefined,
         uid: undefined,
@@ -256,6 +279,7 @@ var habitRPG = (function(){
 
             this.setActiveState();
 
+            this.controllers = Controllers;
             this.activators = Activators;
 
             for (var name in this.activators) 
@@ -286,6 +310,9 @@ var habitRPG = (function(){
 
             for (var ac in this.activators) 
                 this.activators[ac].setOptions(params);
+
+            for (var co in this.controllers) 
+                this.controllers[co].setOptions(params);
             
             this.setValue(params, 'activatorName');
             this.setActivator(this.activatorName);

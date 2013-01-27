@@ -7,13 +7,13 @@ module.exports = function(grunt) {
 		},
 		concat: {
 		background: {
-			src: ['activators.js', 'habitrpg.js', 'app.js'],
+			src: ['activators.js', 'sitewatcher.js', 'habitrpg.js', 'app.js'],
 			dest: 'background.js'
-		}
+			}
 		},
 		watch: {
 			background: {
-				files: ['activators.js', 'habitrpg.js', 'app.js', 'test/*.js'],
+				files: ['activators.js', 'sitewatcher.js', 'habitrpg.js', 'app.js', 'test/*.js'],
 				tasks: ['lint', 'jasmine', 'concat:background', 'clean:test']
 			},
 			options: {
@@ -22,7 +22,7 @@ module.exports = function(grunt) {
 			}
 		},
 		jasmine : {
-			src : ['activators.js', 'habitrpg.js'],
+			src : ['activators.js', 'sitewatcher.js', 'habitrpg.js'],
 			specs : 'test/*.js',
 			timeout : 1000
 		},
