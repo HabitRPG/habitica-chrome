@@ -1,4 +1,5 @@
 
+/* ---------------- ugly hack for testing :( ------------ */
 
 function getTestChrome() {
     var getTablist= function() {
@@ -37,6 +38,7 @@ function getTestChrome() {
 }
     
 
+
 var Activators = (function() {
 
     try {
@@ -45,11 +47,13 @@ var Activators = (function() {
         chrome = getTestChrome();
     } 
 
+    /* ---------------- Always on activator ------------ */
+
     function AlwaysonActivator() {
-        this.changeStateFn = undefined;
-        this.state = false;
+        this.state = true;
     }
-    AlwaysonActivator.prototype.setState = function() { this.changeStateFn(true); };
+    AlwaysonActivator.prototype.setOptions = function() {};
+    AlwaysonActivator.prototype.check = function() {this.changeStateFn(true);};
     AlwaysonActivator.prototype.setChangeStateFn = function(changeStateFn) { 
         this.changeStateFn = function(value) { 
             this.state = value;
@@ -58,34 +62,29 @@ var Activators = (function() {
     };
 
 
-    /*---------------- FromOptionsActivator ------------*/
+
+    /*---------------- From options activator ------------*/
 
     function FromOptionsActivator() {}
     FromOptionsActivator.prototype.setChangeStateFn = AlwaysonActivator.prototype.setChangeStateFn;
-
-    FromOptionsActivator.prototype.setState = function(value) {
-        if (value == 'true') this.changeStateFn(true);
-        else if (value == 'false') this.changeStateFn(false);
+    FromOptionsActivator.prototype.setOptions = function(params) {
+        this.value = params.isActive == 'true' ?  true : false;
+    };
+    FromOptionsActivator.prototype.check = function(value) {
+        this.changeStateFn(this.value);
     };
 
 
 
-    /*---------------- PageLinkActivator ------------*/
+    /*---------------- Page link activator ------------*/
 
-    function PageLinkActivator(url) {
-        this.url = url;
-
+    function PageLinkActivator() {
         var self = this;
-        chrome.tabs.onRemoved.addListener(function(tabId) {
-            self.pageOpened();
+        chrome.tabs.onRemoved.addListener(function() {
+            self.check();
         });
     }
     PageLinkActivator.prototype.setChangeStateFn = AlwaysonActivator.prototype.setChangeStateFn;
-
-    PageLinkActivator.prototype.setUrl = function(url) {
-        this.url = url;
-        this.pageOpened();
-    };
 
     PageLinkActivator.prototype.handleNewUrl = function(url) {
         if (!url && !this.url)
@@ -94,7 +93,11 @@ var Activators = (function() {
             this.changeStateFn(true);
     };
 
-    PageLinkActivator.prototype.pageOpened = function() {
+    PageLinkActivator.prototype.setOptions = function(params) {
+        this.url = params.watchedUrl !== undefined ? params.watchedUrl : this.url;
+    };
+
+    PageLinkActivator.prototype.check = function() {
         var self = this, host, win, tab, isOpened = false;
 
         chrome.windows.getAll({populate:true}, function(windows){
@@ -122,71 +125,87 @@ var Activators = (function() {
      /* ---------------- Days activator ------------ */
 
     function DaysActivator() {
-        this.days = undefined;
-        this.today = undefined;
-
-        this.runLookForActivationTime();
+        this.check();
     }
     DaysActivator.prototype.setChangeStateFn = AlwaysonActivator.prototype.setChangeStateFn;
     DaysActivator.dayList = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
-    DaysActivator.prototype.setDays = function(days) {
-        this.days = days;
-        this.lookForActivationTime();
+    DaysActivator.prototype.setOptions = function(params) {
+        this.days = params.days ? params.days : this.days;
     };
 
-    DaysActivator.prototype.runLookForActivationTime = function(){
+    DaysActivator.prototype.check = function(){
         var self = this;
-        this.runLookForActivationTime = function() { 
-            self.lookForActivationTime(); 
+        this.check = function() { 
+            self.setState(new Date()); 
         };
     };
 
-    DaysActivator.prototype.lookForActivationTime = function() {
-        var now = new Date();
-        var today = this.days[DaysActivator.dayList[now.getDay()-1]];
+    DaysActivator.prototype.getDayName = function(date) {
+        return DaysActivator.dayList[date.getDay() === 0 ? 6 : date.getDay()-1];
+    };
+
+    DaysActivator.prototype.getNextDayName = function(date) {
+        return DaysActivator.dayList[date.getDay() === 6 ? 0 : date.getDay()];
+    };
+
+    DaysActivator.prototype.offsetToNextStart = function(now, what) {
+        var next = this.days[this.getNextDayName(now)];
+
+        what.setDate(what.getDate() + 1);
+        what.setHours( next.start[0]);
+        what.setMinutes( next.start[1]);
+
+    };
+
+    DaysActivator.prototype.getTimeoutTime = function(now, start, end) {
+         // before today start time
+        if (now < start) {
+            this.timeoutTime = start.getTime() - now.getTime() + 100;
+            
+        } else {
+            // beyond today end time
+            if ( now > end) 
+                this.offsetToNextStart(now, end);
+            
+            this.timeoutTime = end.getTime() - now.getTime() + 100;
+        }
+
+        return this.timeoutTime;
+        
+    };    
+
+    DaysActivator.prototype.setState = function(now) {
+        var today = this.days[this.getDayName(now)], t,
+            start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), today.start[0], today.start[1]),
+            end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), today.end[0], today.end[1]);
+
+        if (start > end) {
+            t = start;
+            start = end;
+            end = t;
+        }
 
         this.changeStateFn(false);
 
-        if (today.active) {
-            var st = new Date(now.getFullYear(), now.getMonth(), now.getDate(), today.start[0], today.start[1]),
-                et = new Date(now.getFullYear(), now.getMonth(), now.getDate(), today.end[0], today.end[1]);
-                if (st > et) {
-                    var t = st;
-                    st = et;
-                    et = s;
-                }
-            // before today start time
-            if (now < st) {
-                setTimeout(this.runLookForActivationTime, st.getTime() - now.getTime() + 100);
+        if (today.active && now > start && now < end)
+                this.changeStateFn(true);
 
-            } else {
-                // beyond today end time
-                if ( now > et) {
-                    et.setDate(et.getDate() + 1);
-                    today = this.days[DaysActivator.dayList[now.getDay() > DaysActivator.dayList.length ? 0 : now.getDay()]];
-                    et.setHours( today.start[0]);
-                    et.setMinutes( today.start[1]);
-
-                } else {
-                    // between the range
-                    this.changeStateFn(true);        
-                }
-
-                setTimeout(this.runLookForActivationTime, et.getTime() - now.getTime() + 100);
-
-            }
-        }
+        else if (!today.active)
+            this.offsetToNextStart(now, start);
+        
+        setTimeout(this.check, this.getTimeoutTime(now, start, end));
     };
+
 
     /* ---------------- Return -------------------- */
 
     return {
-            'days': new DaysActivator(),
-            'webpage': new PageLinkActivator(),
-            'alwayson': new AlwaysonActivator(),
-            'fromOptions': new FromOptionsActivator()
-            };
+        'days': new DaysActivator(),
+        'webpage': new PageLinkActivator(),
+        'alwayson': new AlwaysonActivator(),
+        'fromOptions': new FromOptionsActivator()
+        };
 
 })();
 
@@ -246,17 +265,11 @@ var habitRPG = (function(){
                 if (this.sendInterval < 60000 ) this.sendInterval = 60000;
             }
 
+            for (var ac in this.activators) 
+                this.activators[ac].setOptions(params);
+            
             this.setValue(params, 'activatorName');
             this.setActivator(this.activatorName);
-
-            if (params.watchedUrl !== undefined && this.activator.setUrl)
-                this.activator.setUrl(params.watchedUrl);
-
-            else if (params.days !== undefined && this.activator.setDays)
-                this.activator.setDays(params.days);
-                        
-            if (params.isActive && this.activatorName == 'fromOptions')
-                this.activator.setState(params.isActive);            
         },
 
         setValue: function(params, name) { 
@@ -327,9 +340,7 @@ var habitRPG = (function(){
             name = this.activators[name] ? name : 'alwayson';
             this.activator = this.activators[name];
 
-            if (name == 'alwayson')
-                this.activator.setState();
-
+            this.activator.check();
         },
 
         setActiveState: function() {
@@ -382,7 +393,10 @@ var App = {
 
 	habitrpg: habitRPG,
 	invalidTransitionTypes: ['auto_subframe', 'form_submit'],
+  //storage: chrome.storage.managed,
+	storage: chrome.storage.local,
 	notificationShowTime: 4000,
+
 
 	init: function() {
 		chrome.webNavigation.onCommitted.addListener(this.navCommittedHandler);
@@ -390,11 +404,10 @@ var App = {
 		chrome.windows.onFocusChanged.addListener(this.focusChangeHandler);
 		chrome.storage.onChanged.addListener(this.setHabitRPGOptionsFromChange);
 
-		//var storage = chrome.storage.managed;
-		var storage = chrome.storage.local;
-		
-		storage.get({
+		this.storage.get({
 			uid:'',
+			days: '',
+			watchedUrl: '',
 			isActive: 'false',
 			sendInterval: '5',
 			activatorName: 'alwayon',
@@ -403,6 +416,7 @@ var App = {
 		}, this.habitrpg.setOptions);
 
 		this.habitrpg.setScoreSendedAction(this.showNotification);
+		
 	},
 
 	navCommittedHandler: function(event){
@@ -457,8 +471,9 @@ var App = {
 		var obj = {}, name;
 		for (name in params) 
 			obj[name] = params[name].newValue;
-		
+
 		App.habitrpg.setOptions(obj);
+		
 	},
 
 	showNotification: function(score, message) {

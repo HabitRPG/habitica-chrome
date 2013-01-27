@@ -54,17 +54,11 @@ var habitRPG = (function(){
                 if (this.sendInterval < 60000 ) this.sendInterval = 60000;
             }
 
+            for (var ac in this.activators) 
+                this.activators[ac].setOptions(params);
+            
             this.setValue(params, 'activatorName');
             this.setActivator(this.activatorName);
-
-            if (params.watchedUrl !== undefined && this.activator.setUrl)
-                this.activator.setUrl(params.watchedUrl);
-
-            else if (params.days !== undefined && this.activator.setDays)
-                this.activator.setDays(params.days);
-                        
-            if (params.isActive && this.activatorName == 'fromOptions')
-                this.activator.setState(params.isActive);            
         },
 
         setValue: function(params, name) { 
@@ -135,9 +129,7 @@ var habitRPG = (function(){
             name = this.activators[name] ? name : 'alwayson';
             this.activator = this.activators[name];
 
-            if (name == 'alwayson')
-                this.activator.setState();
-
+            this.activator.check();
         },
 
         setActiveState: function() {

@@ -5,7 +5,10 @@ var App = {
 
 	habitrpg: habitRPG,
 	invalidTransitionTypes: ['auto_subframe', 'form_submit'],
+  //storage: chrome.storage.managed,
+	storage: chrome.storage.local,
 	notificationShowTime: 4000,
+
 
 	init: function() {
 		chrome.webNavigation.onCommitted.addListener(this.navCommittedHandler);
@@ -13,11 +16,10 @@ var App = {
 		chrome.windows.onFocusChanged.addListener(this.focusChangeHandler);
 		chrome.storage.onChanged.addListener(this.setHabitRPGOptionsFromChange);
 
-		//var storage = chrome.storage.managed;
-		var storage = chrome.storage.local;
-		
-		storage.get({
+		this.storage.get({
 			uid:'',
+			days: '',
+			watchedUrl: '',
 			isActive: 'false',
 			sendInterval: '5',
 			activatorName: 'alwayon',
@@ -26,6 +28,7 @@ var App = {
 		}, this.habitrpg.setOptions);
 
 		this.habitrpg.setScoreSendedAction(this.showNotification);
+		
 	},
 
 	navCommittedHandler: function(event){
@@ -80,8 +83,9 @@ var App = {
 		var obj = {}, name;
 		for (name in params) 
 			obj[name] = params[name].newValue;
-		
+
 		App.habitrpg.setOptions(obj);
+		
 	},
 
 	showNotification: function(score, message) {

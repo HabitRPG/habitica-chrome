@@ -48,10 +48,6 @@ jQuery('document').ready(function(){
 
           data.days = DaySettings.getDataFromView();
           
-          // strogae.set only passthrough the really changed data
-          // so this line is a hack for the real formOptions control :(
-          if (data.activatorName != 'fromOptions') data.isActive = true;
-          
           storage.set(data, function(data) {
             $("#status").addClass('good');
             setTimeout(function() {$("#status").removeClass('good')}, 2000);
