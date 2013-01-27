@@ -2,18 +2,18 @@ module.exports = function(grunt) {
 
 	grunt.initConfig({
 		lint: {
-			background: ['test/*.js', 'habitrpg.js', 'activators.js', 'app.js']
+			background: ['test/*.js', 'src/*.js']
 
 		},
 		concat: {
 		background: {
-			src: ['activators.js', 'sitewatcher.js', 'habitrpg.js', 'app.js'],
+			src: ['src/activators.js', 'src/sitewatcher.js', 'src/habitrpg.js', 'src/app.js'],
 			dest: 'background.js'
 			}
 		},
 		watch: {
 			background: {
-				files: ['activators.js', 'sitewatcher.js', 'habitrpg.js', 'app.js', 'test/*.js'],
+				files: ['src/*.js', 'test/*.js'],
 				tasks: ['lint', 'jasmine', 'concat:background', 'clean:test']
 			},
 			options: {
@@ -22,7 +22,7 @@ module.exports = function(grunt) {
 			}
 		},
 		jasmine : {
-			src : ['activators.js', 'sitewatcher.js', 'habitrpg.js'],
+			src : ['src/activators.js', 'src/sitewatcher.js', 'src/habitrpg.js'],
 			specs : 'test/*.js',
 			timeout : 1000
 		},
