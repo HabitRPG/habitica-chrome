@@ -1,10 +1,10 @@
 
 var SiteWatcher = (function() {
-
+/*
     BaseController.prototype.setOptions = function() {};
-    BaseController.prototype.deinit = function() { this.enabled = false; };
-    BaseController.prototype.init = function() { this.enabled = true; };
-
+    BaseController.prototype.deinit = function() {  };
+    BaseController.prototype.init = function() {  };
+*/
 
     var watcher = {
 
@@ -19,21 +19,22 @@ var SiteWatcher = (function() {
         score: 0,
         timestamp: new Date().getTime(),
 
-        parent: undefined,
+        bridge: undefined,
         activators: undefined,
         activator: undefined,
 
-        init: function(parent) {
+        init: function(bridge) {
 
-            this.parent = parent;
+            this.bridge = bridge;
             this.activators = Activators;
 
             for (var name in this.activators) 
-                this.activators[name].setChangeStateFn(this.setActiveState);
+                this.activators[name].setChangeStateFn(this.controllSendingState);
 
             this.activator = this.activators.alwaysoff;
 
-            this.send();
+            this.bridge.addEventListener('newUrl', this.checkNewUrl);
+            
         },
 
         setOptions: function(params) {
@@ -70,22 +71,6 @@ var SiteWatcher = (function() {
             this.activator.init();
         },
 
-        checkNewPage: function(url) {
-            
-            var host = url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1');
-            
-            if (host == this.host) return;
-            this.host = host;
-
-            if (this.activator.handleNewUrl) 
-                this.activator.handleNewUrl(url);
-
-            if (!this.activator.getState()) return;
-
-            this.addScoreFromSpentTime(this.getandResetSpentTime());
-
-        },
-
         addScoreFromSpentTime: function(spentTime) {
             var score = 0;
             if (this.goodHosts.indexOf(this.host) != -1)
@@ -104,32 +89,44 @@ var SiteWatcher = (function() {
             return spent * 0.001 / 60;
         },
 
-        send: function() {
+        checkNewUrl: function(url) {
+            
+            var host = url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1');
+            
+            if (host == watcher.host) return;
+            watcher.host = host;
 
-            var self = this;
+            if (watcher.activator.handleNewUrl) 
+                watcher.activator.handleNewUrl(url);
 
-            this.send = function() {
-                self.addScoreFromSpentTime(self.getandResetSpentTime());
+            if (!watcher.activator.getState()) return;
 
-                if (self.score !== 0) {
-                    self.parent.send(self.urlPrefix+(self.score < 0 ? 'down' : 'up'), self.score);
-                }
-            }
+            watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
+            
         },
 
-        setActiveState: function() {
-            var self = this;
+        send: function() {
 
-            this.setActiveState = function(value) {
-                if (!value) {
-                    self.send();
-                    self.turnOffTheSender();
-                } else if (value) {
-                    if (self.uid) {
-                        self.turnOnTheSender();
-                    }
-                }
-            };
+            watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
+
+            if (watcher.score !== 0) 
+                watcher.bridge.triggerEvent('sendRequest', {
+                    urlSuffix: watcher.urlPrefix+(watcher.score < 0 ? 'down' : 'up'), 
+                    score: watcher.score 
+                });
+        },
+
+        controllSendingState: function(value) {
+
+            if (!value) {
+                watcher.send();
+                watcher.turnOffTheSender();
+
+            } else if (value) {
+                watcher.turnOnTheSender();
+                
+            }
+            
         },
 
         turnOnTheSender: function() {
@@ -144,8 +141,8 @@ var SiteWatcher = (function() {
     }
 
     return {
-        checkNewPage: watcher.checkNewPage,
         getScore: function() { return watcher.score; },
+        checkNewPage: function() { return watcher.checkNewPage; },
         isActive: function() { return watcher.activator.getState(); }
     }
 

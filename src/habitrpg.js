@@ -1,7 +1,18 @@
 
 var habitRPG = (function(){
 
-    var habitrpg = {
+    var returnObj = {
+        get: function() { return habitrpg; },
+        newUrl: function(url) { habitrpg.newUrl(url); },
+        setOptions: function(params) { habitrpg.setOptions(params); },
+        setScoreSendedAction: function(callback) { habitrpg.setScoreSendedAction(callback); }
+    }, 
+    controllerBridge = {
+        triggerEvent: function(type, fn) { habitrpg.triggerEvent(type, data); },
+        addEventListener: function(type, fn) { habitrpg.addEventListener(type, fn); },
+        removeEventListener: function(type, fn) { habitrpg.removeEventListener(type, fn); },
+    },
+    habitrpg = {
 
         isSandBox: true,
 
@@ -14,6 +25,8 @@ var habitRPG = (function(){
         habitUrl: '',
         sourceHabitUrl: "https://habitrpg.com/users/{UID}/",
 
+        events: { },
+
         init: function() {
 
             this.controllers = {
@@ -21,8 +34,9 @@ var habitRPG = (function(){
             };
 
             for (var name in this.controllers) 
-                this.controllers[name].init(this);
+                this.controllers[name].init(controllerBridge);
         
+            this.addEventListener('sendRequest', this.send);
         },
 
         setOptions: function(params) {
@@ -39,19 +53,21 @@ var habitRPG = (function(){
             
         },
 
-        send: function(urlSuffix, score, message) {
+        newUrl: function(url) { this.triggerEvent('newUrl', url); },
+
+        send: function(data) {
    
-            if (this.isSandBox) {
-                if (this.scoreSendedAction)
-                    this.scoreSendedAction(score, message);
+            if (habitrpg.isSandBox) {
+                habitrpg.scoreSendedAction(data.score, data.message);
+
             } else {
                 
                 $.ajax({
                     type: 'POST',
-                    url: this.habitUrl + urlSuffix;
+                    url: habitrpg.habitUrl + data.urlSuffix;
                     
                 }).done(function(){
-                    habitrpg.scoreSendedAction(score, message);
+                    habitrpg.scoreSendedAction(data.score, data.message);
                 });
             }
             
@@ -59,17 +75,40 @@ var habitRPG = (function(){
 
         setScoreSendedAction: function(scoreSendedAction) {
             this.scoreSendedAction = scoreSendedAction;
+        },
+
+        removeEventListener: function(type, fn) {
+            if (!this.events[type]) return;
+
+            var index = this.events[type].indexOf(fn);
+
+            if (!index == -1) return;
+
+            this.events[type].slice(index, 1);
+
+        },
+
+        addEventListener: function(type, fn) {
+            if (!this.events[type])
+                this.events[type] = [];
+
+            if (this.events[type].indexOf(fn) != -1 ) return;
+
+            this.events.push(fn);
+        },
+
+        triggerEvent: function(type, data) {
+            if (!this.events[type]) return;
+
+            var listeners = this.events[type];
+            for (var i=0,len=listeners.length;i<len;i++)
+                listeners.apply(controllerBridge, [data])
+            
         }
     };
 
     habitrpg.init();
 
-    return {
-        get: function() { return habitrpg; },
-        sendTo: habitrpg.sendTo, 
-        setOptions: habitrpg.setOptions,
-        checkNewPage: habitrpg.sitewatcher.checkNewPage,
-        setScoreSendedAction: habitrpg.setScoreSendedAction(callback)
-    };
+    return returnObj;
 
 })();

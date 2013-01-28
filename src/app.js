@@ -33,7 +33,7 @@ var App = {
 
 	navCommittedHandler: function(event){
 		if (App.hasFocus && App.activeTabId == event.tabId && App.invalidTransitionTypes.indexOf(event.transitionType) == -1) {
-			App.habitrpg.checkNewPage(App.catchSpecURL(event.url));
+			App.habitrpg.newUrl(App.catchSpecURL(event.url));
 		}
 	},
 
@@ -42,7 +42,7 @@ var App = {
 		try { 
 			chrome.tabs.get(event.tabId, function(tab){
 				App.activeTabId = tab.id;
-				App.habitrpg.checkNewPage(App.catchSpecURL(tab.url));
+				App.habitrpg.newUrl(App.catchSpecURL(tab.url));
 
 			});
 		} catch (e) {
@@ -58,13 +58,13 @@ var App = {
 
 		if (!win.focused) {
 			App.hasFocus = false;
-			App.habitrpg.checkNewPage('');
+			App.habitrpg.newUrl('');
 
 		} else {
 			App.hasFocus = true;
 			for (var i in win.tabs) {
 				if (win.tabs[i].active) {
-					App.habitrpg.checkNewPage(App.catchSpecURL(win.tabs[i].url));
+					App.habitrpg.newUrl(App.catchSpecURL(win.tabs[i].url));
 					break;
 				}
 			}
