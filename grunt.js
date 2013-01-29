@@ -7,8 +7,12 @@ module.exports = function(grunt) {
 		},
 		concat: {
 			background: {
-				src: ['src/utilies.js', 'src/activators.js', 'src/sitewatcher.js', 'src/habitrpg.js', 'src/app.js'],
+				src: ['src/defaults.js', 'src/utilies.js', 'src/activators.js', 'src/sitewatcher.js', 'src/habitrpg.js', 'src/app.js'],
 				dest: 'background.js'
+			},
+			options: {
+				src: ['src/defaults.js', 'src/options.js'],
+				dest: 'options.js'
 			}
 		},
 		watch: {
@@ -18,7 +22,7 @@ module.exports = function(grunt) {
 			},
 			options: {
 				files: ['options.js', 'options.html'],
-				tasks: ['concat:background', 'copy:extension']
+				tasks: ['concat:options', 'concat:background', 'copy:extension']
 			}
 		},
 		jasmine : {
@@ -40,7 +44,7 @@ module.exports = function(grunt) {
 
 	grunt.loadNpmTasks('grunt-jasmine-runner');
 
-	grunt.registerTask('create', ['concat:background', 'copy:extension']);
+	grunt.registerTask('create', ['concat:options', 'concat:background', 'copy:extension']);
 
 	grunt.registerTask('default', 'create');
 	

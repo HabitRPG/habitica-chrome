@@ -32,7 +32,7 @@ var SiteWatcher = (function() {
             this.activators = Activators;
 
             for (var name in this.activators) 
-                this.activators[name].init(dispatcher);
+                this.activators[name].init(this.dispatcher);
 
             this.activator = this.activators.alwaysoff;
         },

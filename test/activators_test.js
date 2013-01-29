@@ -55,6 +55,78 @@ describe('Activators', function(){
 
     });
 
+    describe('Page link', function(){
+
+        var activator = Activators.webpage,
+            urls = ['http://habitrpg.com/', 'http://gruntjs.com', 'http://github.com', 'http://facebook.com', 'http://9gag.com'];
+            
+
+        beforeEach(function(){
+            bridge = new utilies.EventDispatcher();
+            activator.init(bridge);
+            bridge.addListener('getAllUrl', function(){ bridge.trigger('allUrlGetted', urls); });
+        });
+
+        it ('Watch for set options call', function(){
+            activator.disable();
+
+            activator.setOptions({watchedHost: 'http://habitrpg.com'});
+            expect(activator.state).toBe(false);
+
+            activator.enable();
+            expect(activator.state).toBe(true);
+            
+            activator.setOptions({watchedHost: 'http://asdyxc.com'});
+            expect(activator.state).toBe(false);
+            
+            activator.disable();
+        });
+
+        it('Only activation for new url', function(){
+            activator.enable();
+
+            urls.push('http://phantomjs.org');            
+
+            bridge.trigger('newHost', 'http://asdyxc.com');
+            expect(activator.state).toBe(false);
+
+            activator.setOptions({watchedHost: 'http://phantomjs.org'});
+            expect(activator.state).toBe(true);
+
+            activator.disable();
+            bridge.trigger('newHost', 'http://phantomjs.org');
+            expect(activator.state).toBe(false);
+
+            activator.enable();
+            bridge.trigger('newHost', 'http://phantomjs.org');
+            expect(activator.state).toBe(true);
+
+            activator.disable();
+        });
+
+        it ('Deactivation only if the windows not have any tab with the watched url', function() {
+            activator.setOptions({watchedHost: 'http://habitrpg.com'});
+            activator.enable();
+
+            expect(activator.state).toBe(true);
+            urls.splice(0, 1);
+            bridge.trigger('closedHost', 'http://habitrpg.com');
+            expect(activator.state).toBe(false);
+
+            activator.setOptions({watchedHost: 'http://gruntjs.com'});
+            bridge.trigger('closedHost', 'http://gruntjs.com');
+            expect(activator.state).toBe(true);
+
+            activator.disable();
+
+            activator.setOptions({watchedHost: 'http://gruntjs.com'});
+            bridge.trigger('closedHost', 'http://gruntjs.com');
+            expect(activator.state).toBe(false);
+
+        });
+
+    });
+
     describe('Days ans Hours', function(){
 
         var activator = Activators.days,
@@ -180,69 +252,6 @@ describe('Activators', function(){
                 expect(activator.timeoutTime).toBe(new Date(2013, 0, 28, 1) - sunday.getTime() + 100);
 
             });
-
-        });
-
-    });
-
-    describe('Page link', function(){
-
-        var activator = Activators.webpage,
-            urls = ['http://habitrpg.com/', 'http://gruntjs.com', 'http://github.com', 'http://facebook.com', 'http://9gag.com'];
-            
-
-        //beforeEach(function(){
-          //  bridge = new utilies.EventDispatcher();
-            activator.init(bridge);
-        //});
-
-        bridge.addListener('getAllUrl', function(){ bridge.trigger('allUrlGetted', urls); });
-
-        it ('Watch for set options call', function(){
-  
-            activator.setOptions({watchedUrl: 'http://habitrpg.com'});
-            expect(activator.state).toBe(false);
-
-            activator.enable();
-            expect(activator.state).toBe(true);
-            
-            activator.setOptions({watchedUrl: 'http://asdyxc.com'});
-            expect(activator.state).toBe(false);
-  
-        });
-
-        it('Only activation for new url', function(){
-
-            expect(activator.state).toBe(false);
-
-            activator.setOptions({watchedUrl: 'http://phantomjs.org'});
-            expect(activator.state).toBe(false);
-
-            activator.handleNewHost('http://phantomjs.org');
-            expect(activator.state).toBe(true);
-
-            activator.handleNewHost('http://asdyxc.com');
-            expect(activator.state).toBe(true);
-        });
-
-        it ('Deactivation only if the windows not have any tab with the watched url', function(){
-
-            expect(activator.state).toBe(true);
-            //chrome.tabs.onRemoved.trigger();
-            expect(activator.state).toBe(false);
-
-            activator.handleNewHost('http://phantomjs.org');
-            urls.push('http://phantomjs.org');
-
-            activator.disable();
-            //chrome.tabs.onRemoved.trigger();
-            expect(activator.state).toBe(false);
-
-            activator.enable();
-            //chrome.tabs.onRemoved.trigger();
-            expect(activator.state).toBe(true);
-
-            activator.disable();
 
         });
 

@@ -1,3 +1,42 @@
+var defaultOptions = {
+      uid:'',
+      watchedHost: '',
+      sendInterval: '5',
+      activatorName: 'alwayon',
+      siteWatcherIsActive: 'true',
+      viceDomains: 'reddit.com\n9gag.com\nfacebook.com',
+      goodDomains: 'lifehacker.com\ncodeacadamy.com\nkhanacadamy.org',
+      days: {
+          'Monday': { 
+              active: true,
+              start: [8,0], end: [16,30]
+            },
+          'Tuesday': { 
+              active: true,
+              start: [8,0], end: [16,30]
+            },
+          'Wednesday': { 
+              active: true,
+              start: [8,0], end: [16,30]
+            },
+          'Thursday': { 
+              active: true,
+              start: [8,0], end: [16,30]
+            },
+          'Friday': { 
+              active: true,
+              start: [8,0], end: [16,30]
+            },
+          'Saturday': { 
+              active: false,
+              start: [8,0], end: [16,30]
+            },
+          'Sunday': { 
+              active: false,
+              start: [8,0], end: [16,30]
+            }
+        }
+    };
 
 var utilies = (function(){
 
@@ -44,53 +83,7 @@ var utilies = (function(){
 
 })();
 
-/* ---------------- ugly hack for testing :( ------------ */
-
-function getTestChrome() {
-    var getTablist= function() {
-            var tabs = [],
-                arr = typeof arguments[0] == 'object' ? arguments[0] : arguments;
-
-            for (var i=0;i<arguments.length;i++)
-                tabs.push({url: arr[i]});
-            
-            return tabs;
-        },
-        getWinList= function() {
-            var wins = [];
-            
-            for (var i=0;i<arguments.length;i++) {
-                wins.push({tabs:getTablist(arguments[i])});
-            }
-
-            return wins;
-        },
-        wins = getWinList(['http://habitrpg.com/', 'http://gruntjs.com', 'http://github.com'], ['http://facebook.com', 'http://9gag.com']);
-
-    return {
-        getTablist: getTablist,
-        getWinList: getWinList,
-        wins: wins,
-        tabs: {
-            onRemoved: {
-                addListener : function(fn) { this.trigger = fn; }
-                }
-            },
-        windows: {
-            getAll: function(opt, fn) { fn(wins); }
-            }
-    };
-}
-    
-
-
 var Activators = (function() {
-
-    try {
-        if (chrome) var alma = null;
-    } catch(e) {
-        chrome = getTestChrome();
-    } 
 
     /* ---------------- Always on activator ------------ */
 
@@ -133,21 +126,23 @@ var Activators = (function() {
         this.bridge.addListener('closedHost', this.handleClosedHost);
         // todo implement the trigger's
         this.bridge.addListener('allUrlGetted', this.seachForHost);
-
+        
         this.check();
     };
     PageLinkActivator.prototype.disable = function() {
+        this.state = false;
         this.bridge.removeListener('newHost', this.handleNewHost);
         this.bridge.removeListener('closedHost', this.handleClosedHost);
 
         this.bridge.removeListener('allUrlGetted', this.seachForHost);
     };
     PageLinkActivator.prototype.setOptions = function(params) {
-        this.host = params.watchedUrl !== undefined ? params.watchedUrl : this.host;
+        this.host = params.watchedHost !== undefined ? params.watchedHost : this.host;
         if (this.bridge.hasListener('newHost', this.handleNewHost)) this.check();
     };
 
     PageLinkActivator.prototype.check = function() {
+
         this.handleClosedHost(this.host);
     };
 
@@ -172,9 +167,9 @@ var Activators = (function() {
         var self = this;
         this.seachForHost = function(urls) {
             for (var i=0,len=urls.length;i<len;i++) {
-                 if (urls[i].indexOf(self.url) === 0) {
+                 if (urls[i].indexOf(self.host) === 0) {
                     self.setState(true);
-                    break;
+                    return;
                  }
             }
 
@@ -311,7 +306,7 @@ var SiteWatcher = (function() {
             this.activators = Activators;
 
             for (var name in this.activators) 
-                this.activators[name].init(dispatcher);
+                this.activators[name].init(this.dispatcher);
 
             this.activator = this.activators.alwaysoff;
         },

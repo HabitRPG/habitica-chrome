@@ -46,13 +46,14 @@ var Activators = (function() {
         this.check();
     };
     PageLinkActivator.prototype.disable = function() {
+        this.state = false;
         this.bridge.removeListener('newHost', this.handleNewHost);
         this.bridge.removeListener('closedHost', this.handleClosedHost);
 
         this.bridge.removeListener('allUrlGetted', this.seachForHost);
     };
     PageLinkActivator.prototype.setOptions = function(params) {
-        this.host = params.watchedUrl !== undefined ? params.watchedUrl : this.host;
+        this.host = params.watchedHost !== undefined ? params.watchedHost : this.host;
         if (this.bridge.hasListener('newHost', this.handleNewHost)) this.check();
     };
 
@@ -82,9 +83,9 @@ var Activators = (function() {
         var self = this;
         this.seachForHost = function(urls) {
             for (var i=0,len=urls.length;i<len;i++) {
-                 if (urls[i].indexOf(self.url) === 0) {
+                 if (urls[i].indexOf(self.host) === 0) {
                     self.setState(true);
-                    break;
+                    return;
                  }
             }
 
