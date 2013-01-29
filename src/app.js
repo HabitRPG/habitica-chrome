@@ -1,25 +1,56 @@
 var App = {
 
-	activeTabId: -1,
+	appTest: -1, // -1 without habitrpg; +1 with habitrpg; 0 nothing logged from the app
+
+	tabs: {},
+	activeUrl: '',
 	hasFocus: true,
 
 	habitrpg: habitRPG,
 	invalidTransitionTypes: ['auto_subframe', 'form_submit'],
+
   //storage: chrome.storage.managed,
 	storage: chrome.storage.local,
+
 	notificationShowTime: 4000,
 
 	dispatcher: new utilies.EventDispatcher(),
 
 	init: function() {
-		chrome.webNavigation.onCommitted.addListener(this.navCommittedHandler);
+
+		this.dispatcher.addListener('sended', this.showNotification);
+		this.dispatcher.addListener('newUrl', function(url){App.activeUrl = url; });
+
+		if (this.appTest > 0) {
+			this.createLogger();
+			App.habitrpg.init(this.dispatcher);
+
+		} else if (this.appTest < 0)
+			this.createLogger();
+
+		else 
+			App.habitrpg.init(this.dispatcher);
+
+		chrome.tabs.onCreated.addListener(this.tabCreatedHandler);
+		chrome.tabs.onUpdated.addListener(this.tabUpdatedHandler);
+		chrome.tabs.onRemoved.addListener(this.tabRemovedHandler);
 		chrome.tabs.onActivated.addListener(this.tabActivatedHandler);
-		chrome.windows.onFocusChanged.addListener(this.focusChangeHandler);
+		chrome.webNavigation.onCommitted.addListener(this.navCommittedHandler);
+
+		chrome.windows.onFocusChanged.addListener(this.focusChangeHandler);		
 		chrome.storage.onChanged.addListener(this.setHabitRPGOptionsFromChange);
 
-		habitrpg.init(this.dispatcher);
+		chrome.windows.getAll({populate:true}, function(windows){
+            for (var wi in windows) {
+                win = windows[wi];
+                for (var ti in win.tabs) {
+                    tab = win.tabs[ti];
+                    App.tabs[tab.id] = tab;
+                }
+            }
+        });
 
-		this.storage.get({
+        this.storage.get({
 			uid:'',
 			days: '',
 			watchedUrl: '',
@@ -31,26 +62,39 @@ var App = {
 
 		}, function(data){ App.dispatcher.trigger('optionsChanged', data); });
 
-		this.dispatcher.addListener('sended', this.showNotification);
-		
 	},
 
-	navCommittedHandler: function(event){
-		if (App.hasFocus && App.activeTabId == event.tabId && App.invalidTransitionTypes.indexOf(event.transitionType) == -1) {
-			App.dispatcher.trigger('newUrl', App.catchSpecURL(event.url));
+	navCommittedHandler: function(tab){
+		App.tabs[tab.id] = tab;
+		if (App.hasFocus && tab.active && tab.url && App.invalidTransitionTypes.indexOf(tab.transitionType) == -1) {
+			App.dispatcher.trigger('newUrl', App.catchSpecURL(tab.url));
+			App.activeUrl = tab.url;
 		}
 	},
 
+	tabCreatedHandler: function(tab) {
+		App.tabs[tab.id] = tab;
+		App.tabUpdatedHandler(undefined, undefined, tab);
+	},
+
+	tabUpdatedHandler: function(id, changed, tab) {
+		if (App.hasFocus && tab.active && tab.url && App.activeUrl != tab.url) {
+			App.dispatcher.trigger('newUrl', App.catchSpecURL(tab.url));
+			App.activeUrl = tab.url;
+		}
+	},
+
+	// This event fired after the remove action, so we forced to store the tabs
+	tabRemovedHandler: function(tabId) {
+		App.dispatcher.trigger('closedUrl', App.catchSpecURL(App.tabs[tabId].url));
+    	delete App.tabs[tabId];
+	},
+	
 	tabActivatedHandler: function(event) {
-		// TODO: find out why not find the event tabID...
-		try { 
-			chrome.tabs.get(event.tabId, function(tab){
-				App.activeTabId = tab.id;
-				App.dispatcher.trigger('newUrl', App.catchSpecURL(event.url));
-
-			});
-		} catch (e) {
-
+		var tab = App.tabs[event.tabId];
+		if (tab) {
+			App.activeUrl = tab.url;
+			App.dispatcher.trigger('newUrl', App.catchSpecURL(tab.url));
 		}
 	},
 
@@ -67,8 +111,9 @@ var App = {
 		} else {
 			App.hasFocus = true;
 			for (var i in win.tabs) {
-				if (win.tabs[i].active) {
-					App.dispatcher.trigger('newUrl', App.catchSpecURL(win.tabs[i].url));
+				var url = win.tabs[i].url;
+				if (win.tabs[i].active && App.activeUrl != url) {
+					App.dispatcher.trigger('newUrl', App.catchSpecURL(url));
 					break;
 				}
 			}
@@ -76,7 +121,7 @@ var App = {
 	},
 
 	catchSpecURL: function(url) {
-		
+
 		if (url.indexOf('chrome-devtools') === 0)
 			url = 'chrome-devtools';
 
@@ -88,7 +133,7 @@ var App = {
 		for (name in params) 
 			obj[name] = params[name].newValue;
 
-		App.bridge.trigger('optionsChanged', obj);
+		App.dispatcher.trigger('optionsChanged', obj);
 		
 	},
 
@@ -103,7 +148,12 @@ var App = {
 		);
 		notification.show();
 		setTimeout(function(){notification.close();}, App.notificationShowTime);
+	},
 
+	createLogger: function() {
+		this.dispatcher.addListener('newUrl', function(url) {console.log('new: '+url); });
+		this.dispatcher.addListener('optionsChanged', function(data){ console.log(data); });
+		this.dispatcher.addListener('closedUrl', function(url) { console.log('closed: '+url);});
 	}
 };
 
