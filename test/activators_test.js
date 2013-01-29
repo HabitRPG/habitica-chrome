@@ -2,9 +2,7 @@
 
 describe('Activators', function(){
 
-    var fn = function(){};
-    for (var name in Activators) 
-        Activators[name].setChangeStateFn(fn);
+    var bridge = new utilies.EventDispatcher();
 
     describe('Always', function(){
 
@@ -13,29 +11,25 @@ describe('Activators', function(){
 
         it ('State is always true', function(){
 
-            activatorTrue.init();
-            activatorTrue.setOptions('true');
-            activatorTrue.check();
-            expect(activatorTrue.getState()).toBe(true);
+            expect(activatorTrue.state).toBe(true);
 
-            activatorTrue.setOptions('false');
-            activatorTrue.check();
-            expect(activatorTrue.getState()).toBe(true);
-            activatorTrue.deinit();
+            activatorTrue.enable();
+            expect(activatorTrue.state).toBe(true);
+
+            activatorTrue.disable();
+            expect(activatorTrue.state).toBe(true);
            
         });
 
         it ('State is always false', function(){
 
-            activatorFalse.init();
-            activatorFalse.setOptions('true');
-            activatorFalse.check();
-            expect(activatorFalse.getState()).toBe(false);
+            expect(activatorTrue.state).toBe(true);
 
-            activatorFalse.setOptions('false');
-            activatorFalse.check();
-            expect(activatorFalse.getState()).toBe(false);
-            activatorFalse.deinit();
+            activatorTrue.enable();
+            expect(activatorTrue.state).toBe(true);
+
+            activatorTrue.disable();
+            expect(activatorTrue.state).toBe(true);
            
         });
 
@@ -47,75 +41,16 @@ describe('Activators', function(){
 
         it ('The activator state handled outside', function(){
 
-            activator.init();
-            activator.setOptions({isActive: 'true'});
-            activator.check();
-            expect(activator.getState()).toBe(true);
+            activator.init(bridge);
+
+            expect(activator.state).toBe(false);
+
+            activator.setOptions({isActive:'true'});
+            expect(activator.state).toBe(true);
 
             activator.setOptions({isActive: 'false'});
-            activator.check();
-            expect(activator.getState()).toBe(false);
-            activator.deinit();
+            expect(activator.state).toBe(false);
             
-        });
-
-    });
-
-    describe('Page link', function(){
-
-        var activator = Activators.webpage;
-
-        it ('Watch for setUrl call', function(){
-  
-
-            activator.setOptions({watchedUrl: 'http://habitrpg.com'});
-            activator.check();
-            expect(activator.getState()).toBe(false);
-
-            activator.init();
-            activator.check();
-            expect(activator.getState()).toBe(true);
-            
-            activator.setOptions({watchedUrl: 'http://asdyxc.com'});
-            activator.check();
-            expect(activator.getState()).toBe(false);
-  
-        });
-
-        it('Only activation for new url', function(){
-
-            expect(activator.getState()).toBe(false);
-
-            activator.setOptions({watchedUrl: 'http://phantomjs.org'});
-            activator.check();
-            expect(activator.getState()).toBe(false);
-
-            activator.handleNewUrl('http://phantomjs.org');
-            expect(activator.getState()).toBe(true);
-
-            activator.handleNewUrl('http://asdyxc.com');
-            expect(activator.getState()).toBe(true);
-        });
-
-        it ('Deactivation only if the windows not have any tab with the watched url', function(){
-
-            expect(activator.getState()).toBe(true);
-            chrome.tabs.onRemoved.trigger();
-            expect(activator.getState()).toBe(false);
-
-            activator.handleNewUrl('http://phantomjs.org');
-            chrome.wins[1].tabs.push({url:'http://phantomjs.org'});
-
-            activator.deinit();
-            chrome.tabs.onRemoved.trigger();
-            expect(activator.getState()).toBe(false);
-
-            activator.init();
-            chrome.tabs.onRemoved.trigger();
-            expect(activator.getState()).toBe(true);
-
-            activator.deinit();
-
         });
 
     });
@@ -135,6 +70,7 @@ describe('Activators', function(){
             },
             dayList = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
+        activator.init(bridge);
         activator.setOptions({days:days});
 
         beforeEach(function(){
@@ -145,8 +81,6 @@ describe('Activators', function(){
             sunday = new Date(2013, 0, 27, 6);
             sundayStart = new Date(2013, 0, 27, 7);
             sundayEnd = new Date(2013, 0, 27, 14);
-
-            activator.init();
 
         });
 
@@ -209,12 +143,12 @@ describe('Activators', function(){
 
             it('Before start', function(){
                 
-                activator.setState(monday);
-                expect(activator.getState()).toBe(false);
+                activator.checkDate(monday);
+                expect(activator.state).toBe(false);
                 expect(activator.timeoutTime).toBe(mondayStart.getTime() - monday.getTime() + 100);
 
-                activator.setState(sunday);
-                expect(activator.getState()).toBe(false);
+                activator.checkDate(sunday);
+                expect(activator.state).toBe(false);
                 expect(activator.timeoutTime).toBe(new Date(2013, 0, 28, 1) - sunday.getTime() + 100);
 
             });
@@ -222,13 +156,13 @@ describe('Activators', function(){
             it('After start before End', function(){
                 
                 monday.setHours(2);
-                activator.setState(monday);
-                expect(activator.getState()).toBe(true);
+                activator.checkDate(monday);
+                expect(activator.state).toBe(true);
                 expect(activator.timeoutTime).toBe(mondayEnd.getTime() - monday.getTime() + 100);
 
                 sunday.setHours(13);
-                activator.setState(sunday);
-                expect(activator.getState()).toBe(false);
+                activator.checkDate(sunday);
+                expect(activator.state).toBe(false);
                 expect(activator.timeoutTime).toBe(new Date(2013, 0, 28, 1) - sunday.getTime() + 100);
 
             });
@@ -236,16 +170,79 @@ describe('Activators', function(){
             it('After end', function(){
 
                 monday.setHours(9);
-                activator.setState(monday);
-                expect(activator.getState()).toBe(false);
+                activator.checkDate(monday);
+                expect(activator.state).toBe(false);
                 expect(activator.timeoutTime).toBe(new Date(2013, 0, 22, 2) - monday.getTime() + 100);
 
                 sunday.setHours(22);
-                activator.setState(sunday);
-                expect(activator.getState()).toBe(false);
+                activator.checkDate(sunday);
+                expect(activator.state).toBe(false);
                 expect(activator.timeoutTime).toBe(new Date(2013, 0, 28, 1) - sunday.getTime() + 100);
 
             });
+
+        });
+
+    });
+
+    describe('Page link', function(){
+
+        var activator = Activators.webpage,
+            urls = ['http://habitrpg.com/', 'http://gruntjs.com', 'http://github.com', 'http://facebook.com', 'http://9gag.com'];
+            
+
+        //beforeEach(function(){
+          //  bridge = new utilies.EventDispatcher();
+            activator.init(bridge);
+        //});
+
+        bridge.addListener('getAllUrl', function(){ bridge.trigger('allUrlGetted', urls); });
+
+        it ('Watch for set options call', function(){
+  
+            activator.setOptions({watchedUrl: 'http://habitrpg.com'});
+            expect(activator.state).toBe(false);
+
+            activator.enable();
+            expect(activator.state).toBe(true);
+            
+            activator.setOptions({watchedUrl: 'http://asdyxc.com'});
+            expect(activator.state).toBe(false);
+  
+        });
+
+        it('Only activation for new url', function(){
+
+            expect(activator.state).toBe(false);
+
+            activator.setOptions({watchedUrl: 'http://phantomjs.org'});
+            expect(activator.state).toBe(false);
+
+            activator.handleNewHost('http://phantomjs.org');
+            expect(activator.state).toBe(true);
+
+            activator.handleNewHost('http://asdyxc.com');
+            expect(activator.state).toBe(true);
+        });
+
+        it ('Deactivation only if the windows not have any tab with the watched url', function(){
+
+            expect(activator.state).toBe(true);
+            //chrome.tabs.onRemoved.trigger();
+            expect(activator.state).toBe(false);
+
+            activator.handleNewHost('http://phantomjs.org');
+            urls.push('http://phantomjs.org');
+
+            activator.disable();
+            //chrome.tabs.onRemoved.trigger();
+            expect(activator.state).toBe(false);
+
+            activator.enable();
+            //chrome.tabs.onRemoved.trigger();
+            expect(activator.state).toBe(true);
+
+            activator.disable();
 
         });
 

@@ -96,109 +96,114 @@ var Activators = (function() {
 
     function AlwaysActivator(value) {
         this.state = value;
-        this.enabled = false;
     }
-    AlwaysActivator.prototype.setOptions = function() {};
-    AlwaysActivator.prototype.deinit = function() { this.enabled = false; };
-    AlwaysActivator.prototype.init = function() { this.enabled = true; this.check(); };
-    AlwaysActivator.prototype.check = function() { this.changeStateFn(this.state); };
-    AlwaysActivator.prototype.getState = function() { return this.enabled ? this.state : false; };
-    AlwaysActivator.prototype.setChangeStateFn = function(changeStateFn) { 
-        this.changeStateFn = function(value) {
-            if (this.enabled) {
-                changeStateFn(value);
-                this.state = value;
-            }
-        }; 
+    AlwaysActivator.prototype.init = function(bridge) { this.bridge = bridge; };
+    AlwaysActivator.prototype.enable = function() { };
+    AlwaysActivator.prototype.disable = function() { };
+    AlwaysActivator.prototype.setOptions = function() { };
+    AlwaysActivator.prototype.setState = function(value) { 
+        this.state = value;
+        this.bridge.trigger('changed', this.state);
     };
-
-
+    
 
     /*---------------- From options activator ------------*/
 
     function FromOptionsActivator() { this.state = false; }
     FromOptionsActivator.prototype.init = AlwaysActivator.prototype.init;
-    FromOptionsActivator.prototype.deinit = AlwaysActivator.prototype.deinit;
-    FromOptionsActivator.prototype.getState = AlwaysActivator.prototype.getState;
-    FromOptionsActivator.prototype.setChangeStateFn = AlwaysActivator.prototype.setChangeStateFn;
+    FromOptionsActivator.prototype.enable = AlwaysActivator.prototype.enable;
+    FromOptionsActivator.prototype.disable = AlwaysActivator.prototype.disable;
+    FromOptionsActivator.prototype.setState = AlwaysActivator.prototype.setState;
     FromOptionsActivator.prototype.setOptions = function(params) {
-        this.state = params.isActive == 'true' ?  true : false;
+        this.setState(params.isActive == 'true');
     };
-    FromOptionsActivator.prototype.check = function() {
-        this.changeStateFn(this.state);
-    };
-
-
 
     /*---------------- Page link activator ------------*/
 
     function PageLinkActivator() {
         this.state = false;
-        var self = this;
-        chrome.tabs.onRemoved.addListener(function() { self.check(); });
+        this.seachForHost();
+        this.handleNewHost();
+        this.handleClosedHost();
     }
     PageLinkActivator.prototype.init = AlwaysActivator.prototype.init;
-    PageLinkActivator.prototype.deinit = AlwaysActivator.prototype.deinit;
-    PageLinkActivator.prototype.getState = AlwaysActivator.prototype.getState;
-    PageLinkActivator.prototype.setChangeStateFn = AlwaysActivator.prototype.setChangeStateFn;
+    PageLinkActivator.prototype.setState = AlwaysActivator.prototype.setState;
+    PageLinkActivator.prototype.enable = function() {
+        this.bridge.addListener('newHost', this.handleNewHost);
+        this.bridge.addListener('closedHost', this.handleClosedHost);
+        // todo implement the trigger's
+        this.bridge.addListener('allUrlGetted', this.seachForHost);
 
-    PageLinkActivator.prototype.handleNewUrl = function(url) {
-        if (!url && !this.url)
-            this.changeStateFn(true);
-        else if (url && this.url && this.url.indexOf(url) === 0)
-            this.changeStateFn(true);
+        this.check();
     };
+    PageLinkActivator.prototype.disable = function() {
+        this.bridge.removeListener('newHost', this.handleNewHost);
+        this.bridge.removeListener('closedHost', this.handleClosedHost);
 
+        this.bridge.removeListener('allUrlGetted', this.seachForHost);
+    };
     PageLinkActivator.prototype.setOptions = function(params) {
-        this.url = params.watchedUrl !== undefined ? params.watchedUrl : this.url;
+        this.host = params.watchedUrl !== undefined ? params.watchedUrl : this.host;
+        if (this.bridge.hasListener('newHost', this.handleNewHost)) this.check();
     };
 
     PageLinkActivator.prototype.check = function() {
-        var self = this, host, win, tab, isOpened = false;
+        this.handleClosedHost(this.host);
+    };
 
-        chrome.windows.getAll({populate:true}, function(windows){
-            for (var wi in windows) {
-                win = windows[wi];
-                for (var ti in win.tabs) {
-                    tab = win.tabs[ti];
-                    if (tab.url.indexOf(self.url) === 0) {
-                        isOpened = true;
-                        break;
-                    }
-                }
+    PageLinkActivator.prototype.handleNewHost = function() {
+        var self = this;
+        this.handleNewHost = function(host) {
+            if ((!host && !this.host) || (host && this.host && this.host.indexOf(host) === 0)) {
+                this.setState(true);
+            }
+        };
+    };
 
-                if (isOpened) break;
+    PageLinkActivator.prototype.handleClosedHost = function() {
+        var self = this;
+        this.handleClosedHost = function(host) {
+            if (self.host == host ) 
+                self.bridge.trigger('getAllUrl');
+        };
+    };
+
+    PageLinkActivator.prototype.seachForHost = function() {
+        var self = this;
+        this.seachForHost = function(urls) {
+            for (var i=0,len=urls.length;i<len;i++) {
+                 if (urls[i].indexOf(self.url) === 0) {
+                    self.setState(true);
+                    break;
+                 }
             }
 
-            if(isOpened)
-                self.changeStateFn(true);
-            else
-                self.changeStateFn(false);
-        });
-        
-    };
+            self.setState(false);
+        };
+    };    
 
      /* ---------------- Days activator ------------ */
 
     function DaysActivator() {
         this.state = false;
-        this.timeOutId = -1;
+        this.timeOutId = undefined;
         this.check();
     }
     DaysActivator.prototype.init = AlwaysActivator.prototype.init;
-    DaysActivator.prototype.getState = AlwaysActivator.prototype.getState;
-    DaysActivator.prototype.setChangeStateFn = AlwaysActivator.prototype.setChangeStateFn;
-    DaysActivator.prototype.deinit = function() { this.enabled = false; clearTimeout(this.timeOutId); };
+    DaysActivator.prototype.setState = AlwaysActivator.prototype.setState;
+    DaysActivator.prototype.enable = function(){ this.check(); };
+    DaysActivator.prototype.disable = function() { this.timeOutId = clearTimeout(this.timeOutId); };
     DaysActivator.dayList = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
     DaysActivator.prototype.setOptions = function(params) {
         this.days = params.days ? params.days : this.days;
+        if (this.timeOutId) this.check();
     };
 
     DaysActivator.prototype.check = function(){
         var self = this;
         this.check = function() { 
-            self.setState(new Date()); 
+            self.checkDate(new Date()); 
         };
     };
 
@@ -236,7 +241,7 @@ var Activators = (function() {
         
     };    
 
-    DaysActivator.prototype.setState = function(now) {
+    DaysActivator.prototype.checkDate = function(now) {
         var today = this.days[this.getDayName(now)], t,
             start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), today.start[0], today.start[1]),
             end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), today.end[0], today.end[1]);
@@ -247,10 +252,10 @@ var Activators = (function() {
             end = t;
         }
 
-        this.changeStateFn(false);
+        this.setState(false);
 
         if (today.active && now > start && now < end)
-                this.changeStateFn(true);
+                this.setState(true);
 
         else if (!today.active)
             this.offsetToNextStart(now, start);
@@ -294,29 +299,44 @@ var SiteWatcher = (function() {
         score: 0,
         timestamp: new Date().getTime(),
 
-        bridge: undefined,
+        parentBridge: undefined,
+        dispatcher: new utilies.EventDispatcher(),
+
         activator: undefined,
         activators: undefined,
 
-        init: function(bridge) {
+        init: function(parentBridge) {
 
-            this.bridge = bridge;
+            this.parentBridge = parentBridge;
             this.activators = Activators;
 
             for (var name in this.activators) 
-                this.activators[name].setChangeStateFn(this.controllSendingState);
+                this.activators[name].init(dispatcher);
 
             this.activator = this.activators.alwaysoff;
         },
 
         enable:function() {
-            this.activator.init();
-            this.bridge.addListener('newUrl', this.checkNewUrl);
+            this.activator.enable();
+            this.parentBridge.addListener('newUrl', this.checkNewUrl);
+            this.parentBridge.addListener('closedUrl', this.checkClosedUrl);
+
+            this.dispatcher.addListener('getAllUrl', this.delegateAllUrl);
         },
 
         disable: function() {
-            this.activator.deinit();
-            this.bridge.removeListener('newUrl', this.checkNewUrl);
+            this.activator.disable();
+            this.parentBridge.removeListener('newUrl', this.checkNewUrl);
+            this.parentBridge.removeListener('closedUrl', this.checkClosedUrl);
+
+            this.dispatcher.removeListener('getAllUrl', this.delegateAllUrl);
+        },
+
+        delegateAllUrl: function() {
+            var self = this;
+            this.delegateAllUrl = function() {
+                self.dispatcher.trigger('allUrlGetted', App.getAllUrls);
+            };
         },
 
         setOptions: function(params) {
@@ -355,9 +375,11 @@ var SiteWatcher = (function() {
         setActivator: function(name) {
             name = this.activators[name] ? name : 'alwaysoff';
 
-            this.activator.deinit();
+            this.dispatcher.removeListener('changed', this.controllSendingState);
+            this.activator.disable();
             this.activator = this.activators[name];
-            this.activator.init();
+            this.dispatcher.addListener('changed', this.controllSendingState);
+            this.activator.enable();
         },
 
         addScoreFromSpentTime: function(spentTime) {
@@ -378,37 +400,38 @@ var SiteWatcher = (function() {
             return spent * 0.001 / 60;
         },
 
+        getHost: function(url) { return url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1'); },
+
         checkNewUrl: function(url) {
             
-            var host = url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1');
+            var host = watcher.getHost(url);
             
             if (host == watcher.host) return;
             watcher.host = host;
 
-            if (watcher.activator.handleNewUrl) 
-                watcher.activator.handleNewUrl(url);
-
-            if (!watcher.activator.getState()) return;
+            watcher.dispatcher.trigger('newHost', url);
+            
+            if (!watcher.activator.state) return;
 
             watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
             
         },
 
-        send: function() {
-
-            watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
-
-            if (watcher.score !== 0) 
-                watcher.bridge.triggerEvent('sendRequest', {
-                    urlSuffix: watcher.urlPrefix+(watcher.score < 0 ? 'down' : 'up'), 
-                    score: watcher.score 
-                });
+        // TODO: find out has any opened host
+        checkClosedUrl: function(url) {
+            
+            var host = watcher.getHost(url);
+            
+            if (host != watcher.host) return;
+            
+            watcher.dispatcher.trigger('closedHost', url);
+            
         },
 
         controllSendingState: function(value) {
 
             if (!value) {
-                watcher.send();
+                watcher.triggerSendRequest();
                 watcher.turnOffTheSender();
 
             } else if (value) {
@@ -417,9 +440,23 @@ var SiteWatcher = (function() {
             
         },
 
+        triggerSendRequest: function() {
+
+            watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
+
+            if (watcher.score !== 0) {
+                watcher.parentBridge.triggerEvent('sendRequest', {
+                    urlSuffix: watcher.urlPrefix+(watcher.score < 0 ? 'down' : 'up'), 
+                    score: watcher.score 
+                });
+
+                watcher.score = 0;
+            }
+        },
+
         turnOnTheSender: function() {
             this.turnOffTheSender();
-            this.sendIntervalID = setInterval(this.send, this.sendInterval);
+            this.sendIntervalID = setInterval(this.triggerSendRequest, this.sendInterval);
         },
 
         turnOffTheSender: function() {
@@ -430,9 +467,10 @@ var SiteWatcher = (function() {
 
     return {
         getScore: function() { return watcher.score; },
-        isEnabled: function() { return watcher.bridge.hasListener('newUrl', watcher.checkNewUrl); },
-        init: function(bridge) { watcher.init(bridge); },
-        setOptions: function(bridge) { watcher.setOptions(bridge); }
+        isEnabled: function() { return watcher.parentBridge.hasListener('newUrl', watcher.checkNewUrl); },
+        init: function(parentBridge) { watcher.init(parentBridge); },
+        setOptions: function(parentBridge) { watcher.setOptions(parentBridge); },
+        forceSendRequest: function() { watcher.triggerSendRequest(); }
     };
 
 })();
@@ -443,9 +481,7 @@ var habitRPG = (function(){
 
     var returnObj = {
         //get: function() { return habitrpg; },
-        newUrl: function(url) { habitrpg.newUrl(url); },
-        setOptions: function(params) { habitrpg.setOptions(params); },
-        setScoreSendedAction: function(callback) { habitrpg.setScoreSendedAction(callback); }
+        init: function(bridge) { habitrpg.init(bridge); }
     }, 
   
     habitrpg = {
@@ -461,9 +497,15 @@ var habitRPG = (function(){
         habitUrl: '',
         sourceHabitUrl: "https://habitrpg.com/users/{UID}/",
 
+        parentBridge: undefined,
         dispatcher: new utilies.EventDispatcher(),
 
-        init: function() {
+        init: function(bridge) {
+
+            this.parentBridge = bridge;
+            this.parentBridge.addListener('newUrl', this.newUrl);
+            this.parentBridge.addListener('closedUrl', this.closedUrl);
+            this.parentBridge.addListener('optionsChanged', this.setOptions);
 
             this.controllers = {
                 'sitewatcher': SiteWatcher 
@@ -478,24 +520,29 @@ var habitRPG = (function(){
         setOptions: function(params) {
 
             if (params.uid) {
-                this.uid = params.uid;
-                this.habitUrl = this.sourceHabitUrl.replace('{UID}', this.uid);
+                habitrpg.uid = params.uid;
+                habitrpg.habitUrl = habitrpg.sourceHabitUrl.replace('{UID}', habitrpg.uid);
             }
 
-            params.isSandBox = this.isSandBox;
+            params.isSandBox = habitrpg.isSandBox;
 
-            for (var co in this.controllers) 
-                this.controllers[co].setOptions(params);
+            for (var co in habitrpg.controllers) 
+                habitrpg.controllers[co].setOptions(params);
             
         },
 
         newUrl: function(url) { 
-            this.dispatcher.trigger('newUrl', url); 
+            habitrpg.dispatcher.trigger('newUrl', url); 
+        },
+
+        closedUrl: function(url) { 
+            habitrpg.dispatcher.trigger('closedUrl', url); 
         },
 
         send: function(data) {
    
             if (habitrpg.isSandBox) {
+                habitrpg.parentBridge.trigger('sended', data);
                 habitrpg.scoreSendedAction(data.score, data.message);
 
             } else {
@@ -505,18 +552,14 @@ var habitRPG = (function(){
                     url: habitrpg.habitUrl + data.urlSuffix
                     
                 }).done(function(){
+                    habitrpg.parentBridge.trigger('sended', data);
                     habitrpg.scoreSendedAction(data.score, data.message);
                 });
             }
             
-        },
-
-        setScoreSendedAction: function(scoreSendedAction) {
-            this.scoreSendedAction = scoreSendedAction;
         }
-    };
 
-    habitrpg.init();
+    };
 
     return returnObj;
 
@@ -524,23 +567,57 @@ var habitRPG = (function(){
 
 var App = {
 
-	activeTabId: -1,
+	appTest: 0, // -1 without habitrpg; +1 with habitrpg; 0 nothing logged from the app
+
+	tabs: {},
+	activeUrl: '',
 	hasFocus: true,
 
 	habitrpg: habitRPG,
 	invalidTransitionTypes: ['auto_subframe', 'form_submit'],
+
   //storage: chrome.storage.managed,
 	storage: chrome.storage.local,
+
 	notificationShowTime: 4000,
 
+	dispatcher: new utilies.EventDispatcher(),
 
 	init: function() {
-		chrome.webNavigation.onCommitted.addListener(this.navCommittedHandler);
+
+		this.dispatcher.addListener('sended', this.showNotification);
+		this.dispatcher.addListener('newUrl', function(url){App.activeUrl = url; });
+
+		if (this.appTest > 0) {
+			this.createLogger();
+			App.habitrpg.init(this.dispatcher);
+
+		} else if (this.appTest < 0)
+			this.createLogger();
+
+		else 
+			App.habitrpg.init(this.dispatcher);
+
+		chrome.tabs.onCreated.addListener(this.tabCreatedHandler);
+		chrome.tabs.onUpdated.addListener(this.tabUpdatedHandler);
+		chrome.tabs.onRemoved.addListener(this.tabRemovedHandler);
 		chrome.tabs.onActivated.addListener(this.tabActivatedHandler);
-		chrome.windows.onFocusChanged.addListener(this.focusChangeHandler);
+		chrome.webNavigation.onCommitted.addListener(this.navCommittedHandler);
+
+		chrome.windows.onFocusChanged.addListener(this.focusChangeHandler);		
 		chrome.storage.onChanged.addListener(this.setHabitRPGOptionsFromChange);
 
-		this.storage.get({
+		chrome.windows.getAll({populate:true}, function(windows){
+            for (var wi in windows) {
+                win = windows[wi];
+                for (var ti in win.tabs) {
+                    tab = win.tabs[ti];
+                    App.tabs[tab.id] = tab;
+                }
+            }
+        });
+
+        this.storage.get({
 			uid:'',
 			days: '',
 			watchedUrl: '',
@@ -549,28 +626,42 @@ var App = {
 			activatorName: 'alwayon',
 			viceDomains: 'reddit.com\n9gag.com\nfacebook.com',
 			goodDomains: 'lifehacker.com\ncodeacadamy.com\nkhanacadamy.org'
-		}, this.habitrpg.setOptions);
 
-		this.habitrpg.setScoreSendedAction(this.showNotification);
-		
+		}, function(data){ App.dispatcher.trigger('optionsChanged', data); });
+
 	},
 
-	navCommittedHandler: function(event){
-		if (App.hasFocus && App.activeTabId == event.tabId && App.invalidTransitionTypes.indexOf(event.transitionType) == -1) {
-			App.habitrpg.newUrl(App.catchSpecURL(event.url));
+	navCommittedHandler: function(tab){
+		App.tabs[tab.id] = tab;
+		if (App.hasFocus && tab.active && tab.url && App.invalidTransitionTypes.indexOf(tab.transitionType) == -1) {
+			App.dispatcher.trigger('newUrl', App.catchSpecURL(tab.url));
+			App.activeUrl = tab.url;
 		}
 	},
 
+	tabCreatedHandler: function(tab) {
+		App.tabs[tab.id] = tab;
+		App.tabUpdatedHandler(undefined, undefined, tab);
+	},
+
+	tabUpdatedHandler: function(id, changed, tab) {
+		if (App.hasFocus && tab.active && tab.url && App.activeUrl != tab.url) {
+			App.dispatcher.trigger('newUrl', App.catchSpecURL(tab.url));
+			App.activeUrl = tab.url;
+		}
+	},
+
+	// This event fired after the remove action, so we forced to store the tabs
+	tabRemovedHandler: function(tabId) {
+		App.dispatcher.trigger('closedUrl', App.catchSpecURL(App.tabs[tabId].url));
+		delete App.tabs[tabId];
+	},
+
 	tabActivatedHandler: function(event) {
-		// TODO: find out why not find the event tabID...
-		try { 
-			chrome.tabs.get(event.tabId, function(tab){
-				App.activeTabId = tab.id;
-				App.habitrpg.newUrl(App.catchSpecURL(tab.url));
-
-			});
-		} catch (e) {
-
+		var tab = App.tabs[event.tabId];
+		if (tab) {
+			App.activeUrl = tab.url;
+			App.dispatcher.trigger('newUrl', App.catchSpecURL(tab.url));
 		}
 	},
 
@@ -582,13 +673,14 @@ var App = {
 
 		if (!win.focused) {
 			App.hasFocus = false;
-			App.habitrpg.newUrl('');
+			App.dispatcher.trigger('newUrl', '');
 
 		} else {
 			App.hasFocus = true;
 			for (var i in win.tabs) {
-				if (win.tabs[i].active) {
-					App.habitrpg.newUrl(App.catchSpecURL(win.tabs[i].url));
+				var url = win.tabs[i].url;
+				if (win.tabs[i].active && App.activeUrl != url) {
+					App.dispatcher.trigger('newUrl', App.catchSpecURL(url));
 					break;
 				}
 			}
@@ -596,7 +688,7 @@ var App = {
 	},
 
 	catchSpecURL: function(url) {
-		
+
 		if (url.indexOf('chrome-devtools') === 0)
 			url = 'chrome-devtools';
 
@@ -608,23 +700,36 @@ var App = {
 		for (name in params) 
 			obj[name] = params[name].newValue;
 
-		App.habitrpg.setOptions(obj);
+		App.dispatcher.trigger('optionsChanged', obj);
 		
 	},
 
-	showNotification: function(score, message) {
+	showNotification: function(data) {
 
-		score = score.toFixed(4);
-
-		var notification = webkitNotifications.createNotification(
+		var score = data.score.toFixed(4),
+			notification = webkitNotifications.createNotification(
 			"/img/icon-48-" + (score < 0 ? 'down' : 'up') + ".png", 
 			'HabitRPG', 
-			message ? message :
+			data.message ? data.message :
 			('You '+(score < 0 ? 'lost' : 'gained')+' '+score+' '+(score < 0 ? 'HP! Work or will die...' : 'Exp/Gold! Keep up the good work!'))
 		);
 		notification.show();
 		setTimeout(function(){notification.close();}, App.notificationShowTime);
+	},
 
+	getAllUrls: function() {
+		var urls = [];
+		for (var i in App.tabs) {
+			urls.push(App.tabs[i].url);
+		}
+
+		return urls;
+	},
+
+	createLogger: function() {
+		this.dispatcher.addListener('newUrl', function(url) {console.log('new: '+url); });
+		this.dispatcher.addListener('optionsChanged', function(data){ console.log(data); });
+		this.dispatcher.addListener('closedUrl', function(url) { console.log('closed: '+url);});
 	}
 };
 

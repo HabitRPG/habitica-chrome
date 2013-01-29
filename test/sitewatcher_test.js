@@ -1,4 +1,4 @@
-describe('SiteWatcher tests', function(){
+xdescribe('SiteWatcher tests', function(){
 
     var bridge = new utilies.EventDispatcher();
 
@@ -29,7 +29,6 @@ describe('SiteWatcher tests', function(){
         
         expect(SiteWatcher.getScore()).toBe(0);
         
-
         bridge.trigger('newUrl', 'http://lifehacker.com');
 
         runs(function() {

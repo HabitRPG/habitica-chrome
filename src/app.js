@@ -1,6 +1,6 @@
 var App = {
 
-	appTest: -1, // -1 without habitrpg; +1 with habitrpg; 0 nothing logged from the app
+	appTest: 0, // -1 without habitrpg; +1 with habitrpg; 0 nothing logged from the app
 
 	tabs: {},
 	activeUrl: '',
@@ -87,9 +87,9 @@ var App = {
 	// This event fired after the remove action, so we forced to store the tabs
 	tabRemovedHandler: function(tabId) {
 		App.dispatcher.trigger('closedUrl', App.catchSpecURL(App.tabs[tabId].url));
-    	delete App.tabs[tabId];
+		delete App.tabs[tabId];
 	},
-	
+
 	tabActivatedHandler: function(event) {
 		var tab = App.tabs[event.tabId];
 		if (tab) {
@@ -148,6 +148,15 @@ var App = {
 		);
 		notification.show();
 		setTimeout(function(){notification.close();}, App.notificationShowTime);
+	},
+
+	getAllUrls: function() {
+		var urls = [];
+		for (var i in App.tabs) {
+			urls.push(App.tabs[i].url);
+		}
+
+		return urls;
 	},
 
 	createLogger: function() {
