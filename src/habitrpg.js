@@ -3,9 +3,7 @@ var habitRPG = (function(){
 
     var returnObj = {
         //get: function() { return habitrpg; },
-        newUrl: function(url) { habitrpg.newUrl(url); },
-        setOptions: function(params) { habitrpg.setOptions(params); },
-        setScoreSendedAction: function(callback) { habitrpg.setScoreSendedAction(callback); }
+        init: function(bridge) { habitrpg.init(bridge); }
     }, 
   
     habitrpg = {
@@ -21,9 +19,15 @@ var habitRPG = (function(){
         habitUrl: '',
         sourceHabitUrl: "https://habitrpg.com/users/{UID}/",
 
+        parentBridge: undefined,
         dispatcher: new utilies.EventDispatcher(),
 
-        init: function() {
+        init: function(bridge) {
+
+            this.parentBridge = bridge;
+            this.parentBridge.addListener('newUrl', this.newUrl);
+            this.parentBridge.addListener('closedUrl', this.closedUrl);
+            this.parentBridge.addListener('optionsChanged', this.setOptions);
 
             this.controllers = {
                 'sitewatcher': SiteWatcher 
@@ -38,24 +42,29 @@ var habitRPG = (function(){
         setOptions: function(params) {
 
             if (params.uid) {
-                this.uid = params.uid;
-                this.habitUrl = this.sourceHabitUrl.replace('{UID}', this.uid);
+                habitrpg.uid = params.uid;
+                habitrpg.habitUrl = habitrpg.sourceHabitUrl.replace('{UID}', habitrpg.uid);
             }
 
-            params.isSandBox = this.isSandBox;
+            params.isSandBox = habitrpg.isSandBox;
 
-            for (var co in this.controllers) 
-                this.controllers[co].setOptions(params);
+            for (var co in habitrpg.controllers) 
+                habitrpg.controllers[co].setOptions(params);
             
         },
 
         newUrl: function(url) { 
-            this.dispatcher.trigger('newUrl', url); 
+            habitrpg.dispatcher.trigger('newUrl', url); 
+        },
+
+        closedUrl: function(url) { 
+            habitrpg.dispatcher.trigger('closedUrl', url); 
         },
 
         send: function(data) {
    
             if (habitrpg.isSandBox) {
+                habitrpg.parentBridge.trigger('sended', data);
                 habitrpg.scoreSendedAction(data.score, data.message);
 
             } else {
@@ -65,18 +74,14 @@ var habitRPG = (function(){
                     url: habitrpg.habitUrl + data.urlSuffix
                     
                 }).done(function(){
+                    habitrpg.parentBridge.trigger('sended', data);
                     habitrpg.scoreSendedAction(data.score, data.message);
                 });
             }
             
-        },
-
-        setScoreSendedAction: function(scoreSendedAction) {
-            this.scoreSendedAction = scoreSendedAction;
         }
-    };
 
-    habitrpg.init();
+    };
 
     return returnObj;
 
