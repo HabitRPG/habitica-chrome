@@ -18,7 +18,7 @@ module.exports = function(grunt) {
 			},
 			options: {
 				files: ['options.js', 'options.html'],
-				tasks: ['copy:extension']
+				tasks: ['concat:background', 'copy:extension']
 			}
 		},
 		jasmine : {
@@ -40,9 +40,9 @@ module.exports = function(grunt) {
 
 	grunt.loadNpmTasks('grunt-jasmine-runner');
 
-	grunt.registerTask('create', 'copy:extension');
+	grunt.registerTask('create', ['concat:background', 'copy:extension']);
 
-	grunt.registerTask('default', ['lint', 'jasmine', 'clean:test']);
+	grunt.registerTask('default', 'create');
 	
 
 };
