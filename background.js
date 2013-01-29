@@ -1,4 +1,49 @@
 
+var utilies = (function(){
+
+
+    /* ----------------- Event system ---------------- */
+    function EventDispatcher(context) {
+        this.listeners = {};
+        this.context = context ? context : this;
+    }
+    EventDispatcher.prototype.addListener= function(type, fn) {
+        if (!this.listeners[type])
+            this.listeners[type] = [];
+
+        if (this.listeners[type].indexOf(fn) != -1 ) return;
+
+        this.listeners[type].push(fn);
+    };
+    EventDispatcher.prototype.removeListener = function(type, fn) {
+        if (!this.listeners[type]) return;
+
+        var index = this.listeners[type].indexOf(fn);
+
+        if (index === -1) return;
+        
+        this.listeners[type].splice(index, 1);
+        
+    };
+    EventDispatcher.prototype.hasListener = function(type, fn) {
+        if (!this.listeners[type]) return false;
+        return this.listeners[type].indexOf(fn) !== -1;
+    };
+    EventDispatcher.prototype.trigger = function(type, data) {
+        if (!this.listeners[type]) return;
+
+        var listeners = this.listeners[type];
+        for (var i=0,len=listeners.length;i<len;i++)
+            listeners[i].apply(this.context, [data]);
+    };
+
+    return {
+        EventDispatcher: EventDispatcher
+    };
+
+
+})();
+
 /* ---------------- ugly hack for testing :( ------------ */
 
 function getTestChrome() {
@@ -228,72 +273,53 @@ var Activators = (function() {
 })();
 
 
-var Controllers = (function() {
+var SiteWatcher = (function() {
+/*
+    BaseController.prototype.init = function() {  };
+    BaseController.prototype.enable = function() {  }; // private use in setOptions
+    BaseController.prototype.disable = function() {  }; // private use in setOptions
+    BaseController.prototype.setOptions = function() { };
+*/
 
+    var watcher = {
 
-    /* ---------------- Always on activator ------------ */
+        urlPrefix: 'tasks/productivity/',
 
-    function BaseController() {
-        this.enabled = false;
-    }
-    BaseController.prototype.setOptions = function() {};
-    BaseController.prototype.deinit = function() { this.enabled = false; };
-    BaseController.prototype.init = function() { this.enabled = true; };
-
-
-
-    return {
-
-    }
-
-})();
-    
-
-
-var habitRPG = (function(){
-
-    var habitrpg = {
-
-        isSandBox: true,
+        goodTimeMultiplier: 0.05,
+        badTimeMultiplier: 0.1,
 
         sendInterval: 1000,
         sendIntervalID: -1,
 
-        goodTimeMultiplier: 0.05,
-        badTimeMultiplier: 0.1,
-        
-        controllers: undefined,
-        activators: undefined,
-        activator: undefined,
-        uid: undefined,
-
         score: 0,
-
-        host: undefined,
         timestamp: new Date().getTime(),
-        
-        habitUrl: '',
-        sourceHabitUrl: "https://habitrpg.com/users/{UID}/tasks/productivity/",
 
-        init: function() {
+        bridge: undefined,
+        activator: undefined,
+        activators: undefined,
 
-            this.setActiveState();
+        init: function(bridge) {
 
-            this.controllers = Controllers;
+            this.bridge = bridge;
             this.activators = Activators;
 
             for (var name in this.activators) 
-                this.activators[name].setChangeStateFn(this.setActiveState);
+                this.activators[name].setChangeStateFn(this.controllSendingState);
 
             this.activator = this.activators.alwaysoff;
         },
 
-        setOptions: function(params) {
+        enable:function() {
+            this.activator.init();
+            this.bridge.addListener('newUrl', this.checkNewUrl);
+        },
 
-            if (params.uid) {
-                this.uid = params.uid;
-                this.habitUrl = this.sourceHabitUrl.replace('{UID}', this.uid);
-            }
+        disable: function() {
+            this.activator.deinit();
+            this.bridge.removeListener('newUrl', this.checkNewUrl);
+        },
+
+        setOptions: function(params) {
 
             this.setValue(params, 'viceDomains');
             this.badHosts = this.viceDomains.split('\n');
@@ -301,7 +327,7 @@ var habitRPG = (function(){
             this.setValue(params, 'goodDomains');
             this.goodHosts = this.goodDomains.split('\n');
 
-            if (!this.isSandBox) {
+            if (!params.isSandBox) {
                 if (params.sendInterval) 
                     this.sendInterval = params.sendInterval * 1000 * 60;
                 
@@ -311,11 +337,15 @@ var habitRPG = (function(){
             for (var ac in this.activators) 
                 this.activators[ac].setOptions(params);
 
-            for (var co in this.controllers) 
-                this.controllers[co].setOptions(params);
-            
             this.setValue(params, 'activatorName');
             this.setActivator(this.activatorName);
+
+            if (params.siteWatcherIsActive) {
+                if (params.siteWatcherIsActive == 'true')
+                    this.enable();
+                else 
+                    this.disable();
+            }
         },
 
         setValue: function(params, name) { 
@@ -323,27 +353,11 @@ var habitRPG = (function(){
         },
 
         setActivator: function(name) {
-            name = this.activators[name] ? name : 'alwayson';
+            name = this.activators[name] ? name : 'alwaysoff';
 
             this.activator.deinit();
             this.activator = this.activators[name];
             this.activator.init();
-        },
-
-        checkNewPage: function(url) {
-            
-            var host = url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1');
-            
-            if (host == this.host) return;
-            this.host = host;
-
-            if (this.activator.handleNewUrl) 
-                this.activator.handleNewUrl(url);
-
-            if (!this.activator.getState()) return;
-
-            this.addScoreFromSpentTime(this.getandResetSpentTime());
-
         },
 
         addScoreFromSpentTime: function(spentTime) {
@@ -364,54 +378,137 @@ var habitRPG = (function(){
             return spent * 0.001 / 60;
         },
 
-        canSend: function() { return this.score !== 0; },
+        checkNewUrl: function(url) {
+            
+            var host = url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1');
+            
+            if (host == watcher.host) return;
+            watcher.host = host;
 
-        sendToHabitRPGHost: function() {
+            if (watcher.activator.handleNewUrl) 
+                watcher.activator.handleNewUrl(url);
 
-            this.addScoreFromSpentTime(this.getandResetSpentTime());
+            if (!watcher.activator.getState()) return;
 
-            if (this.canSend()) {
-                
-                if (this.isSandBox) {
-                    if (this.scoreSendedAction)
-                        this.scoreSendedAction(this.score);
-                } else {
-                    var sc = this.score;
-                    
-                    $.ajax({
-                        type: 'POST',
-                        url: this.habitUrl + (sc < 0 ? 'down' : 'up')
-                        
-                    }).done(function(){
-                        habitrpg.scoreSendedAction(sc);
-                    });
-                }
-                this.score = 0;
-            }
+            watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
+            
         },
 
-        setActiveState: function() {
-            var self = this;
+        send: function() {
 
-            this.setActiveState = function(value) {
-                if (!value) {
-                    self.sendToHabitRPGHost();
-                    self.turnOffTheSender();
-                } else if (value) {
-                    if (self.uid) {
-                        self.turnOnTheSender();
-                    }
-                }
-            };
+            watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
+
+            if (watcher.score !== 0) 
+                watcher.bridge.triggerEvent('sendRequest', {
+                    urlSuffix: watcher.urlPrefix+(watcher.score < 0 ? 'down' : 'up'), 
+                    score: watcher.score 
+                });
+        },
+
+        controllSendingState: function(value) {
+
+            if (!value) {
+                watcher.send();
+                watcher.turnOffTheSender();
+
+            } else if (value) {
+                watcher.turnOnTheSender();
+            }
+            
         },
 
         turnOnTheSender: function() {
             this.turnOffTheSender();
-            this.sendIntervalID = setInterval(function(){habitrpg.sendToHabitRPGHost();}, this.sendInterval);
+            this.sendIntervalID = setInterval(this.send, this.sendInterval);
         },
 
         turnOffTheSender: function() {
             clearInterval(this.sendIntervalID);
+        }
+
+    };
+
+    return {
+        getScore: function() { return watcher.score; },
+        isEnabled: function() { return watcher.bridge.hasListener('newUrl', watcher.checkNewUrl); },
+        init: function(bridge) { watcher.init(bridge); },
+        setOptions: function(bridge) { watcher.setOptions(bridge); }
+    };
+
+})();
+    
+
+
+var habitRPG = (function(){
+
+    var returnObj = {
+        //get: function() { return habitrpg; },
+        newUrl: function(url) { habitrpg.newUrl(url); },
+        setOptions: function(params) { habitrpg.setOptions(params); },
+        setScoreSendedAction: function(callback) { habitrpg.setScoreSendedAction(callback); }
+    }, 
+  
+    habitrpg = {
+
+        isSandBox: true,
+
+        controllers: undefined,
+        
+        uid: undefined,
+
+        host: undefined,
+        
+        habitUrl: '',
+        sourceHabitUrl: "https://habitrpg.com/users/{UID}/",
+
+        dispatcher: new utilies.EventDispatcher(),
+
+        init: function() {
+
+            this.controllers = {
+                'sitewatcher': SiteWatcher 
+            };
+
+            for (var name in this.controllers) 
+                this.controllers[name].init(this.dispatcher);
+        
+            this.dispatcher.addListener('sendRequest', this.send);
+        },
+
+        setOptions: function(params) {
+
+            if (params.uid) {
+                this.uid = params.uid;
+                this.habitUrl = this.sourceHabitUrl.replace('{UID}', this.uid);
+            }
+
+            params.isSandBox = this.isSandBox;
+
+            for (var co in this.controllers) 
+                this.controllers[co].setOptions(params);
+            
+        },
+
+        newUrl: function(url) { 
+            this.dispatcher.trigger('newUrl', url); 
+        },
+
+        send: function(data) {
+   
+            if (habitrpg.isSandBox) {
+                habitrpg.scoreSendedAction(data.score, data.message);
+
+            } else {
+                
+                $.ajax({
+                    type: 'POST',
+                    url: habitrpg.habitUrl + data.urlSuffix
+                    
+                }).done(function(){
+                    habitrpg.scoreSendedAction(data.score, data.message);
+                });
+            }
+            
         },
 
         setScoreSendedAction: function(scoreSendedAction) {
@@ -421,15 +518,7 @@ var habitRPG = (function(){
 
     habitrpg.init();
 
-    return {
-        get: function() { return habitrpg; },
-        getScore: function() { return habitrpg.score; },
-        isActive: function() { return habitrpg.activator.getState(); },
-        checkNewPage: function(url) { habitrpg.checkNewPage(url); },
-        setOptions: function(params) { habitrpg.setOptions(params); },
-        sendScore: function() { return habitrpg.sendToHabitRPGHost(); },
-        setScoreSendedAction: function(callback) { habitrpg.setScoreSendedAction(callback); }
-    };
+    return returnObj;
 
 })();
 
@@ -468,7 +557,7 @@ var App = {
 
 	navCommittedHandler: function(event){
 		if (App.hasFocus && App.activeTabId == event.tabId && App.invalidTransitionTypes.indexOf(event.transitionType) == -1) {
-			App.habitrpg.checkNewPage(App.catchSpecURL(event.url));
+			App.habitrpg.newUrl(App.catchSpecURL(event.url));
 		}
 	},
 
@@ -477,7 +566,7 @@ var App = {
 		try { 
 			chrome.tabs.get(event.tabId, function(tab){
 				App.activeTabId = tab.id;
-				App.habitrpg.checkNewPage(App.catchSpecURL(tab.url));
+				App.habitrpg.newUrl(App.catchSpecURL(tab.url));
 
 			});
 		} catch (e) {
@@ -493,13 +582,13 @@ var App = {
 
 		if (!win.focused) {
 			App.hasFocus = false;
-			App.habitrpg.checkNewPage('');
+			App.habitrpg.newUrl('');
 
 		} else {
 			App.hasFocus = true;
 			for (var i in win.tabs) {
 				if (win.tabs[i].active) {
-					App.habitrpg.checkNewPage(App.catchSpecURL(win.tabs[i].url));
+					App.habitrpg.newUrl(App.catchSpecURL(win.tabs[i].url));
 					break;
 				}
 			}

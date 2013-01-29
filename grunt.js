@@ -6,9 +6,9 @@ module.exports = function(grunt) {
 
 		},
 		concat: {
-		background: {
-			src: ['src/activators.js', 'src/sitewatcher.js', 'src/habitrpg.js', 'src/app.js'],
-			dest: 'background.js'
+			background: {
+				src: ['src/utilies.js', 'src/activators.js', 'src/sitewatcher.js', 'src/habitrpg.js', 'src/app.js'],
+				dest: 'background.js'
 			}
 		},
 		watch: {
@@ -22,8 +22,8 @@ module.exports = function(grunt) {
 			}
 		},
 		jasmine : {
-			src : ['src/activators.js', 'src/sitewatcher.js', 'src/habitrpg.js'],
-			specs : 'test/*.js',
+			src : ['src/utilies.js', 'src/activators.js', 'src/sitewatcher.js', 'src/habitrpg.js'],
+			specs : ['test/utilies_test.js', 'test/activators_test.js', 'test/sitewatcher_test.js', 'test/habitrpg_test.js'],
 			timeout : 1000
 		},
 		clean: {
@@ -40,7 +40,7 @@ module.exports = function(grunt) {
 
 	grunt.loadNpmTasks('grunt-jasmine-runner');
 
-	grunt.registerTask('cpExt', 'copy:extension');
+	grunt.registerTask('create', 'copy:extension');
 
 	grunt.registerTask('default', ['lint', 'jasmine', 'clean:test']);
 	

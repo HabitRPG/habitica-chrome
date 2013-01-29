@@ -1,14 +1,15 @@
 
 var SiteWatcher = (function() {
 /*
-    BaseController.prototype.setOptions = function() {};
-    BaseController.prototype.deinit = function() {  };
     BaseController.prototype.init = function() {  };
+    BaseController.prototype.enable = function() {  }; // private use in setOptions
+    BaseController.prototype.disable = function() {  }; // private use in setOptions
+    BaseController.prototype.setOptions = function() { };
 */
 
     var watcher = {
 
-        urlPrefix: 'tasks/productivity/'
+        urlPrefix: 'tasks/productivity/',
 
         goodTimeMultiplier: 0.05,
         badTimeMultiplier: 0.1,
@@ -20,8 +21,8 @@ var SiteWatcher = (function() {
         timestamp: new Date().getTime(),
 
         bridge: undefined,
-        activators: undefined,
         activator: undefined,
+        activators: undefined,
 
         init: function(bridge) {
 
@@ -32,9 +33,16 @@ var SiteWatcher = (function() {
                 this.activators[name].setChangeStateFn(this.controllSendingState);
 
             this.activator = this.activators.alwaysoff;
+        },
 
-            this.bridge.addEventListener('newUrl', this.checkNewUrl);
-            
+        enable:function() {
+            this.activator.init();
+            this.bridge.addListener('newUrl', this.checkNewUrl);
+        },
+
+        disable: function() {
+            this.activator.deinit();
+            this.bridge.removeListener('newUrl', this.checkNewUrl);
         },
 
         setOptions: function(params) {
@@ -57,6 +65,13 @@ var SiteWatcher = (function() {
 
             this.setValue(params, 'activatorName');
             this.setActivator(this.activatorName);
+
+            if (params.siteWatcherIsActive) {
+                if (params.siteWatcherIsActive == 'true')
+                    this.enable();
+                else 
+                    this.disable();
+            }
         },
 
         setValue: function(params, name) { 
@@ -98,53 +113,57 @@ var SiteWatcher = (function() {
 
             if (watcher.activator.handleNewUrl) 
                 watcher.activator.handleNewUrl(url);
-
+            
             if (!watcher.activator.getState()) return;
 
             watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
             
         },
 
-        send: function() {
+        triggerSendRequest: function() {
 
             watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
 
-            if (watcher.score !== 0) 
+            if (watcher.score !== 0) {
                 watcher.bridge.triggerEvent('sendRequest', {
                     urlSuffix: watcher.urlPrefix+(watcher.score < 0 ? 'down' : 'up'), 
                     score: watcher.score 
                 });
+
+                watcher.score = 0;
+            }
         },
 
         controllSendingState: function(value) {
 
             if (!value) {
-                watcher.send();
+                watcher.triggerSendRequest();
                 watcher.turnOffTheSender();
 
             } else if (value) {
                 watcher.turnOnTheSender();
-                
             }
             
         },
 
         turnOnTheSender: function() {
             this.turnOffTheSender();
-            this.sendIntervalID = setInterval(this.send, this.sendInterval);
+            this.sendIntervalID = setInterval(this.triggerSendRequest, this.sendInterval);
         },
 
         turnOffTheSender: function() {
             clearInterval(this.sendIntervalID);
-        },
+        }
 
-    }
+    };
 
     return {
         getScore: function() { return watcher.score; },
-        checkNewPage: function() { return watcher.checkNewPage; },
-        isActive: function() { return watcher.activator.getState(); }
-    }
+        isEnabled: function() { return watcher.bridge.hasListener('newUrl', watcher.checkNewUrl); },
+        init: function(bridge) { watcher.init(bridge); },
+        setOptions: function(bridge) { watcher.setOptions(bridge); },
+        forceSendRequest: function() { watcher.triggerSendRequest(); }
+    };
 
 })();
     

@@ -2,16 +2,12 @@
 var habitRPG = (function(){
 
     var returnObj = {
-        get: function() { return habitrpg; },
+        //get: function() { return habitrpg; },
         newUrl: function(url) { habitrpg.newUrl(url); },
         setOptions: function(params) { habitrpg.setOptions(params); },
         setScoreSendedAction: function(callback) { habitrpg.setScoreSendedAction(callback); }
     }, 
-    controllerBridge = {
-        triggerEvent: function(type, fn) { habitrpg.triggerEvent(type, data); },
-        addEventListener: function(type, fn) { habitrpg.addEventListener(type, fn); },
-        removeEventListener: function(type, fn) { habitrpg.removeEventListener(type, fn); },
-    },
+  
     habitrpg = {
 
         isSandBox: true,
@@ -25,7 +21,7 @@ var habitRPG = (function(){
         habitUrl: '',
         sourceHabitUrl: "https://habitrpg.com/users/{UID}/",
 
-        events: { },
+        dispatcher: new utilies.EventDispatcher(),
 
         init: function() {
 
@@ -34,9 +30,9 @@ var habitRPG = (function(){
             };
 
             for (var name in this.controllers) 
-                this.controllers[name].init(controllerBridge);
+                this.controllers[name].init(this.dispatcher);
         
-            this.addEventListener('sendRequest', this.send);
+            this.dispatcher.addListener('sendRequest', this.send);
         },
 
         setOptions: function(params) {
@@ -53,7 +49,9 @@ var habitRPG = (function(){
             
         },
 
-        newUrl: function(url) { this.triggerEvent('newUrl', url); },
+        newUrl: function(url) { 
+            this.dispatcher.trigger('newUrl', url); 
+        },
 
         send: function(data) {
    
@@ -64,7 +62,7 @@ var habitRPG = (function(){
                 
                 $.ajax({
                     type: 'POST',
-                    url: habitrpg.habitUrl + data.urlSuffix;
+                    url: habitrpg.habitUrl + data.urlSuffix
                     
                 }).done(function(){
                     habitrpg.scoreSendedAction(data.score, data.message);
@@ -75,35 +73,6 @@ var habitRPG = (function(){
 
         setScoreSendedAction: function(scoreSendedAction) {
             this.scoreSendedAction = scoreSendedAction;
-        },
-
-        removeEventListener: function(type, fn) {
-            if (!this.events[type]) return;
-
-            var index = this.events[type].indexOf(fn);
-
-            if (!index == -1) return;
-
-            this.events[type].slice(index, 1);
-
-        },
-
-        addEventListener: function(type, fn) {
-            if (!this.events[type])
-                this.events[type] = [];
-
-            if (this.events[type].indexOf(fn) != -1 ) return;
-
-            this.events.push(fn);
-        },
-
-        triggerEvent: function(type, data) {
-            if (!this.events[type]) return;
-
-            var listeners = this.events[type];
-            for (var i=0,len=listeners.length;i<len;i++)
-                listeners.apply(controllerBridge, [data])
-            
         }
     };
 
