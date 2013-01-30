@@ -1,149 +1,197 @@
-
-/* ---------------- ugly hack for testing :( ------------ */
-
-function getTestChrome() {
-    var getTablist= function() {
-            var tabs = [],
-                arr = typeof arguments[0] == 'object' ? arguments[0] : arguments;
-
-            for (var i=0;i<arguments.length;i++)
-                tabs.push({url: arr[i]});
-            
-            return tabs;
-        },
-        getWinList= function() {
-            var wins = [];
-            
-            for (var i=0;i<arguments.length;i++) {
-                wins.push({tabs:getTablist(arguments[i])});
+var defaultOptions = {
+      uid:'',
+      watchedUrl: '',
+      sendInterval: '5',
+      activatorName: 'alwayon',
+      siteWatcherIsActive: 'true',
+      viceDomains: 'reddit.com\n9gag.com\nfacebook.com',
+      goodDomains: 'lifehacker.com\ncodeacadamy.com\nkhanacadamy.org',
+      days: {
+          'Monday': { 
+              active: true,
+              start: [8,0], end: [16,30]
+            },
+          'Tuesday': { 
+              active: true,
+              start: [8,0], end: [16,30]
+            },
+          'Wednesday': { 
+              active: true,
+              start: [8,0], end: [16,30]
+            },
+          'Thursday': { 
+              active: true,
+              start: [8,0], end: [16,30]
+            },
+          'Friday': { 
+              active: true,
+              start: [8,0], end: [16,30]
+            },
+          'Saturday': { 
+              active: false,
+              start: [8,0], end: [16,30]
+            },
+          'Sunday': { 
+              active: false,
+              start: [8,0], end: [16,30]
             }
+        }
+    };
 
-            return wins;
-        },
-        wins = getWinList(['http://habitrpg.com/', 'http://gruntjs.com', 'http://github.com'], ['http://facebook.com', 'http://9gag.com']);
+var utilies = (function(){
+
+
+    /* ----------------- Event system ---------------- */
+    function EventDispatcher(context) {
+        this.listeners = {};
+        this.context = context ? context : this;
+    }
+    EventDispatcher.prototype.addListener= function(type, fn) {
+        if (!this.listeners[type])
+            this.listeners[type] = [];
+
+        if (this.listeners[type].indexOf(fn) != -1 ) return;
+
+        this.listeners[type].push(fn);
+    };
+    EventDispatcher.prototype.removeListener = function(type, fn) {
+        if (!this.listeners[type]) return;
+
+        var index = this.listeners[type].indexOf(fn);
+
+        if (index === -1) return;
+        
+        this.listeners[type].splice(index, 1);
+        
+    };
+    EventDispatcher.prototype.hasListener = function(type, fn) {
+        if (!this.listeners[type]) return false;
+        return this.listeners[type].indexOf(fn) !== -1;
+    };
+    EventDispatcher.prototype.trigger = function(type, data) {
+        if (!this.listeners[type]) return;
+
+        var listeners = this.listeners[type];
+        for (var i=0,len=listeners.length;i<len;i++)
+            listeners[i].apply(this.context, [data]);
+    };
 
     return {
-        getTablist: getTablist,
-        getWinList: getWinList,
-        wins: wins,
-        tabs: {
-            onRemoved: {
-                addListener : function(fn) { this.trigger = fn; }
-                }
-            },
-        windows: {
-            getAll: function(opt, fn) { fn(wins); }
-            }
+        EventDispatcher: EventDispatcher
     };
-}
-    
 
+
+})();
 
 var Activators = (function() {
-
-    try {
-        if (chrome) var alma = null;
-    } catch(e) {
-        chrome = getTestChrome();
-    } 
 
     /* ---------------- Always on activator ------------ */
 
     function AlwaysActivator(value) {
         this.state = value;
-        this.enabled = false;
     }
-    AlwaysActivator.prototype.setOptions = function() {};
-    AlwaysActivator.prototype.deinit = function() { this.enabled = false; };
-    AlwaysActivator.prototype.init = function() { this.enabled = true; this.check(); };
-    AlwaysActivator.prototype.check = function() { this.changeStateFn(this.state); };
-    AlwaysActivator.prototype.getState = function() { return this.enabled ? this.state : false; };
-    AlwaysActivator.prototype.setChangeStateFn = function(changeStateFn) { 
-        this.changeStateFn = function(value) {
-            if (this.enabled) {
-                changeStateFn(value);
-                this.state = value;
-            }
-        }; 
+    AlwaysActivator.prototype.init = function(bridge) { this.bridge = bridge; };
+    AlwaysActivator.prototype.enable = function() { this.setState(this.state); };
+    AlwaysActivator.prototype.disable = function() { };
+    AlwaysActivator.prototype.setOptions = function() { };
+    AlwaysActivator.prototype.setState = function(value) { 
+        this.bridge.trigger('changed', value);
+        this.state = value;
     };
-
-
-
-    /*---------------- From options activator ------------*/
-
-    function FromOptionsActivator() { this.state = false; }
-    FromOptionsActivator.prototype.init = AlwaysActivator.prototype.init;
-    FromOptionsActivator.prototype.deinit = AlwaysActivator.prototype.deinit;
-    FromOptionsActivator.prototype.getState = AlwaysActivator.prototype.getState;
-    FromOptionsActivator.prototype.setChangeStateFn = AlwaysActivator.prototype.setChangeStateFn;
-    FromOptionsActivator.prototype.setOptions = function(params) {
-        this.state = params.isActive == 'true' ?  true : false;
-    };
-    FromOptionsActivator.prototype.check = function() {
-        this.changeStateFn(this.state);
-    };
-
-
+    
 
     /*---------------- Page link activator ------------*/
 
     function PageLinkActivator() {
         this.state = false;
-        var self = this;
-        chrome.tabs.onRemoved.addListener(function() { self.check(); });
+        this.seachForUrl();
+        this.handleNewUrl();
+        this.handleClosedUrl();
     }
     PageLinkActivator.prototype.init = AlwaysActivator.prototype.init;
-    PageLinkActivator.prototype.deinit = AlwaysActivator.prototype.deinit;
-    PageLinkActivator.prototype.getState = AlwaysActivator.prototype.getState;
-    PageLinkActivator.prototype.setChangeStateFn = AlwaysActivator.prototype.setChangeStateFn;
-
-    PageLinkActivator.prototype.handleNewUrl = function(url) {
-        if (!url && !this.url)
-            this.changeStateFn(true);
-        else if (url && this.url && this.url.indexOf(url) === 0)
-            this.changeStateFn(true);
+    PageLinkActivator.prototype.setState = AlwaysActivator.prototype.setState;
+    PageLinkActivator.prototype.enable = function() {
+        this.bridge.addListener('newUrl', this.handleNewUrl);
+        this.bridge.addListener('closedUrl', this.handleClosedUrl);
+        
+        this.bridge.addListener('allUrlGetted', this.seachForUrl);
+        
+        this.check();
     };
+    PageLinkActivator.prototype.disable = function() {
+        this.state = false;
+        this.bridge.removeListener('newUrl', this.handleNewUrl);
+        this.bridge.removeListener('closedUrl', this.handleClosedUrl);
 
+        this.bridge.removeListener('allUrlGetted', this.seachForUrl);
+    };
     PageLinkActivator.prototype.setOptions = function(params) {
         this.url = params.watchedUrl !== undefined ? params.watchedUrl : this.url;
     };
 
     PageLinkActivator.prototype.check = function() {
-        var self = this, host, win, tab, isOpened = false;
-
-        chrome.windows.getAll({populate:true}, function(windows){
-            for (var wi in windows) {
-                win = windows[wi];
-                for (var ti in win.tabs) {
-                    tab = win.tabs[ti];
-                    if (tab.url.indexOf(self.url) === 0) {
-                        isOpened = true;
-                        break;
-                    }
-                }
-
-                if (isOpened) break;
-            }
-
-            if(isOpened)
-                self.changeStateFn(true);
-            else
-                self.changeStateFn(false);
-        });
-        
+        this.handleClosedUrl(this.url);
     };
+
+    PageLinkActivator.prototype.isWachedFocusLost = function(url) {
+        return !url && !this.url;
+    };
+
+    PageLinkActivator.prototype.isWatchedUrl = function(url) {
+        return url && this.url && url.indexOf(this.url) === 0;
+    };
+
+    PageLinkActivator.prototype.handleNewUrl = function() {
+        var self = this;
+        this.handleNewUrl = function(url) {
+
+            if (!self.url)
+                if (self.isWachedFocusLost(url))
+                    self.setState(true);
+                else
+                    self.setState(false);
+
+            else if (self.isWatchedUrl(url)) 
+                self.setState(true);
+            
+        };
+    };
+
+    PageLinkActivator.prototype.handleClosedUrl = function() {
+        var self = this;
+        this.handleClosedUrl = function(url) {
+            if (self.isWachedFocusLost(url)) self.setState(false);
+            else if (self.isWatchedUrl(url)) 
+                self.bridge.trigger('getAllUrl');
+            
+        };
+    };
+
+    PageLinkActivator.prototype.seachForUrl = function() {
+        var self = this;
+        this.seachForUrl = function(urls) {
+            var foundCount = 0;
+            for (var i=0,len=urls.length;i<len;i++) {
+                 if (self.isWatchedUrl(urls[i])) foundCount++;
+
+            }
+            if (!foundCount || (self.state && foundCount === 1))
+                self.setState(false);
+            else
+                self.setState(true);
+        };
+    };    
 
      /* ---------------- Days activator ------------ */
 
     function DaysActivator() {
         this.state = false;
-        this.timeOutId = -1;
-        this.check();
+        this.timeOutId = undefined;
     }
     DaysActivator.prototype.init = AlwaysActivator.prototype.init;
-    DaysActivator.prototype.getState = AlwaysActivator.prototype.getState;
-    DaysActivator.prototype.setChangeStateFn = AlwaysActivator.prototype.setChangeStateFn;
-    DaysActivator.prototype.deinit = function() { this.enabled = false; clearTimeout(this.timeOutId); };
+    DaysActivator.prototype.setState = AlwaysActivator.prototype.setState;
+    DaysActivator.prototype.enable = function(){ this.check(); };
+    DaysActivator.prototype.disable = function() { this.timeOutId = clearTimeout(this.timeOutId); };
     DaysActivator.dayList = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
     DaysActivator.prototype.setOptions = function(params) {
@@ -153,7 +201,7 @@ var Activators = (function() {
     DaysActivator.prototype.check = function(){
         var self = this;
         this.check = function() { 
-            self.setState(new Date()); 
+            self.checkDate(new Date()); 
         };
     };
 
@@ -191,7 +239,7 @@ var Activators = (function() {
         
     };    
 
-    DaysActivator.prototype.setState = function(now) {
+    DaysActivator.prototype.checkDate = function(now) {
         var today = this.days[this.getDayName(now)], t,
             start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), today.start[0], today.start[1]),
             end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), today.end[0], today.end[1]);
@@ -202,10 +250,10 @@ var Activators = (function() {
             end = t;
         }
 
-        this.changeStateFn(false);
+        this.setState(false);
 
         if (today.active && now > start && now < end)
-                this.changeStateFn(true);
+                this.setState(true);
 
         else if (!today.active)
             this.offsetToNextStart(now, start);
@@ -222,54 +270,80 @@ var Activators = (function() {
         'webpage': new PageLinkActivator(),
         'alwayson': new AlwaysActivator(true),
         'alwaysoff': new AlwaysActivator(false),
-        'fromOptions': new FromOptionsActivator()
         };
 
 })();
 
 
-var habitRPG = (function(){
+var SiteWatcher = (function() {
+/*
+    BaseController.prototype.init = function() {  };
+    BaseController.prototype.enable = function() {  }; // private use in setOptions
+    BaseController.prototype.disable = function() {  }; // private use in setOptions
+    BaseController.prototype.setOptions = function() { };
+*/
 
-    var habitrpg = {
+    var watcher = {
 
-        isSandBox: true,
-
-        sendInterval: 1000,
-        sendIntervalID: -1,
+        urlPrefix: 'tasks/productivity/',
 
         goodTimeMultiplier: 0.05,
         badTimeMultiplier: 0.1,
-        
-        activators: undefined,
-        activator: undefined,
-        uid: undefined,
+
+        sendInterval: 3000,
+        sendIntervalID: -1,
 
         score: 0,
-
-        host: undefined,
         timestamp: new Date().getTime(),
-        
-        habitUrl: '',
-        sourceHabitUrl: "https://habitrpg.com/users/{UID}/tasks/productivity/",
 
-        init: function() {
+        parentBridge: undefined,
+        dispatcher: new utilies.EventDispatcher(),
 
-            this.setActiveState();
+        activator: undefined,
+        activators: undefined,
 
+        init: function(parentBridge) {
+
+            this.parentBridge = parentBridge;
             this.activators = Activators;
 
             for (var name in this.activators) 
-                this.activators[name].setChangeStateFn(this.setActiveState);
+                this.activators[name].init(this.dispatcher);
 
             this.activator = this.activators.alwaysoff;
+
+            this.delegateAllUrl();
+        },
+
+        enable:function() {
+            this.parentBridge.addListener('newUrl', this.checkNewUrl);
+            this.parentBridge.addListener('closedUrl', this.checkClosedUrl);
+
+            this.dispatcher.addListener('getAllUrl', this.delegateAllUrl);
+            this.dispatcher.addListener('changed', this.controllSendingState);
+
+        },
+
+        disable: function() {
+
+            this.turnOffTheSender();
+
+            this.parentBridge.removeListener('newUrl', this.checkNewUrl);
+            this.parentBridge.removeListener('closedUrl', this.checkClosedUrl);
+
+            this.dispatcher.removeListener('getAllUrl', this.delegateAllUrl);
+            this.dispatcher.removeListener('changed', this.controllSendingState);
+
+        },
+
+        delegateAllUrl: function() {
+            var self = this;
+            this.delegateAllUrl = function() {
+                self.dispatcher.trigger('allUrlGetted', App.getAllUrls());
+            };
         },
 
         setOptions: function(params) {
-
-            if (params.uid) {
-                this.uid = params.uid;
-                this.habitUrl = this.sourceHabitUrl.replace('{UID}', this.uid);
-            }
 
             this.setValue(params, 'viceDomains');
             this.badHosts = this.viceDomains.split('\n');
@@ -277,18 +351,26 @@ var habitRPG = (function(){
             this.setValue(params, 'goodDomains');
             this.goodHosts = this.goodDomains.split('\n');
 
-            if (!this.isSandBox) {
+            if (!params.isSandBox) {
                 if (params.sendInterval) 
                     this.sendInterval = params.sendInterval * 1000 * 60;
                 
                 if (this.sendInterval < 60000 ) this.sendInterval = 60000;
             }
 
+            if (params.siteWatcherIsActive) {
+                if (params.siteWatcherIsActive == 'true')
+                    this.enable();
+                else 
+                    this.disable();
+            }
+
             for (var ac in this.activators) 
                 this.activators[ac].setOptions(params);
-            
+
             this.setValue(params, 'activatorName');
             this.setActivator(this.activatorName);
+
         },
 
         setValue: function(params, name) { 
@@ -296,27 +378,11 @@ var habitRPG = (function(){
         },
 
         setActivator: function(name) {
-            name = this.activators[name] ? name : 'alwayson';
-
-            this.activator.deinit();
+            name = this.activators[name] ? name : 'alwaysoff';
+            
+            this.activator.disable();
             this.activator = this.activators[name];
-            this.activator.init();
-        },
-
-        checkNewPage: function(url) {
-            
-            var host = url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1');
-            
-            if (host == this.host) return;
-            this.host = host;
-
-            if (this.activator.handleNewUrl) 
-                this.activator.handleNewUrl(url);
-
-            if (!this.activator.getState()) return;
-
-            this.addScoreFromSpentTime(this.getandResetSpentTime());
-
+            this.activator.enable();
         },
 
         addScoreFromSpentTime: function(spentTime) {
@@ -337,124 +403,253 @@ var habitRPG = (function(){
             return spent * 0.001 / 60;
         },
 
-        canSend: function() { return this.score !== 0; },
+        getHost: function(url) { return url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1'); },
 
-        sendToHabitRPGHost: function() {
+        checkNewUrl: function(url) {
+            
+            var host = watcher.getHost(url);
+            
+            if (host == watcher.host) return;
+            watcher.host = host;
 
-            this.addScoreFromSpentTime(this.getandResetSpentTime());
-
-            if (this.canSend()) {
-                
-                if (this.isSandBox) {
-                    if (this.scoreSendedAction)
-                        this.scoreSendedAction(this.score);
-                } else {
-                    var sc = this.score;
-                    
-                    $.ajax({
-                        type: 'POST',
-                        url: this.habitUrl + (sc < 0 ? 'down' : 'up')
-                        
-                    }).done(function(){
-                        habitrpg.scoreSendedAction(sc);
-                    });
-                }
-                this.score = 0;
-            }
+            watcher.dispatcher.trigger('newUrl', url);
+            
+            if (!watcher.activator.state) return;
+            
+            watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
+            
         },
 
-        setActiveState: function() {
-            var self = this;
+        checkClosedUrl: function(url) {
+            watcher.dispatcher.trigger('closedUrl', url);
+            
+        },
 
-            this.setActiveState = function(value) {
-                if (!value) {
-                    self.sendToHabitRPGHost();
-                    self.turnOffTheSender();
-                } else if (value) {
-                    if (self.uid) {
-                        self.turnOnTheSender();
-                    }
-                }
-            };
+        controllSendingState: function(value) {
+
+            if (watcher.activator.state && !value) {
+                watcher.triggerSendRequest();
+                watcher.turnOffTheSender();
+
+            } else if (!watcher.activator.state && value) {
+                watcher.turnOnTheSender();
+            }
+            
+        },
+
+        triggerSendRequest: function() {
+
+            watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
+            
+            if (watcher.score !== 0) {
+                watcher.parentBridge.trigger('sendRequest', {
+                    urlSuffix: watcher.urlPrefix+(watcher.score < 0 ? 'down' : 'up'), 
+                    score: watcher.score 
+                });
+
+                watcher.score = 0;
+            }
         },
 
         turnOnTheSender: function() {
             this.turnOffTheSender();
-            this.sendIntervalID = setInterval(function(){habitrpg.sendToHabitRPGHost();}, this.sendInterval);
+            this.sendIntervalID = setInterval(this.triggerSendRequest, this.sendInterval);
         },
 
         turnOffTheSender: function() {
             clearInterval(this.sendIntervalID);
-        },
-
-        setScoreSendedAction: function(scoreSendedAction) {
-            this.scoreSendedAction = scoreSendedAction;
         }
-    };
 
-    habitrpg.init();
+    };
 
     return {
-        get: function() { return habitrpg; },
-        getScore: function() { return habitrpg.score; },
-        isActive: function() { return habitrpg.activator.getState(); },
-        checkNewPage: function(url) { habitrpg.checkNewPage(url); },
-        setOptions: function(params) { habitrpg.setOptions(params); },
-        sendScore: function() { return habitrpg.sendToHabitRPGHost(); },
-        setScoreSendedAction: function(callback) { habitrpg.setScoreSendedAction(callback); }
+        get: function() { return watcher; },
+        getScore: function() { return watcher.score; },
+        isEnabled: function() { return watcher.parentBridge.hasListener('newUrl', watcher.checkNewUrl); },
+        init: function(parentBridge) { watcher.init(parentBridge); },
+        setOptions: function(parentBridge) { watcher.setOptions(parentBridge); },
+        forceSendRequest: function() { watcher.triggerSendRequest(); }
     };
+
+})();
+    
+
+
+var habitRPG = (function(){
+
+    var returnObj = {
+        get: function() { return habitrpg; },
+        init: function(bridge) { habitrpg.init(bridge); }
+    }, 
+  
+    habitrpg = {
+
+        isSandBox: true,
+
+        controllers: undefined,
+        
+        uid: undefined,
+
+        habitUrl: '',
+        sourceHabitUrl: "https://habitrpg.com/users/{UID}/",
+
+        parentBridge: undefined,
+        dispatcher: new utilies.EventDispatcher(),
+
+        init: function(bridge) {
+
+            this.parentBridge = bridge;
+            this.parentBridge.addListener('newUrl', this.newUrl);
+            this.parentBridge.addListener('closedUrl', this.closedUrl);
+            this.parentBridge.addListener('optionsChanged', this.setOptions);
+
+            this.controllers = {
+                'sitewatcher': SiteWatcher 
+            };
+
+            for (var name in this.controllers) 
+                this.controllers[name].init(this.dispatcher);
+        
+            this.dispatcher.addListener('sendRequest', this.send);
+        },
+
+        setOptions: function(params) {
+
+            if (params.uid) {
+                habitrpg.uid = params.uid;
+                habitrpg.habitUrl = habitrpg.sourceHabitUrl.replace('{UID}', habitrpg.uid);
+            }
+
+            params.isSandBox = habitrpg.isSandBox;
+
+            for (var co in habitrpg.controllers) 
+                habitrpg.controllers[co].setOptions(params);
+            
+        },
+
+        newUrl: function(url) { 
+            habitrpg.dispatcher.trigger('newUrl', url); 
+        },
+
+        closedUrl: function(url) { 
+            habitrpg.dispatcher.trigger('closedUrl', url); 
+        },
+
+        send: function(data) {
+
+            if (habitrpg.isSandBox) {
+                habitrpg.parentBridge.trigger('sended', data);
+                
+            } else {
+                if (!habitrpg.uid) return;
+
+                $.ajax({
+                    type: 'POST',
+                    url: habitrpg.habitUrl + data.urlSuffix
+                    
+                }).done(function(){
+                    habitrpg.parentBridge.trigger('sended', data);
+
+                });
+            }
+            
+        }
+
+    };
+
+    return returnObj;
 
 })();
 
 var App = {
 
-	activeTabId: -1,
+	appTest: 0, // -1 without habitrpg; +1 with habitrpg; 0 nothing logged from the app
+
+	tabs: {},
+	activeUrl: '',
 	hasFocus: true,
 
 	habitrpg: habitRPG,
 	invalidTransitionTypes: ['auto_subframe', 'form_submit'],
+
   //storage: chrome.storage.managed,
 	storage: chrome.storage.local,
+
 	notificationShowTime: 4000,
 
+	dispatcher: new utilies.EventDispatcher(),
 
 	init: function() {
-		chrome.webNavigation.onCommitted.addListener(this.navCommittedHandler);
+
+		this.dispatcher.addListener('sended', this.showNotification);
+		this.dispatcher.addListener('newUrl', function(url){App.activeUrl = url; });
+
+		if (this.appTest > 0) {
+			this.createLogger();
+			App.habitrpg.init(this.dispatcher);
+
+		} else if (this.appTest < 0)
+			this.createLogger();
+
+		else 
+			App.habitrpg.init(this.dispatcher);
+
+		chrome.tabs.onCreated.addListener(this.tabCreatedHandler);
+		chrome.tabs.onUpdated.addListener(this.tabUpdatedHandler);
+		chrome.tabs.onRemoved.addListener(this.tabRemovedHandler);
 		chrome.tabs.onActivated.addListener(this.tabActivatedHandler);
-		chrome.windows.onFocusChanged.addListener(this.focusChangeHandler);
+		chrome.webNavigation.onCommitted.addListener(this.navCommittedHandler);
+
+		chrome.windows.onFocusChanged.addListener(this.focusChangeHandler);		
 		chrome.storage.onChanged.addListener(this.setHabitRPGOptionsFromChange);
 
-		this.storage.get({
-			uid:'',
-			days: '',
-			watchedUrl: '',
-			isActive: 'false',
-			sendInterval: '5',
-			activatorName: 'alwayon',
-			viceDomains: 'reddit.com\n9gag.com\nfacebook.com',
-			goodDomains: 'lifehacker.com\ncodeacadamy.com\nkhanacadamy.org'
-		}, this.habitrpg.setOptions);
+		chrome.windows.getAll({populate:true}, function(windows){
+            for (var wi in windows) {
+                win = windows[wi];
+                for (var ti in win.tabs) {
+                    tab = win.tabs[ti];
+                    App.tabs[tab.id] = tab;
+                }
+            }
+        });
 
-		this.habitrpg.setScoreSendedAction(this.showNotification);
-		
+        this.storage.get(defaultOptions, function(data){ App.dispatcher.trigger('optionsChanged', data); });
+
 	},
 
-	navCommittedHandler: function(event){
-		if (App.hasFocus && App.activeTabId == event.tabId && App.invalidTransitionTypes.indexOf(event.transitionType) == -1) {
-			App.habitrpg.checkNewPage(App.catchSpecURL(event.url));
+	navCommittedHandler: function(tab){
+		App.tabs[tab.id] = tab;
+		if (App.hasFocus && tab.active && tab.url && App.invalidTransitionTypes.indexOf(tab.transitionType) == -1) {
+			App.dispatcher.trigger('newUrl', App.catchSpecURL(tab.url));
+			App.activeUrl = tab.url;
 		}
 	},
 
+	tabCreatedHandler: function(tab) {
+		App.tabs[tab.id] = tab;
+		App.tabUpdatedHandler(undefined, undefined, tab);
+	},
+
+	tabUpdatedHandler: function(id, changed, tab) {
+		if (App.hasFocus && tab.active && tab.url && App.activeUrl != tab.url) {
+			App.dispatcher.trigger('newUrl', App.catchSpecURL(tab.url));
+			App.activeUrl = tab.url;
+		}
+	},
+
+	// This event fired after the remove action, so we forced to store the tabs
+	tabRemovedHandler: function(tabId) {
+		var url = App.tabs[tabId].url;
+		delete App.tabs[tabId];
+
+		App.dispatcher.trigger('closedUrl', App.catchSpecURL(url));
+	},
+
 	tabActivatedHandler: function(event) {
-		// TODO: find out why not find the event tabID...
-		try { 
-			chrome.tabs.get(event.tabId, function(tab){
-				App.activeTabId = tab.id;
-				App.habitrpg.checkNewPage(App.catchSpecURL(tab.url));
-
-			});
-		} catch (e) {
-
+		var tab = App.tabs[event.tabId];
+		if (tab) {
+			App.activeUrl = tab.url;
+			App.dispatcher.trigger('newUrl', App.catchSpecURL(tab.url));
 		}
 	},
 
@@ -466,13 +661,14 @@ var App = {
 
 		if (!win.focused) {
 			App.hasFocus = false;
-			App.habitrpg.checkNewPage('');
+			App.dispatcher.trigger('newUrl', '');
 
 		} else {
 			App.hasFocus = true;
 			for (var i in win.tabs) {
-				if (win.tabs[i].active) {
-					App.habitrpg.checkNewPage(App.catchSpecURL(win.tabs[i].url));
+				var url = win.tabs[i].url;
+				if (win.tabs[i].active && App.activeUrl != url) {
+					App.dispatcher.trigger('newUrl', App.catchSpecURL(url));
 					break;
 				}
 			}
@@ -480,7 +676,7 @@ var App = {
 	},
 
 	catchSpecURL: function(url) {
-		
+
 		if (url.indexOf('chrome-devtools') === 0)
 			url = 'chrome-devtools';
 
@@ -492,23 +688,36 @@ var App = {
 		for (name in params) 
 			obj[name] = params[name].newValue;
 
-		App.habitrpg.setOptions(obj);
+		App.dispatcher.trigger('optionsChanged', obj);
 		
 	},
 
-	showNotification: function(score, message) {
+	showNotification: function(data) {
 
-		score = score.toFixed(4);
-
-		var notification = webkitNotifications.createNotification(
+		var score = data.score.toFixed(4),
+			notification = webkitNotifications.createNotification(
 			"/img/icon-48-" + (score < 0 ? 'down' : 'up') + ".png", 
 			'HabitRPG', 
-			message ? message :
+			data.message ? data.message :
 			('You '+(score < 0 ? 'lost' : 'gained')+' '+score+' '+(score < 0 ? 'HP! Work or will die...' : 'Exp/Gold! Keep up the good work!'))
 		);
 		notification.show();
 		setTimeout(function(){notification.close();}, App.notificationShowTime);
+	},
 
+	getAllUrls: function() {
+		var urls = [];
+		for (var i in App.tabs) {
+			urls.push(App.tabs[i].url);
+		}
+
+		return urls;
+	},
+
+	createLogger: function() {
+		this.dispatcher.addListener('newUrl', function(url) {console.log('new: '+url); });
+		this.dispatcher.addListener('optionsChanged', function(data){ console.log(data); });
+		this.dispatcher.addListener('closedUrl', function(url) { console.log('closed: '+url);});
 	}
 };
 

@@ -2,28 +2,32 @@ module.exports = function(grunt) {
 
 	grunt.initConfig({
 		lint: {
-			background: ['test/*.js', 'habitrpg.js', 'activators.js', 'app.js']
+			background: ['test/*.js', 'src/*.js']
 
 		},
 		concat: {
-		background: {
-			src: ['activators.js', 'habitrpg.js', 'app.js'],
-			dest: 'background.js'
-		}
+			background: {
+				src: ['src/defaults.js', 'src/utilies.js', 'src/activators.js', 'src/sitewatcher.js', 'src/habitrpg.js', 'src/app.js'],
+				dest: 'background.js'
+			},
+			options: {
+				src: ['src/defaults.js', 'src/options.js'],
+				dest: 'options.js'
+			}
 		},
 		watch: {
 			background: {
-				files: ['activators.js', 'habitrpg.js', 'app.js', 'test/*.js'],
+				files: ['src/*.js', 'test/*.js'],
 				tasks: ['lint', 'jasmine', 'concat:background', 'clean:test']
 			},
 			options: {
 				files: ['options.js', 'options.html'],
-				tasks: ['copy:extension']
+				tasks: ['concat:options', 'concat:background', 'copy:extension']
 			}
 		},
 		jasmine : {
-			src : ['activators.js', 'habitrpg.js'],
-			specs : 'test/*.js',
+			src : ['src/utilies.js', 'src/activators.js', 'src/sitewatcher.js', 'src/habitrpg.js'],
+			specs : ['test/utilies_test.js', 'test/activators_test.js', 'test/sitewatcher_test.js', 'test/habitrpg_test.js'],
 			timeout : 1000
 		},
 		clean: {
@@ -40,9 +44,9 @@ module.exports = function(grunt) {
 
 	grunt.loadNpmTasks('grunt-jasmine-runner');
 
-	grunt.registerTask('cpExt', 'copy:extension');
+	grunt.registerTask('create', ['concat:options', 'concat:background', 'copy:extension']);
 
-	grunt.registerTask('default', ['lint', 'jasmine', 'clean:test']);
+	grunt.registerTask('default', 'create');
 	
 
 };

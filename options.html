@@ -12,6 +12,7 @@
     .state.bad { background: red; display: block; }
     .visible { display: block !important; }
     .day { display: inline-block; margin: 5px; text-align: center; }
+    .section {background: #efefef;}
     #ActivatorOptions > div { display: none; }
   </style>
 </head>
@@ -21,6 +22,23 @@
     <div id="EmptyUID" class="state">If the UserId is field empty, this extension does not work</div>
     <label for="uid">HabitRPG UserId:</label><input id="uid" type="text"/></br>
 
+<div class="section">
+    <h4>Host watcher</h4>
+    <p><label for="siteWatcherIsActive">Enabled</label><input id="siteWatcherIsActive" type="checkbox" /></p>
+    <p><label for="sendInterval">Send to HabitRPG interval:</label><input type="number" id="sendInterval" value="5" min="1" /> minute <br /></p>
+    <label for="activatorName">How would you like to control the extension:</label>
+    <select id="activatorName">
+      <option value="alwayson">Always on</option>
+      <option value="webpage">Via website</option>
+      <option value="days">Days and hours</option>
+    </select><br />
+    <div id="ActivatorOptions">
+      <div id="ActOpts-webpage">
+        <label for="watchedUrl">Url:</label><input type="text" id="watchedUrl" /> ( Started with 'http://' or 'https://' or leave completle blank)
+      </div>
+      <div id="ActOpts-days">
+      </div>
+    </div>
     <p>Websites where you procrastinate (one domain per line)</p>
     <p><textarea id="viceDomains" rows="10">
 reddit.com
@@ -35,30 +53,7 @@ khanacadamy.org</textarea></p>
     If you type an empty row into one section, then the extension will detect when the chrome lost or has focus<br/>
     eg: add the empty line to the top of the productive websites. save your settings. and switch to your working program. Voala the extension keep thinking you are working:)
     
-    <p>
-      <label for="sendInterval">Send to HabitRPG interval:</label><input type="number" id="sendInterval" value="5" min="1" /> minute <br />
-    </p>
-    <label for="activatorName">How would you like to control the extension:</label>
-    <select id="activatorName">
-      <option value="alwayson">Always on</option>
-      <option value="fromOptions">From here</option>
-      <option value="days">Days and hours</option>
-      <option value="webpage">Via website</option>
-      <option value="tomatoes">Via http://tomato.es</option>
-    </select><br />
-    <div id="ActivatorOptions">
-      <div id="ActOpts-fromOptions">
-        <label for="isActive">Active:</label><input type="checkbox" id="isActive" />
-      </div>
-      <div id="ActOpts-webpage">
-        <label for="watchedUrl">Url:</label><input type="text" id="watchedUrl" /> ( Started with 'http://' or 'https://' or leave completle blank)
-      </div>
-      <div id="ActOpts-days">
-      </div>
-      <div id="ActOpts-tomatoes">
-      </div>
-    </div>
-
+</div>
     <p><button type="submit">Save</button></p>
   </form>
 </body>
