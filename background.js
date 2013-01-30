@@ -81,7 +81,7 @@ chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
 		if(direction == "up"){
 		directionMessage = "Using a Productive Website";
 		}else if (direction == "down"){
-		directionMessage = "Linguring on a Vice Website";
+		directionMessage = "Lingering on a Vice Website";
 		}
 				
 		var timer = setInterval(function(){
