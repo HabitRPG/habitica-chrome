@@ -1,6 +1,6 @@
 var defaultOptions = {
       uid:'',
-      watchedHost: '',
+      watchedUrl: '',
       sendInterval: '5',
       activatorName: 'alwayon',
       siteWatcherIsActive: 'true',

@@ -7,89 +7,94 @@ var Activators = (function() {
         this.state = value;
     }
     AlwaysActivator.prototype.init = function(bridge) { this.bridge = bridge; };
-    AlwaysActivator.prototype.enable = function() { };
+    AlwaysActivator.prototype.enable = function() { this.setState(this.state); };
     AlwaysActivator.prototype.disable = function() { };
     AlwaysActivator.prototype.setOptions = function() { };
     AlwaysActivator.prototype.setState = function(value) { 
+        this.bridge.trigger('changed', value);
         this.state = value;
-        this.bridge.trigger('changed', this.state);
     };
     
-
-    /*---------------- From options activator ------------*/
-
-    function FromOptionsActivator() { this.state = false; }
-    FromOptionsActivator.prototype.init = AlwaysActivator.prototype.init;
-    FromOptionsActivator.prototype.enable = AlwaysActivator.prototype.enable;
-    FromOptionsActivator.prototype.disable = AlwaysActivator.prototype.disable;
-    FromOptionsActivator.prototype.setState = AlwaysActivator.prototype.setState;
-    FromOptionsActivator.prototype.setOptions = function(params) {
-        this.setState(params.isActive == 'true');
-    };
 
     /*---------------- Page link activator ------------*/
 
     function PageLinkActivator() {
         this.state = false;
-        this.seachForHost();
-        this.handleNewHost();
-        this.handleClosedHost();
+        this.seachForUrl();
+        this.handleNewUrl();
+        this.handleClosedUrl();
     }
     PageLinkActivator.prototype.init = AlwaysActivator.prototype.init;
     PageLinkActivator.prototype.setState = AlwaysActivator.prototype.setState;
     PageLinkActivator.prototype.enable = function() {
-        this.bridge.addListener('newHost', this.handleNewHost);
-        this.bridge.addListener('closedHost', this.handleClosedHost);
-        // todo implement the trigger's
-        this.bridge.addListener('allUrlGetted', this.seachForHost);
+        this.bridge.addListener('newUrl', this.handleNewUrl);
+        this.bridge.addListener('closedUrl', this.handleClosedUrl);
+        
+        this.bridge.addListener('allUrlGetted', this.seachForUrl);
         
         this.check();
     };
     PageLinkActivator.prototype.disable = function() {
         this.state = false;
-        this.bridge.removeListener('newHost', this.handleNewHost);
-        this.bridge.removeListener('closedHost', this.handleClosedHost);
+        this.bridge.removeListener('newUrl', this.handleNewUrl);
+        this.bridge.removeListener('closedUrl', this.handleClosedUrl);
 
-        this.bridge.removeListener('allUrlGetted', this.seachForHost);
+        this.bridge.removeListener('allUrlGetted', this.seachForUrl);
     };
     PageLinkActivator.prototype.setOptions = function(params) {
-        this.host = params.watchedHost !== undefined ? params.watchedHost : this.host;
-        if (this.bridge.hasListener('newHost', this.handleNewHost)) this.check();
+        this.url = params.watchedUrl !== undefined ? params.watchedUrl : this.url;
     };
 
     PageLinkActivator.prototype.check = function() {
-
-        this.handleClosedHost(this.host);
+        this.handleClosedUrl(this.url);
     };
 
-    PageLinkActivator.prototype.handleNewHost = function() {
-        var self = this;
-        this.handleNewHost = function(host) {
-            if ((!host && !this.host) || (host && this.host && this.host.indexOf(host) === 0)) {
-                this.setState(true);
-            }
-        };
+    PageLinkActivator.prototype.isWachedFocusLost = function(url) {
+        return !url && !this.url;
     };
 
-    PageLinkActivator.prototype.handleClosedHost = function() {
-        var self = this;
-        this.handleClosedHost = function(host) {
-            if (self.host == host ) 
-                self.bridge.trigger('getAllUrl');
-        };
+    PageLinkActivator.prototype.isWatchedUrl = function(url) {
+        return url && this.url && url.indexOf(this.url) === 0;
     };
 
-    PageLinkActivator.prototype.seachForHost = function() {
+    PageLinkActivator.prototype.handleNewUrl = function() {
         var self = this;
-        this.seachForHost = function(urls) {
-            for (var i=0,len=urls.length;i<len;i++) {
-                 if (urls[i].indexOf(self.host) === 0) {
+        this.handleNewUrl = function(url) {
+
+            if (!self.url)
+                if (self.isWachedFocusLost(url))
                     self.setState(true);
-                    return;
-                 }
-            }
+                else
+                    self.setState(false);
 
-            self.setState(false);
+            else if (self.isWatchedUrl(url)) 
+                self.setState(true);
+            
+        };
+    };
+
+    PageLinkActivator.prototype.handleClosedUrl = function() {
+        var self = this;
+        this.handleClosedUrl = function(url) {
+            if (self.isWachedFocusLost(url)) self.setState(false);
+            else if (self.isWatchedUrl(url)) 
+                self.bridge.trigger('getAllUrl');
+            
+        };
+    };
+
+    PageLinkActivator.prototype.seachForUrl = function() {
+        var self = this;
+        this.seachForUrl = function(urls) {
+            var foundCount = 0;
+            for (var i=0,len=urls.length;i<len;i++) {
+                 if (self.isWatchedUrl(urls[i])) foundCount++;
+
+            }
+            if (!foundCount || (self.state && foundCount === 1))
+                self.setState(false);
+            else
+                self.setState(true);
         };
     };    
 
@@ -98,7 +103,6 @@ var Activators = (function() {
     function DaysActivator() {
         this.state = false;
         this.timeOutId = undefined;
-        this.check();
     }
     DaysActivator.prototype.init = AlwaysActivator.prototype.init;
     DaysActivator.prototype.setState = AlwaysActivator.prototype.setState;
@@ -108,7 +112,6 @@ var Activators = (function() {
 
     DaysActivator.prototype.setOptions = function(params) {
         this.days = params.days ? params.days : this.days;
-        if (this.timeOutId) this.check();
     };
 
     DaysActivator.prototype.check = function(){
@@ -183,7 +186,6 @@ var Activators = (function() {
         'webpage': new PageLinkActivator(),
         'alwayson': new AlwaysActivator(true),
         'alwaysoff': new AlwaysActivator(false),
-        'fromOptions': new FromOptionsActivator()
         };
 
 })();

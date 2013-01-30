@@ -118,7 +118,7 @@ jQuery('document').ready(function(){
     },
 
     getDataFromView: function() {
-      var data = {}, temp = this.getDefaults();
+      var data = {}, temp = defaultOptions.days;
 
       for (var day in temp) {
         data[day] = {

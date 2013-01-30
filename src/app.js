@@ -50,17 +50,7 @@ var App = {
             }
         });
 
-        this.storage.get({
-			uid:'',
-			days: '',
-			watchedUrl: '',
-			isActive: 'false',
-			sendInterval: '5',
-			activatorName: 'alwayon',
-			viceDomains: 'reddit.com\n9gag.com\nfacebook.com',
-			goodDomains: 'lifehacker.com\ncodeacadamy.com\nkhanacadamy.org'
-
-		}, function(data){ App.dispatcher.trigger('optionsChanged', data); });
+        this.storage.get(defaultOptions, function(data){ App.dispatcher.trigger('optionsChanged', data); });
 
 	},
 
@@ -86,8 +76,10 @@ var App = {
 
 	// This event fired after the remove action, so we forced to store the tabs
 	tabRemovedHandler: function(tabId) {
-		App.dispatcher.trigger('closedUrl', App.catchSpecURL(App.tabs[tabId].url));
+		var url = App.tabs[tabId].url;
 		delete App.tabs[tabId];
+
+		App.dispatcher.trigger('closedUrl', App.catchSpecURL(url));
 	},
 
 	tabActivatedHandler: function(event) {

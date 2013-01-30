@@ -2,7 +2,7 @@
 var habitRPG = (function(){
 
     var returnObj = {
-        //get: function() { return habitrpg; },
+        get: function() { return habitrpg; },
         init: function(bridge) { habitrpg.init(bridge); }
     }, 
   
@@ -14,8 +14,6 @@ var habitRPG = (function(){
         
         uid: undefined,
 
-        host: undefined,
-        
         habitUrl: '',
         sourceHabitUrl: "https://habitrpg.com/users/{UID}/",
 
@@ -62,20 +60,20 @@ var habitRPG = (function(){
         },
 
         send: function(data) {
-   
+
             if (habitrpg.isSandBox) {
                 habitrpg.parentBridge.trigger('sended', data);
-                habitrpg.scoreSendedAction(data.score, data.message);
-
-            } else {
                 
+            } else {
+                if (!habitrpg.uid) return;
+
                 $.ajax({
                     type: 'POST',
                     url: habitrpg.habitUrl + data.urlSuffix
                     
                 }).done(function(){
                     habitrpg.parentBridge.trigger('sended', data);
-                    habitrpg.scoreSendedAction(data.score, data.message);
+
                 });
             }
             
