@@ -540,11 +540,11 @@ var habitRPG = (function(){
         },
 
         isOpenedHandler: function() {
-            watcher.dispatcher.trigger('isOpened');
+            habitrpg.dispatcher.trigger('isOpened');
         },
 
         isOpenedUrlHandler: function(url) {
-            watcher.parentBridge.trigger('isOpenedUrl', url);
+            habitrpg.parentBridge.trigger('isOpenedUrl', url);
         },
 
         send: function(data) {

@@ -36,7 +36,7 @@ var defaultOptions = {
               start: [8,0], end: [16,30]
             }
         }
-    };
+  };
 jQuery('document').ready(function(){
     
   //var storage = chrome.storage.managed;
