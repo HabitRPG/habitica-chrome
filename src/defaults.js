@@ -36,4 +36,4 @@ var defaultOptions = {
               start: [8,0], end: [16,30]
             }
         }
-    };
+  };

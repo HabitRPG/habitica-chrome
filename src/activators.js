@@ -20,33 +20,26 @@ var Activators = (function() {
 
     function PageLinkActivator() {
         this.state = false;
-        this.seachForUrl();
         this.handleNewUrl();
+        this.isOpenedHandler();
         this.handleClosedUrl();
     }
     PageLinkActivator.prototype.init = AlwaysActivator.prototype.init;
     PageLinkActivator.prototype.setState = AlwaysActivator.prototype.setState;
     PageLinkActivator.prototype.enable = function() {
-        this.bridge.addListener('newUrl', this.handleNewUrl);
-        this.bridge.addListener('closedUrl', this.handleClosedUrl);
-        
-        this.bridge.addListener('allUrlGetted', this.seachForUrl);
+        this.bridge.addListener('firstOpenedUrl', this.handleNewUrl);
+        this.bridge.addListener('lastClosedUrl', this.handleClosedUrl);
+        this.bridge.addListener('isOpened', this.isOpenedHandler);
         
         this.check();
     };
     PageLinkActivator.prototype.disable = function() {
         this.state = false;
-        this.bridge.removeListener('newUrl', this.handleNewUrl);
-        this.bridge.removeListener('closedUrl', this.handleClosedUrl);
-
-        this.bridge.removeListener('allUrlGetted', this.seachForUrl);
+        this.bridge.removeListener('firstOpenedUrl', this.handleNewUrl);
+        this.bridge.removeListener('lastClosedUrl', this.handleClosedUrl);
     };
     PageLinkActivator.prototype.setOptions = function(params) {
         this.url = params.watchedUrl !== undefined ? params.watchedUrl : this.url;
-    };
-
-    PageLinkActivator.prototype.check = function() {
-        this.handleClosedUrl(this.url);
     };
 
     PageLinkActivator.prototype.isWachedFocusLost = function(url) {
@@ -57,10 +50,20 @@ var Activators = (function() {
         return url && this.url && url.indexOf(this.url) === 0;
     };
 
+    PageLinkActivator.prototype.check = function() {
+        this.bridge.trigger('isOpenedUrl', this.url);
+    };
+
+    PageLinkActivator.prototype.isOpenedHandler = function() {
+        var self = this;
+        this.isOpenedHandler = function() {
+            self.setState(true);
+        };
+    };    
+
     PageLinkActivator.prototype.handleNewUrl = function() {
         var self = this;
         this.handleNewUrl = function(url) {
-
             if (!self.url)
                 if (self.isWachedFocusLost(url))
                     self.setState(true);
@@ -77,26 +80,9 @@ var Activators = (function() {
         var self = this;
         this.handleClosedUrl = function(url) {
             if (self.isWachedFocusLost(url)) self.setState(false);
-            else if (self.isWatchedUrl(url)) 
-                self.bridge.trigger('getAllUrl');
-            
+            else if (self.isWatchedUrl(url)) self.setState(false);
         };
     };
-
-    PageLinkActivator.prototype.seachForUrl = function() {
-        var self = this;
-        this.seachForUrl = function(urls) {
-            var foundCount = 0;
-            for (var i=0,len=urls.length;i<len;i++) {
-                 if (self.isWatchedUrl(urls[i])) foundCount++;
-
-            }
-            if (!foundCount || (self.state && foundCount === 1))
-                self.setState(false);
-            else
-                self.setState(true);
-        };
-    };    
 
      /* ---------------- Days activator ------------ */
 
@@ -185,7 +171,7 @@ var Activators = (function() {
         'days': new DaysActivator(),
         'webpage': new PageLinkActivator(),
         'alwayson': new AlwaysActivator(true),
-        'alwaysoff': new AlwaysActivator(false),
+        'alwaysoff': new AlwaysActivator(false)
         };
 
 })();

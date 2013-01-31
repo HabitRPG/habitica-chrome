@@ -19,6 +19,7 @@ var App = {
 	init: function() {
 
 		this.dispatcher.addListener('sended', this.showNotification);
+		this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
 		this.dispatcher.addListener('newUrl', function(url){App.activeUrl = url; });
 
 		if (this.appTest > 0) {
@@ -54,21 +55,31 @@ var App = {
 
 	},
 
-	navCommittedHandler: function(tab){
+	navCommittedHandler: function(tab) {
+		if (!tab.id) return;
+
+		App.triggerFirstOpenedUrl(tab.url);
+
 		App.tabs[tab.id] = tab;
 		if (App.hasFocus && tab.active && tab.url && App.invalidTransitionTypes.indexOf(tab.transitionType) == -1) {
+			App.triggerFirstOpenedUrl(tab.url);
 			App.dispatcher.trigger('newUrl', App.catchSpecURL(tab.url));
 			App.activeUrl = tab.url;
 		}
 	},
 
 	tabCreatedHandler: function(tab) {
+		if (!tab.id) return;
+
+		App.triggerFirstOpenedUrl(tab.url);
+
 		App.tabs[tab.id] = tab;
 		App.tabUpdatedHandler(undefined, undefined, tab);
 	},
 
 	tabUpdatedHandler: function(id, changed, tab) {
 		if (App.hasFocus && tab.active && tab.url && App.activeUrl != tab.url) {
+			App.triggerFirstOpenedUrl(tab.url);
 			App.dispatcher.trigger('newUrl', App.catchSpecURL(tab.url));
 			App.activeUrl = tab.url;
 		}
@@ -78,6 +89,9 @@ var App = {
 	tabRemovedHandler: function(tabId) {
 		var url = App.tabs[tabId].url;
 		delete App.tabs[tabId];
+		
+		if (!App.hasInTabs(url))
+			App.dispatcher.trigger('lastClosedUrl', App.catchSpecURL(url));
 
 		App.dispatcher.trigger('closedUrl', App.catchSpecURL(url));
 	},
@@ -142,19 +156,44 @@ var App = {
 		setTimeout(function(){notification.close();}, App.notificationShowTime);
 	},
 
-	getAllUrls: function() {
-		var urls = [];
-		for (var i in App.tabs) {
-			urls.push(App.tabs[i].url);
-		}
+	isOpenedUrlHandler: function(url) {
+		if (App.hasInTabs(url))
+			App.dispatcher.trigger('isOpened');
+	},
 
-		return urls;
+	triggerFirstOpenedUrl: function(url) {
+		if (!App.hasInTabs(url))
+			App.dispatcher.trigger('firstOpenedUrl', App.catchSpecURL(url));
+	},
+
+	hasInTabs: function(url) {
+		var urls = $.map(App.tabs, App.filterUrlsWrap(App.getHost(url)));
+		if (urls.indexOf(true) === -1 ) return false;
+
+		return true;
+	},
+
+	filterUrlsWrap: function(refUrl){
+		return function(tab){
+			var url = App.getHost(tab.url);
+			if (refUrl == url) return true;
+			return false;
+		};
+	},
+
+	filterUrls: function(refUrl, tab) {
+	},
+
+	getHost: function(url) { 
+		return url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1'); 
 	},
 
 	createLogger: function() {
 		this.dispatcher.addListener('newUrl', function(url) {console.log('new: '+url); });
 		this.dispatcher.addListener('optionsChanged', function(data){ console.log(data); });
 		this.dispatcher.addListener('closedUrl', function(url) { console.log('closed: '+url);});
+		this.dispatcher.addListener('lastClosedUrl', function(url) {console.log('lastClosedUrl: '+url); });
+		this.dispatcher.addListener('firstOpenedUrl', function(url) {console.log('firstOpenedUrl: '+url); });
 	}
 };
 

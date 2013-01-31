@@ -25,7 +25,10 @@ var habitRPG = (function(){
             this.parentBridge = bridge;
             this.parentBridge.addListener('newUrl', this.newUrl);
             this.parentBridge.addListener('closedUrl', this.closedUrl);
+            this.parentBridge.addListener('isOpened', this.isOpenedHandler);
             this.parentBridge.addListener('optionsChanged', this.setOptions);
+            this.parentBridge.addListener('lastClosedUrl', this.lastClosedUrlHandler);
+            this.parentBridge.addListener('firstOpenedUrl', this.firstOpenedUrlHandler);
 
             this.controllers = {
                 'sitewatcher': SiteWatcher 
@@ -35,6 +38,7 @@ var habitRPG = (function(){
                 this.controllers[name].init(this.dispatcher);
         
             this.dispatcher.addListener('sendRequest', this.send);
+            this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
         },
 
         setOptions: function(params) {
@@ -57,6 +61,22 @@ var habitRPG = (function(){
 
         closedUrl: function(url) { 
             habitrpg.dispatcher.trigger('closedUrl', url); 
+        },
+
+        lastClosedUrlHandler: function(url) { 
+            habitrpg.dispatcher.trigger('lastClosedUrl', url); 
+        },
+
+        firstOpenedUrlHandler: function(url) { 
+            habitrpg.dispatcher.trigger('firstOpenedUrl', url); 
+        },
+
+        isOpenedHandler: function() {
+            habitrpg.dispatcher.trigger('isOpened');
+        },
+
+        isOpenedUrlHandler: function(url) {
+            habitrpg.parentBridge.trigger('isOpenedUrl', url);
         },
 
         send: function(data) {
