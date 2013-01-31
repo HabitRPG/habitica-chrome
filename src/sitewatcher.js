@@ -15,7 +15,7 @@ var SiteWatcher = (function() {
         badTimeMultiplier: 0.1,
 
         sendInterval: 3000,
-        sendIntervalID: -1,
+        sendIntervalID: 0,
 
         score: 0,
         timestamp: new Date().getTime(),
@@ -35,16 +35,16 @@ var SiteWatcher = (function() {
                 this.activators[name].init(this.dispatcher);
 
             this.activator = this.activators.alwaysoff;
-
-            this.delegateAllUrl();
         },
 
         enable:function() {
             this.parentBridge.addListener('newUrl', this.checkNewUrl);
-            this.parentBridge.addListener('closedUrl', this.checkClosedUrl);
+            this.parentBridge.addListener('lastClosedUrl', this.lastClosedUrlHandler);
+            this.parentBridge.addListener('firstOpenedUrl', this.firstOpenedUrlHandler);
 
-            this.dispatcher.addListener('getAllUrl', this.delegateAllUrl);
+            this.dispatcher.addListener('isOpened', this.isOpenedHandler);
             this.dispatcher.addListener('changed', this.controllSendingState);
+            this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
 
         },
 
@@ -53,18 +53,13 @@ var SiteWatcher = (function() {
             this.turnOffTheSender();
 
             this.parentBridge.removeListener('newUrl', this.checkNewUrl);
-            this.parentBridge.removeListener('closedUrl', this.checkClosedUrl);
+            this.parentBridge.removeListener('lastClosedUrl', this.lastClosedUrlHandler);
+            this.parentBridge.removeListener('firstOpenedUrl', this.firstOpenedUrlHandler);
 
-            this.dispatcher.removeListener('getAllUrl', this.delegateAllUrl);
+            this.dispatcher.removeListener('isOpened', this.isOpenedHandler);
             this.dispatcher.removeListener('changed', this.controllSendingState);
+            this.dispatcher.removeListener('isOpenedUrl', this.isOpenedUrlHandler);
 
-        },
-
-        delegateAllUrl: function() {
-            var self = this;
-            this.delegateAllUrl = function() {
-                self.dispatcher.trigger('allUrlGetted', App.getAllUrls());
-            };
         },
 
         setOptions: function(params) {
@@ -135,8 +130,6 @@ var SiteWatcher = (function() {
             
             if (host == watcher.host) return;
             watcher.host = host;
-
-            watcher.dispatcher.trigger('newUrl', url);
             
             if (!watcher.activator.state) return;
             
@@ -144,9 +137,20 @@ var SiteWatcher = (function() {
             
         },
 
-        checkClosedUrl: function(url) {
-            watcher.dispatcher.trigger('closedUrl', url);
-            
+        isOpenedHandler: function() {
+            watcher.dispatcher.trigger('isOpened');
+        },
+
+        isOpenedUrlHandler: function(url) {
+            watcher.parentBridge.trigger('isOpenedUrl', url);
+        },
+
+        firstOpenedUrlHandler: function(url) {
+            watcher.dispatcher.trigger('firstOpenedUrl', url);
+        },
+
+        lastClosedUrlHandler: function(url) {
+            watcher.dispatcher.trigger('lastClosedUrl', url);
         },
 
         controllSendingState: function(value) {
@@ -157,7 +161,9 @@ var SiteWatcher = (function() {
 
             } else if (!watcher.activator.state && value) {
                 watcher.turnOnTheSender();
-            }
+
+            } else if (watcher.activator.state && value && !watcher.sendIntervalID)
+                watcher.turnOnTheSender();
             
         },
 
@@ -181,7 +187,7 @@ var SiteWatcher = (function() {
         },
 
         turnOffTheSender: function() {
-            clearInterval(this.sendIntervalID);
+            this.sendIntervalID = clearInterval(this.sendIntervalID);
         }
 
     };

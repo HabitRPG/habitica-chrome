@@ -36,7 +36,7 @@ var defaultOptions = {
               start: [8,0], end: [16,30]
             }
         }
-    };
+  };
 
 var utilies = (function(){
 
@@ -104,33 +104,26 @@ var Activators = (function() {
 
     function PageLinkActivator() {
         this.state = false;
-        this.seachForUrl();
         this.handleNewUrl();
+        this.isOpenedHandler();
         this.handleClosedUrl();
     }
     PageLinkActivator.prototype.init = AlwaysActivator.prototype.init;
     PageLinkActivator.prototype.setState = AlwaysActivator.prototype.setState;
     PageLinkActivator.prototype.enable = function() {
-        this.bridge.addListener('newUrl', this.handleNewUrl);
-        this.bridge.addListener('closedUrl', this.handleClosedUrl);
-        
-        this.bridge.addListener('allUrlGetted', this.seachForUrl);
+        this.bridge.addListener('firstOpenedUrl', this.handleNewUrl);
+        this.bridge.addListener('lastClosedUrl', this.handleClosedUrl);
+        this.bridge.addListener('isOpened', this.isOpenedHandler);
         
         this.check();
     };
     PageLinkActivator.prototype.disable = function() {
         this.state = false;
-        this.bridge.removeListener('newUrl', this.handleNewUrl);
-        this.bridge.removeListener('closedUrl', this.handleClosedUrl);
-
-        this.bridge.removeListener('allUrlGetted', this.seachForUrl);
+        this.bridge.removeListener('firstOpenedUrl', this.handleNewUrl);
+        this.bridge.removeListener('lastClosedUrl', this.handleClosedUrl);
     };
     PageLinkActivator.prototype.setOptions = function(params) {
         this.url = params.watchedUrl !== undefined ? params.watchedUrl : this.url;
-    };
-
-    PageLinkActivator.prototype.check = function() {
-        this.handleClosedUrl(this.url);
     };
 
     PageLinkActivator.prototype.isWachedFocusLost = function(url) {
@@ -141,10 +134,20 @@ var Activators = (function() {
         return url && this.url && url.indexOf(this.url) === 0;
     };
 
+    PageLinkActivator.prototype.check = function() {
+        this.bridge.trigger('isOpenedUrl', this.url);
+    };
+
+    PageLinkActivator.prototype.isOpenedHandler = function() {
+        var self = this;
+        this.isOpenedHandler = function() {
+            self.setState(true);
+        };
+    };    
+
     PageLinkActivator.prototype.handleNewUrl = function() {
         var self = this;
         this.handleNewUrl = function(url) {
-
             if (!self.url)
                 if (self.isWachedFocusLost(url))
                     self.setState(true);
@@ -161,26 +164,9 @@ var Activators = (function() {
         var self = this;
         this.handleClosedUrl = function(url) {
             if (self.isWachedFocusLost(url)) self.setState(false);
-            else if (self.isWatchedUrl(url)) 
-                self.bridge.trigger('getAllUrl');
-            
+            else if (self.isWatchedUrl(url)) self.setState(false);
         };
     };
-
-    PageLinkActivator.prototype.seachForUrl = function() {
-        var self = this;
-        this.seachForUrl = function(urls) {
-            var foundCount = 0;
-            for (var i=0,len=urls.length;i<len;i++) {
-                 if (self.isWatchedUrl(urls[i])) foundCount++;
-
-            }
-            if (!foundCount || (self.state && foundCount === 1))
-                self.setState(false);
-            else
-                self.setState(true);
-        };
-    };    
 
      /* ---------------- Days activator ------------ */
 
@@ -269,7 +255,7 @@ var Activators = (function() {
         'days': new DaysActivator(),
         'webpage': new PageLinkActivator(),
         'alwayson': new AlwaysActivator(true),
-        'alwaysoff': new AlwaysActivator(false),
+        'alwaysoff': new AlwaysActivator(false)
         };
 
 })();
@@ -291,7 +277,7 @@ var SiteWatcher = (function() {
         badTimeMultiplier: 0.1,
 
         sendInterval: 3000,
-        sendIntervalID: -1,
+        sendIntervalID: 0,
 
         score: 0,
         timestamp: new Date().getTime(),
@@ -311,16 +297,16 @@ var SiteWatcher = (function() {
                 this.activators[name].init(this.dispatcher);
 
             this.activator = this.activators.alwaysoff;
-
-            this.delegateAllUrl();
         },
 
         enable:function() {
             this.parentBridge.addListener('newUrl', this.checkNewUrl);
-            this.parentBridge.addListener('closedUrl', this.checkClosedUrl);
+            this.parentBridge.addListener('lastClosedUrl', this.lastClosedUrlHandler);
+            this.parentBridge.addListener('firstOpenedUrl', this.firstOpenedUrlHandler);
 
-            this.dispatcher.addListener('getAllUrl', this.delegateAllUrl);
+            this.dispatcher.addListener('isOpened', this.isOpenedHandler);
             this.dispatcher.addListener('changed', this.controllSendingState);
+            this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
 
         },
 
@@ -329,18 +315,13 @@ var SiteWatcher = (function() {
             this.turnOffTheSender();
 
             this.parentBridge.removeListener('newUrl', this.checkNewUrl);
-            this.parentBridge.removeListener('closedUrl', this.checkClosedUrl);
+            this.parentBridge.removeListener('lastClosedUrl', this.lastClosedUrlHandler);
+            this.parentBridge.removeListener('firstOpenedUrl', this.firstOpenedUrlHandler);
 
-            this.dispatcher.removeListener('getAllUrl', this.delegateAllUrl);
+            this.dispatcher.removeListener('isOpened', this.isOpenedHandler);
             this.dispatcher.removeListener('changed', this.controllSendingState);
+            this.dispatcher.removeListener('isOpenedUrl', this.isOpenedUrlHandler);
 
-        },
-
-        delegateAllUrl: function() {
-            var self = this;
-            this.delegateAllUrl = function() {
-                self.dispatcher.trigger('allUrlGetted', App.getAllUrls());
-            };
         },
 
         setOptions: function(params) {
@@ -411,8 +392,6 @@ var SiteWatcher = (function() {
             
             if (host == watcher.host) return;
             watcher.host = host;
-
-            watcher.dispatcher.trigger('newUrl', url);
             
             if (!watcher.activator.state) return;
             
@@ -420,9 +399,20 @@ var SiteWatcher = (function() {
             
         },
 
-        checkClosedUrl: function(url) {
-            watcher.dispatcher.trigger('closedUrl', url);
-            
+        isOpenedHandler: function() {
+            watcher.dispatcher.trigger('isOpened');
+        },
+
+        isOpenedUrlHandler: function(url) {
+            watcher.parentBridge.trigger('isOpenedUrl', url);
+        },
+
+        firstOpenedUrlHandler: function(url) {
+            watcher.dispatcher.trigger('firstOpenedUrl', url);
+        },
+
+        lastClosedUrlHandler: function(url) {
+            watcher.dispatcher.trigger('lastClosedUrl', url);
         },
 
         controllSendingState: function(value) {
@@ -433,7 +423,9 @@ var SiteWatcher = (function() {
 
             } else if (!watcher.activator.state && value) {
                 watcher.turnOnTheSender();
-            }
+
+            } else if (watcher.activator.state && value && !watcher.sendIntervalID)
+                watcher.turnOnTheSender();
             
         },
 
@@ -457,7 +449,7 @@ var SiteWatcher = (function() {
         },
 
         turnOffTheSender: function() {
-            clearInterval(this.sendIntervalID);
+            this.sendIntervalID = clearInterval(this.sendIntervalID);
         }
 
     };
@@ -501,7 +493,10 @@ var habitRPG = (function(){
             this.parentBridge = bridge;
             this.parentBridge.addListener('newUrl', this.newUrl);
             this.parentBridge.addListener('closedUrl', this.closedUrl);
+            this.parentBridge.addListener('isOpened', this.isOpenedHandler);
             this.parentBridge.addListener('optionsChanged', this.setOptions);
+            this.parentBridge.addListener('lastClosedUrl', this.lastClosedUrlHandler);
+            this.parentBridge.addListener('firstOpenedUrl', this.firstOpenedUrlHandler);
 
             this.controllers = {
                 'sitewatcher': SiteWatcher 
@@ -511,6 +506,7 @@ var habitRPG = (function(){
                 this.controllers[name].init(this.dispatcher);
         
             this.dispatcher.addListener('sendRequest', this.send);
+            this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
         },
 
         setOptions: function(params) {
@@ -533,6 +529,22 @@ var habitRPG = (function(){
 
         closedUrl: function(url) { 
             habitrpg.dispatcher.trigger('closedUrl', url); 
+        },
+
+        lastClosedUrlHandler: function(url) { 
+            habitrpg.dispatcher.trigger('lastClosedUrl', url); 
+        },
+
+        firstOpenedUrlHandler: function(url) { 
+            habitrpg.dispatcher.trigger('firstOpenedUrl', url); 
+        },
+
+        isOpenedHandler: function() {
+            watcher.dispatcher.trigger('isOpened');
+        },
+
+        isOpenedUrlHandler: function(url) {
+            watcher.parentBridge.trigger('isOpenedUrl', url);
         },
 
         send: function(data) {
@@ -582,6 +594,7 @@ var App = {
 	init: function() {
 
 		this.dispatcher.addListener('sended', this.showNotification);
+		this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
 		this.dispatcher.addListener('newUrl', function(url){App.activeUrl = url; });
 
 		if (this.appTest > 0) {
@@ -617,21 +630,31 @@ var App = {
 
 	},
 
-	navCommittedHandler: function(tab){
+	navCommittedHandler: function(tab) {
+		if (!tab.id) return;
+
+		App.triggerFirstOpenedUrl(tab.url);
+
 		App.tabs[tab.id] = tab;
 		if (App.hasFocus && tab.active && tab.url && App.invalidTransitionTypes.indexOf(tab.transitionType) == -1) {
+			App.triggerFirstOpenedUrl(tab.url);
 			App.dispatcher.trigger('newUrl', App.catchSpecURL(tab.url));
 			App.activeUrl = tab.url;
 		}
 	},
 
 	tabCreatedHandler: function(tab) {
+		if (!tab.id) return;
+
+		App.triggerFirstOpenedUrl(tab.url);
+
 		App.tabs[tab.id] = tab;
 		App.tabUpdatedHandler(undefined, undefined, tab);
 	},
 
 	tabUpdatedHandler: function(id, changed, tab) {
 		if (App.hasFocus && tab.active && tab.url && App.activeUrl != tab.url) {
+			App.triggerFirstOpenedUrl(tab.url);
 			App.dispatcher.trigger('newUrl', App.catchSpecURL(tab.url));
 			App.activeUrl = tab.url;
 		}
@@ -641,6 +664,9 @@ var App = {
 	tabRemovedHandler: function(tabId) {
 		var url = App.tabs[tabId].url;
 		delete App.tabs[tabId];
+		
+		if (!App.hasInTabs(url))
+			App.dispatcher.trigger('lastClosedUrl', App.catchSpecURL(url));
 
 		App.dispatcher.trigger('closedUrl', App.catchSpecURL(url));
 	},
@@ -705,19 +731,44 @@ var App = {
 		setTimeout(function(){notification.close();}, App.notificationShowTime);
 	},
 
-	getAllUrls: function() {
-		var urls = [];
-		for (var i in App.tabs) {
-			urls.push(App.tabs[i].url);
-		}
+	isOpenedUrlHandler: function(url) {
+		if (App.hasInTabs(url))
+			App.dispatcher.trigger('isOpened');
+	},
 
-		return urls;
+	triggerFirstOpenedUrl: function(url) {
+		if (!App.hasInTabs(url))
+			App.dispatcher.trigger('firstOpenedUrl', App.catchSpecURL(url));
+	},
+
+	hasInTabs: function(url) {
+		var urls = $.map(App.tabs, App.filterUrlsWrap(App.getHost(url)));
+		if (urls.indexOf(true) === -1 ) return false;
+
+		return true;
+	},
+
+	filterUrlsWrap: function(refUrl){
+		return function(tab){
+			var url = App.getHost(tab.url);
+			if (refUrl == url) return true;
+			return false;
+		};
+	},
+
+	filterUrls: function(refUrl, tab) {
+	},
+
+	getHost: function(url) { 
+		return url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1'); 
 	},
 
 	createLogger: function() {
 		this.dispatcher.addListener('newUrl', function(url) {console.log('new: '+url); });
 		this.dispatcher.addListener('optionsChanged', function(data){ console.log(data); });
 		this.dispatcher.addListener('closedUrl', function(url) { console.log('closed: '+url);});
+		this.dispatcher.addListener('lastClosedUrl', function(url) {console.log('lastClosedUrl: '+url); });
+		this.dispatcher.addListener('firstOpenedUrl', function(url) {console.log('firstOpenedUrl: '+url); });
 	}
 };
 

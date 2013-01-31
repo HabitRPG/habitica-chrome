@@ -75,7 +75,7 @@ jQuery('document').ready(function(){
             var el = $(this),
                 name = el.attr('id');
 
-            if (name.indexOf('days-')==0) return;
+            if (name.indexOf('days-') === 0) return;
 
             if (el.is('input[type=checkbox]'))
               data[name] = el.is(':checked') ? 'true' : 'false';
@@ -89,7 +89,7 @@ jQuery('document').ready(function(){
           
           storage.set(data, function(data) {
             $("#status").addClass('good');
-            setTimeout(function() {$("#status").removeClass('good')}, 2000);
+            setTimeout(function() {$("#status").removeClass('good'); }, 2000);
             }
           );
 
@@ -135,8 +135,8 @@ jQuery('document').ready(function(){
     view: $('#ActOpts-days'),
 
     setView: function(data) {
-      var data = typeof data == 'string' ? JSON.parse(data) : data, inner = '', day,
-          dayList = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+      data = typeof data == 'string' ? JSON.parse(data) : data, inner = '';
+      var day, dayList = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
           getNumbInput = function(id, value, isHour ) {
             return '<input type="number" id="'+id+'" value="'+value+'" min="0" max="'+(isHour ? '23' : '59')+'" />';
           };
@@ -162,9 +162,9 @@ jQuery('document').ready(function(){
       for (var day in temp) {
         data[day] = {
           active: this.view.find('#days-'+day+'-isActive').is(':checked'),
-          start: [parseInt(this.view.find('#days-'+day+'-sH').val()), parseInt(this.view.find('#days-'+day+'-sM').val())],
-          end: [parseInt(this.view.find('#days-'+day+'-eH').val()), parseInt(this.view.find('#days-'+day+'-eM').val())]
-        }
+          start: [parseInt(this.view.find('#days-'+day+'-sH').val(), 10), parseInt(this.view.find('#days-'+day+'-sM').val(), 10)],
+          end: [parseInt(this.view.find('#days-'+day+'-eH').val(), 10), parseInt(this.view.find('#days-'+day+'-eM').val(), 10)]
+        };
       }
 
       return data;
