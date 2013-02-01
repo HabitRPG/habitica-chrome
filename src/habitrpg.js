@@ -85,7 +85,7 @@ var habitRPG = (function(){
             if (!habitrpg.uid) return;
 
             if (habitrpg.isSandBox) {
-                habitrpg.parentBridge.trigger('sended', data);
+                habitrpg.parentBridge.trigger('notify', data);
                 
             } else {
                 
@@ -94,7 +94,7 @@ var habitRPG = (function(){
                     url: habitrpg.habitUrl + data.urlSuffix
                     
                 }).done(function(){
-                    habitrpg.parentBridge.trigger('sended', data);
+                    habitrpg.parentBridge.trigger('notify', data);
 
                 });
             }

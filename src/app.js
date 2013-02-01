@@ -18,7 +18,7 @@ var App = {
 
 	init: function() {
 
-		this.dispatcher.addListener('sended', this.showNotification);
+		this.dispatcher.addListener('notify', this.showNotification);
 		this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
 		this.dispatcher.addListener('newUrl', function(url){App.activeUrl = url; });
 
