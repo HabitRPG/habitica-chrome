@@ -41,8 +41,8 @@ var SiteWatcher = (function() {
             this.parentBridge.addListener('newUrl', this.checkNewUrl);
             this.parentBridge.addListener('lastClosedUrl', this.lastClosedUrlHandler);
             this.parentBridge.addListener('firstOpenedUrl', this.firstOpenedUrlHandler);
+            this.parentBridge.addListener('isOpened', this.isOpenedHandler);
 
-            this.dispatcher.addListener('isOpened', this.isOpenedHandler);
             this.dispatcher.addListener('changed', this.controllSendingState);
             this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
 
@@ -55,8 +55,8 @@ var SiteWatcher = (function() {
             this.parentBridge.removeListener('newUrl', this.checkNewUrl);
             this.parentBridge.removeListener('lastClosedUrl', this.lastClosedUrlHandler);
             this.parentBridge.removeListener('firstOpenedUrl', this.firstOpenedUrlHandler);
+            this.parentBridge.removeListener('isOpened', this.isOpenedHandler);
 
-            this.dispatcher.removeListener('isOpened', this.isOpenedHandler);
             this.dispatcher.removeListener('changed', this.controllSendingState);
             this.dispatcher.removeListener('isOpenedUrl', this.isOpenedUrlHandler);
 
@@ -162,9 +162,13 @@ var SiteWatcher = (function() {
             } else if (!watcher.activator.state && value) {
                 watcher.turnOnTheSender();
 
-            } else if (watcher.activator.state && value && !watcher.sendIntervalID)
+            } else if (watcher.activator.state && value && !watcher.sendIntervalID) {
                 watcher.turnOnTheSender();
-            
+
+            } else if (!watcher.activator.state && !value && watcher.sendIntervalID) {
+                watcher.triggerSendRequest();
+                watcher.turnOffTheSender();
+            }            
         },
 
         triggerSendRequest: function() {

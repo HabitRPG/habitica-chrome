@@ -30,6 +30,9 @@ var habitRPG = (function(){
             this.parentBridge.addListener('lastClosedUrl', this.lastClosedUrlHandler);
             this.parentBridge.addListener('firstOpenedUrl', this.firstOpenedUrlHandler);
 
+            this.dispatcher.addListener('sendRequest', this.send);
+            this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
+
             this.controllers = {
                 'sitewatcher': SiteWatcher 
             };
@@ -37,8 +40,6 @@ var habitRPG = (function(){
             for (var name in this.controllers) 
                 this.controllers[name].init(this.dispatcher);
         
-            this.dispatcher.addListener('sendRequest', this.send);
-            this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
         },
 
         setOptions: function(params) {
@@ -81,12 +82,13 @@ var habitRPG = (function(){
 
         send: function(data) {
 
+            if (!habitrpg.uid) return;
+
             if (habitrpg.isSandBox) {
                 habitrpg.parentBridge.trigger('sended', data);
                 
             } else {
-                if (!habitrpg.uid) return;
-
+                
                 $.ajax({
                     type: 'POST',
                     url: habitrpg.habitUrl + data.urlSuffix

@@ -1,6 +1,6 @@
 var App = {
 
-	appTest: 0, // -1 without habitrpg; +1 with habitrpg; 0 nothing logged from the app
+	appTest: 1, // -1 without habitrpg; +1 with habitrpg; 0 nothing logged from the app
 
 	tabs: {},
 	activeUrl: '',
@@ -113,9 +113,11 @@ var App = {
 		if (!win.focused) {
 			App.hasFocus = false;
 			App.dispatcher.trigger('newUrl', '');
+			App.dispatcher.trigger('firstOpenedUrl', '');
 
 		} else {
 			App.hasFocus = true;
+			App.dispatcher.trigger('lastClosedUrl', '');
 			for (var i in win.tabs) {
 				var url = win.tabs[i].url;
 				if (win.tabs[i].active && App.activeUrl != url) {
