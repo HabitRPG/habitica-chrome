@@ -1,6 +1,6 @@
 var App = {
 
-	appTest: 1, // -1 without habitrpg; +1 with habitrpg; 0 nothing logged from the app
+	appTest: 0, // -1 without habitrpg; +1 with habitrpg; 0 nothing logged from the app
 
 	tabs: {},
 	activeUrl: '',
@@ -18,7 +18,7 @@ var App = {
 
 	init: function() {
 
-		this.dispatcher.addListener('sended', this.showNotification);
+		this.dispatcher.addListener('notify', this.showNotification);
 		this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
 		this.dispatcher.addListener('newUrl', function(url){App.activeUrl = url; });
 

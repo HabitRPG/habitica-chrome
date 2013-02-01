@@ -1,7 +1,7 @@
 var defaultOptions = {
       uid:'',
       watchedUrl: '',
-      sendInterval: '5',
+      sendInterval: '25',
       activatorName: 'alwayon',
       siteWatcherIsActive: 'true',
       viceDomains: 'reddit.com\n9gag.com\nfacebook.com',

@@ -32,6 +32,7 @@ var habitRPG = (function(){
 
             this.dispatcher.addListener('sendRequest', this.send);
             this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
+            this.dispatcher.addListener('notify', this.delegateNotifyRequest);
 
             this.controllers = {
                 'sitewatcher': SiteWatcher 
@@ -80,12 +81,16 @@ var habitRPG = (function(){
             habitrpg.parentBridge.trigger('isOpenedUrl', url);
         },
 
+        delegateNotifyRequest: function(data) {
+            habitrpg.parentBridge.trigger('notify', data);
+        },
+
         send: function(data) {
 
             if (!habitrpg.uid) return;
 
             if (habitrpg.isSandBox) {
-                habitrpg.parentBridge.trigger('sended', data);
+                habitrpg.parentBridge.trigger('notify', data);
                 
             } else {
                 
@@ -94,7 +99,7 @@ var habitRPG = (function(){
                     url: habitrpg.habitUrl + data.urlSuffix
                     
                 }).done(function(){
-                    habitrpg.parentBridge.trigger('sended', data);
+                    habitrpg.parentBridge.trigger('notify', data);
 
                 });
             }
