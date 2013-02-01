@@ -32,6 +32,7 @@ var habitRPG = (function(){
 
             this.dispatcher.addListener('sendRequest', this.send);
             this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
+            this.dispatcher.addListener('notify', this.delegateNotifyRequest);
 
             this.controllers = {
                 'sitewatcher': SiteWatcher 
@@ -78,6 +79,10 @@ var habitRPG = (function(){
 
         isOpenedUrlHandler: function(url) {
             habitrpg.parentBridge.trigger('isOpenedUrl', url);
+        },
+
+        delegateNotifyRequest: function(data) {
+            habitrpg.parentBridge.trigger('notify', data);
         },
 
         send: function(data) {

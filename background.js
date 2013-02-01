@@ -1,7 +1,7 @@
 var defaultOptions = {
       uid:'',
       watchedUrl: '',
-      sendInterval: '5',
+      sendInterval: '25',
       activatorName: 'alwayon',
       siteWatcherIsActive: 'true',
       viceDomains: 'reddit.com\n9gag.com\nfacebook.com',
@@ -288,6 +288,8 @@ var SiteWatcher = (function() {
         activator: undefined,
         activators: undefined,
 
+        productivityState: 0,
+
         init: function(parentBridge) {
 
             this.parentBridge = parentBridge;
@@ -307,7 +309,6 @@ var SiteWatcher = (function() {
 
             this.dispatcher.addListener('changed', this.controllSendingState);
             this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
-
         },
 
         disable: function() {
@@ -321,7 +322,6 @@ var SiteWatcher = (function() {
 
             this.dispatcher.removeListener('changed', this.controllSendingState);
             this.dispatcher.removeListener('isOpenedUrl', this.isOpenedUrlHandler);
-
         },
 
         setOptions: function(params) {
@@ -333,10 +333,12 @@ var SiteWatcher = (function() {
             this.goodHosts = this.goodDomains.split('\n');
 
             if (!params.isSandBox) {
-                if (params.sendInterval) 
+                if (params.sendInterval) {
                     this.sendInterval = params.sendInterval * 1000 * 60;
-                
-                if (this.sendInterval < 60000 ) this.sendInterval = 60000;
+                    if (this.sendInterval < 60000 ) this.sendInterval = 60000;
+                    if (this.sendIntervalID)
+                        this.turnOnTheSender();
+                }
             }
 
             if (params.siteWatcherIsActive) {
@@ -366,11 +368,38 @@ var SiteWatcher = (function() {
             this.activator.enable();
         },
 
+        setProductivityState: function() {
+            var state = 0, data;
+            if (this.goodHosts.indexOf(this.host) != -1)
+                state = 1;
+            else if (this.badHosts.indexOf(this.host) != -1)
+                state = -1;
+
+            if (this.productivityState !== state) {
+                if (state > 0) {
+                    data = {
+                        score: 1,
+                        message: 'Great! Maybe you are started working:)'
+                    };
+                } else if (state < 0) {
+                    data = {
+                        score: -1,
+                        message: "I'm watching you! Lets go to work!"
+                    };
+                }
+
+                this.productivityState = state;
+
+                if (data)
+                    this.parentBridge.trigger('notify', data);
+            }
+        },
+
         addScoreFromSpentTime: function(spentTime) {
             var score = 0;
-            if (this.goodHosts.indexOf(this.host) != -1)
+            if (this.productivityState > 0)
                 score = spentTime * this.goodTimeMultiplier;
-            else if (this.badHosts.indexOf(this.host) != -1)
+            else if (this.productivityState < 0)
                 score = (spentTime * this.badTimeMultiplier) * -1;
 
             this.score += score;
@@ -395,6 +424,8 @@ var SiteWatcher = (function() {
             
             if (!watcher.activator.state) return;
             
+            watcher.setProductivityState();
+
             watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
             
         },
@@ -414,7 +445,7 @@ var SiteWatcher = (function() {
         lastClosedUrlHandler: function(url) {
             watcher.dispatcher.trigger('lastClosedUrl', url);
         },
-
+        
         controllSendingState: function(value) {
 
             if (watcher.activator.state && !value) {
@@ -504,6 +535,7 @@ var habitRPG = (function(){
 
             this.dispatcher.addListener('sendRequest', this.send);
             this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
+            this.dispatcher.addListener('notify', this.delegateNotifyRequest);
 
             this.controllers = {
                 'sitewatcher': SiteWatcher 
@@ -552,12 +584,16 @@ var habitRPG = (function(){
             habitrpg.parentBridge.trigger('isOpenedUrl', url);
         },
 
+        delegateNotifyRequest: function(data) {
+            habitrpg.parentBridge.trigger('notify', data);
+        },
+
         send: function(data) {
 
             if (!habitrpg.uid) return;
 
             if (habitrpg.isSandBox) {
-                habitrpg.parentBridge.trigger('sended', data);
+                habitrpg.parentBridge.trigger('notify', data);
                 
             } else {
                 
@@ -566,7 +602,7 @@ var habitRPG = (function(){
                     url: habitrpg.habitUrl + data.urlSuffix
                     
                 }).done(function(){
-                    habitrpg.parentBridge.trigger('sended', data);
+                    habitrpg.parentBridge.trigger('notify', data);
 
                 });
             }
@@ -581,7 +617,7 @@ var habitRPG = (function(){
 
 var App = {
 
-	appTest: 1, // -1 without habitrpg; +1 with habitrpg; 0 nothing logged from the app
+	appTest: 0, // -1 without habitrpg; +1 with habitrpg; 0 nothing logged from the app
 
 	tabs: {},
 	activeUrl: '',
@@ -599,7 +635,7 @@ var App = {
 
 	init: function() {
 
-		this.dispatcher.addListener('sended', this.showNotification);
+		this.dispatcher.addListener('notify', this.showNotification);
 		this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
 		this.dispatcher.addListener('newUrl', function(url){App.activeUrl = url; });
 
