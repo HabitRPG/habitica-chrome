@@ -18,16 +18,16 @@ module.exports = function(grunt) {
 		watch: {
 			background: {
 				files: ['src/*.js', 'test/*.js'],
-				tasks: ['lint', 'jasmine', 'concat:background', 'clean:test']
+				tasks: ['lint', 'jasmine', 'concat:background', 'clean:test', 'copy:extension']
 			},
 			options: {
-				files: ['options.js', 'options.html'],
+				files: ['src/options.js', 'options.html'],
 				tasks: ['concat:options', 'concat:background', 'copy:extension']
 			}
 		},
 		jasmine : {
-			src : ['src/utilies.js', 'src/activators.js', 'src/sitewatcher.js', 'src/habitrpg.js'],
-			specs : ['test/utilies_test.js', 'test/activators_test.js', 'test/sitewatcher_test.js', 'test/habitrpg_test.js'],
+			src : ['src/defaults.js', 'src/utilies.js', 'src/activators.js', 'src/sitewatcher.js', 'src/habitrpg.js'],
+			specs : ['test/utilies_test.js', 'test/activators_test.js', 'test/sitewatcher_test.js', 'test/habitrpg_test.js', 'test/testwith_appmock.js'],
 			timeout : 1000
 		},
 		clean: {

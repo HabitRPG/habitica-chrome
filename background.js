@@ -303,8 +303,8 @@ var SiteWatcher = (function() {
             this.parentBridge.addListener('newUrl', this.checkNewUrl);
             this.parentBridge.addListener('lastClosedUrl', this.lastClosedUrlHandler);
             this.parentBridge.addListener('firstOpenedUrl', this.firstOpenedUrlHandler);
+            this.parentBridge.addListener('isOpened', this.isOpenedHandler);
 
-            this.dispatcher.addListener('isOpened', this.isOpenedHandler);
             this.dispatcher.addListener('changed', this.controllSendingState);
             this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
 
@@ -317,8 +317,8 @@ var SiteWatcher = (function() {
             this.parentBridge.removeListener('newUrl', this.checkNewUrl);
             this.parentBridge.removeListener('lastClosedUrl', this.lastClosedUrlHandler);
             this.parentBridge.removeListener('firstOpenedUrl', this.firstOpenedUrlHandler);
+            this.parentBridge.removeListener('isOpened', this.isOpenedHandler);
 
-            this.dispatcher.removeListener('isOpened', this.isOpenedHandler);
             this.dispatcher.removeListener('changed', this.controllSendingState);
             this.dispatcher.removeListener('isOpenedUrl', this.isOpenedUrlHandler);
 
@@ -424,9 +424,13 @@ var SiteWatcher = (function() {
             } else if (!watcher.activator.state && value) {
                 watcher.turnOnTheSender();
 
-            } else if (watcher.activator.state && value && !watcher.sendIntervalID)
+            } else if (watcher.activator.state && value && !watcher.sendIntervalID) {
                 watcher.turnOnTheSender();
-            
+
+            } else if (!watcher.activator.state && !value && watcher.sendIntervalID) {
+                watcher.triggerSendRequest();
+                watcher.turnOffTheSender();
+            }            
         },
 
         triggerSendRequest: function() {
@@ -498,6 +502,9 @@ var habitRPG = (function(){
             this.parentBridge.addListener('lastClosedUrl', this.lastClosedUrlHandler);
             this.parentBridge.addListener('firstOpenedUrl', this.firstOpenedUrlHandler);
 
+            this.dispatcher.addListener('sendRequest', this.send);
+            this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
+
             this.controllers = {
                 'sitewatcher': SiteWatcher 
             };
@@ -505,8 +512,6 @@ var habitRPG = (function(){
             for (var name in this.controllers) 
                 this.controllers[name].init(this.dispatcher);
         
-            this.dispatcher.addListener('sendRequest', this.send);
-            this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
         },
 
         setOptions: function(params) {
@@ -549,12 +554,13 @@ var habitRPG = (function(){
 
         send: function(data) {
 
+            if (!habitrpg.uid) return;
+
             if (habitrpg.isSandBox) {
                 habitrpg.parentBridge.trigger('sended', data);
                 
             } else {
-                if (!habitrpg.uid) return;
-
+                
                 $.ajax({
                     type: 'POST',
                     url: habitrpg.habitUrl + data.urlSuffix
@@ -575,7 +581,7 @@ var habitRPG = (function(){
 
 var App = {
 
-	appTest: 0, // -1 without habitrpg; +1 with habitrpg; 0 nothing logged from the app
+	appTest: 1, // -1 without habitrpg; +1 with habitrpg; 0 nothing logged from the app
 
 	tabs: {},
 	activeUrl: '',
@@ -688,9 +694,11 @@ var App = {
 		if (!win.focused) {
 			App.hasFocus = false;
 			App.dispatcher.trigger('newUrl', '');
+			App.dispatcher.trigger('firstOpenedUrl', '');
 
 		} else {
 			App.hasFocus = true;
+			App.dispatcher.trigger('lastClosedUrl', '');
 			for (var i in win.tabs) {
 				var url = win.tabs[i].url;
 				if (win.tabs[i].active && App.activeUrl != url) {
