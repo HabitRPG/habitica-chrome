@@ -71,10 +71,12 @@ var SiteWatcher = (function() {
             this.goodHosts = this.goodDomains.split('\n');
 
             if (!params.isSandBox) {
-                if (params.sendInterval) 
+                if (params.sendInterval) {
                     this.sendInterval = params.sendInterval * 1000 * 60;
-                
-                if (this.sendInterval < 60000 ) this.sendInterval = 60000;
+                    if (this.sendInterval < 60000 ) this.sendInterval = 60000;
+                    if (this.sendIntervalID)
+                        this.turnOnTheSender();
+                }
             }
 
             if (params.siteWatcherIsActive) {
