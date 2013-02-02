@@ -1,13 +1,15 @@
 module.exports = function(grunt) {
 
+	var baseFiles = ['src/defaults.js', 'src/utilies.js', 'src/activators.js', 'src/sitewatcher.js', 'src/tomatoes.js', 'src/habitrpg.js'];
+
 	grunt.initConfig({
 		lint: {
-			background: ['test/*.js', 'src/*.js']
-
+			test: ['test/*.js'],
+			src: ['src/*.js']
 		},
 		concat: {
 			background: {
-				src: ['src/defaults.js', 'src/utilies.js', 'src/activators.js', 'src/sitewatcher.js', 'src/habitrpg.js', 'src/app.js'],
+				src: baseFiles.concat(['app.js']),
 				dest: 'background.js'
 			},
 			options: {
@@ -16,18 +18,18 @@ module.exports = function(grunt) {
 			}
 		},
 		watch: {
-			background: {
+			baseDev: {
 				files: ['src/*.js', 'test/*.js'],
-				tasks: ['lint', 'jasmine', 'concat:background', 'clean:test', 'copy:extension']
+				tasks: ['lint', 'jasmine', 'concat:background', 'clean:test']
 			},
-			options: {
-				files: ['src/options.js', 'options.html'],
-				tasks: ['concat:options', 'concat:background', 'copy:extension']
-			}
+			extDev: {
+				files: ['src/*.js', 'options.html', 'background.html'],
+				tasks: ['lint:src', 'concat:background', 'concat:options', 'copy:extension']
+			},
 		},
 		jasmine : {
-			src : ['src/defaults.js', 'src/utilies.js', 'src/activators.js', 'src/sitewatcher.js', 'src/habitrpg.js'],
-			specs : ['test/utilies_test.js', 'test/activators_test.js', 'test/sitewatcher_test.js', 'test/habitrpg_test.js', 'test/testwith_appmock.js'],
+			src : baseFiles,
+			specs : ['test/utilies_test.js', 'test/activators_test.js', 'test/sitewatcher_test.js', 'test/habitrpg_test.js'],
 			timeout : 1000
 		},
 		clean: {
