@@ -9,7 +9,7 @@ module.exports = function(grunt) {
 		},
 		concat: {
 			background: {
-				src: baseFiles.concat(['app.js']),
+				src: baseFiles.concat(['src/app.js']),
 				dest: 'background.js'
 			},
 			options: {
