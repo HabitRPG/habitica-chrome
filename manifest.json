@@ -2,7 +2,7 @@
 
    "name": "HabitRPG",
    "version": "0.5",
-   "permissions": ["storage", "tabs", "webNavigation", "notifications", "https://habitrpg.com/" ],
+   "permissions": ["storage", "tabs", "webNavigation", "notifications", "https://habitrpg.com/", "http://tomato.es/" ],
   
    "description": "Monitors your browsing habits to divvy points to your HabitRPG character.",
    "web_accessible_resources": [ "img/icon-48-up.png", "img/icon-48-down.png" ],
