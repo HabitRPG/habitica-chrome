@@ -35,7 +35,8 @@ var habitRPG = (function(){
             this.dispatcher.addListener('notify', this.delegateNotifyRequest);
 
             this.controllers = {
-                'sitewatcher': SiteWatcher 
+                'sitewatcher': SiteWatcher,
+                'tomatoes': Tomatoes
             };
 
             for (var name in this.controllers) 

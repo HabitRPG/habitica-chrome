@@ -4,6 +4,7 @@ var defaultOptions = {
       sendInterval: '25',
       activatorName: 'alwayon',
       siteWatcherIsActive: 'true',
+      tomatoesIsActive: 'true',
       viceDomains: 'reddit.com\n9gag.com\nfacebook.com',
       goodDomains: 'lifehacker.com\ncodeacadamy.com\nkhanacadamy.org',
       days: {
@@ -76,8 +77,131 @@ var utilies = (function(){
             listeners[i].apply(this.context, [data]);
     };
 
+
+    /* ----------------- Time Period ---------------- */
+    function Period(length, type) {
+        this.setExpectedLength(length);
+        this.type = type;
+    }
+
+    Period.prototype.start = function() {
+        this.begun = new Date().getTime();
+        this.overTime = undefined;
+    };
+
+    Period.prototype.setExpectedLength = function(length) {
+        this.expectedLength = length * 60000;
+    };
+
+    Period.prototype.getExpectedLength = function(length) {
+        return this.expectedLength / 60000;
+    };
+
+    Period.prototype.getOverTime = function() {
+        var time = new Date().getTime() - this.begun;
+        return (time - this.expectedLength) / 60000;
+    };
+
+    Period.prototype.stop = function() {
+        this.begun = undefined;
+        this.overTime = this.getOverTime();
+    };
+    Period.prototype.isStarted = function() { return this.begun !== undefined; };
+    Period.prototype.isFinnished = function() { return this.overTime !== undefined; };
+
+
+
+    /* ----------------- Pomodore ---------------- */
+    var Pomodore = function(parentBridge){
+        this.workCount = 0;
+        this.parentBridge = parentBridge;
+
+        this.periods = {
+            'work': new Period(25, 'work'),
+            'break': new Period(5, 'break'),
+            'bigBreak': new Period(15, 'break')
+        };
+        this.currentPeriod = new Period(0, 'break');
+
+        this.maxOverTimeInterval = 60000;
+        this.overTimeInterval = this.maxOverTimeInterval;
+        this.timeOutId = undefined;
+        this.handleOverTime();
+    };
+
+    Pomodore.prototype.isRunning = function() {
+        return this.timeOutId !== undefined;
+    };
+
+    Pomodore.prototype.reset = function() {
+        this.stop();
+        this.workCount = 0;
+    };    
+
+    Pomodore.prototype.stop = function() {
+        var wasWork = false;
+        this.currentPeriod.stop();
+
+        if (this.currentPeriod.type == 'work') {
+            wasWork = true;
+            this.workCount--;
+            this.currentPeriod = this.periods['break'];
+        } 
+
+        this.timeOutId = clearTimeout(this.timeOutId);
+
+        this.parentBridge.trigger('stopped', wasWork);
+    };
+
+    Pomodore.prototype.start = function() {
+
+        var isWork, overTime = 0;
+
+        if (!this.currentPeriod.isStarted()) {
+            this.currentPeriod.stop();
+            overTime = this.currentPeriod.overTime;
+        }
+        
+        if (this.currentPeriod.type == 'break' ) {
+            isWork = true;
+            this.workCount++;
+            this.currentPeriod = this.periods.work;
+
+        } else if (this.workCount % 4 === 0) {
+            this.currentPeriod = this.periods.bigBreak;
+
+        } else {
+            this.currentPeriod = this.periods['break'];
+        }
+
+        this.currentPeriod.start();
+
+        clearTimeout(this.timeOutId);
+        this.overTimeInterval = this.maxOverTimeInterval;
+        this.timeOutId = setTimeout(this.handleOverTime, this.currentPeriod.expectedLength);
+
+        this.parentBridge.trigger('started', {type: this.currentPeriod.type, lastOverTime: overTime });
+    };
+
+    Pomodore.prototype.handleOverTime = function() {
+        var self = this;
+        this.handleOverTime = function() {
+
+            self.parentBridge.trigger('overTime', {type: self.currentPeriod.type, time:self.currentPeriod.getOverTime() });
+
+            clearTimeout(self.timeOutId);
+            self.timeOutId = setTimeout(self.handleOverTime, self.overTimeInterval);
+
+            if (self.overTimeInterval > 15000)
+                self.overTimeInterval -= 5000; 
+        };
+    };
+
+    /* ----------------- return ---------------- */
     return {
-        EventDispatcher: EventDispatcher
+        EventDispatcher: EventDispatcher,
+        Pomodore:Pomodore,
+        Period:Period
     };
 
 
@@ -501,6 +625,81 @@ var SiteWatcher = (function() {
 })();
     
 
+var Tomatoes = (function() {
+/*
+    BaseController.prototype.init = function(parentBridge) {  };
+    BaseController.prototype.enable = function() {  }; // private use in setOptions
+    BaseController.prototype.disable = function() {  }; // private use in setOptions
+    BaseController.prototype.setOptions = function(params) { };
+*/
+
+    var tomatoes = {
+
+        url: 'http://tomato.es',
+        urlPrefix: 'tasks/tomatoes/',
+
+        init: function(parentBridge) {
+
+            this.parentBridge = parentBridge;
+
+            this.injectCode();
+        },
+
+        enable:function() {            
+            this.parentBridge.addListener('newUrl', this.injectCode);
+            this.parentBridge.addListener('isOpened', this.isOpenedHandler);
+
+        },
+
+        disable: function() {
+            this.parentBridge.removeListener('newUrl', this.injectCode);
+            this.parentBridge.removeListener('isOpened', this.isOpenedHandler);
+
+        },
+
+        setOptions: function(params) {
+
+
+            if (!params.isSandBox) {
+
+            }
+
+            if (params.tomatoesIsActive) {
+                if (params.tomatoesIsActive == 'true')
+                    this.enable();
+                else 
+                    this.disable();
+            }
+
+        },
+
+        setValue: function(params, name) { 
+            if (params[name]) this[name] = params[name];
+        },
+
+        isOpenedHandler: function() {
+
+        },
+
+        injectCode: function() {
+            var self = this;
+            this.injectCode = function(url) {
+                if (url.indexOf(self.url) === 0) {
+
+                }
+            };
+        }
+    };
+
+
+    return {
+        get: function() { return tomatoes; },
+        isEnabled: function() { return tomatoes.parentBridge.hasListener('firstOpenedUrl', tomatoes.injectCode); },
+        init: function(parentBridge) { tomatoes.init(parentBridge); },
+        setOptions: function(params) { tomatoes.setOptions(params); }
+    };
+
+})();
 
 var habitRPG = (function(){
 
@@ -538,7 +737,8 @@ var habitRPG = (function(){
             this.dispatcher.addListener('notify', this.delegateNotifyRequest);
 
             this.controllers = {
-                'sitewatcher': SiteWatcher 
+                'sitewatcher': SiteWatcher,
+                'tomatoes': Tomatoes
             };
 
             for (var name in this.controllers) 
@@ -614,208 +814,3 @@ var habitRPG = (function(){
     return returnObj;
 
 })();
-
-var App = {
-
-	appTest: 0, // -1 without habitrpg; +1 with habitrpg; 0 nothing logged from the app
-
-	tabs: {},
-	activeUrl: '',
-	hasFocus: true,
-
-	habitrpg: habitRPG,
-	invalidTransitionTypes: ['auto_subframe', 'form_submit'],
-
-  //storage: chrome.storage.managed,
-	storage: chrome.storage.local,
-
-	notificationShowTime: 4000,
-
-	dispatcher: new utilies.EventDispatcher(),
-
-	init: function() {
-
-		this.dispatcher.addListener('notify', this.showNotification);
-		this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
-		this.dispatcher.addListener('newUrl', function(url){App.activeUrl = url; });
-
-		if (this.appTest > 0) {
-			this.createLogger();
-			App.habitrpg.init(this.dispatcher);
-
-		} else if (this.appTest < 0)
-			this.createLogger();
-
-		else 
-			App.habitrpg.init(this.dispatcher);
-
-		chrome.tabs.onCreated.addListener(this.tabCreatedHandler);
-		chrome.tabs.onUpdated.addListener(this.tabUpdatedHandler);
-		chrome.tabs.onRemoved.addListener(this.tabRemovedHandler);
-		chrome.tabs.onActivated.addListener(this.tabActivatedHandler);
-		chrome.webNavigation.onCommitted.addListener(this.navCommittedHandler);
-
-		chrome.windows.onFocusChanged.addListener(this.focusChangeHandler);		
-		chrome.storage.onChanged.addListener(this.setHabitRPGOptionsFromChange);
-
-		chrome.windows.getAll({populate:true}, function(windows){
-            for (var wi in windows) {
-                win = windows[wi];
-                for (var ti in win.tabs) {
-                    tab = win.tabs[ti];
-                    App.tabs[tab.id] = tab;
-                }
-            }
-        });
-
-        this.storage.get(defaultOptions, function(data){ App.dispatcher.trigger('optionsChanged', data); });
-
-	},
-
-	navCommittedHandler: function(tab) {
-		if (!tab.id) return;
-
-		App.triggerFirstOpenedUrl(tab.url);
-
-		App.tabs[tab.id] = tab;
-		if (App.hasFocus && tab.active && tab.url && App.invalidTransitionTypes.indexOf(tab.transitionType) == -1) {
-			App.triggerFirstOpenedUrl(tab.url);
-			App.dispatcher.trigger('newUrl', App.catchSpecURL(tab.url));
-			App.activeUrl = tab.url;
-		}
-	},
-
-	tabCreatedHandler: function(tab) {
-		if (!tab.id) return;
-
-		App.triggerFirstOpenedUrl(tab.url);
-
-		App.tabs[tab.id] = tab;
-		App.tabUpdatedHandler(undefined, undefined, tab);
-	},
-
-	tabUpdatedHandler: function(id, changed, tab) {
-		if (App.hasFocus && tab.active && tab.url && App.activeUrl != tab.url) {
-			App.triggerFirstOpenedUrl(tab.url);
-			App.dispatcher.trigger('newUrl', App.catchSpecURL(tab.url));
-			App.activeUrl = tab.url;
-		}
-	},
-
-	// This event fired after the remove action, so we forced to store the tabs
-	tabRemovedHandler: function(tabId) {
-		var url = App.tabs[tabId].url;
-		delete App.tabs[tabId];
-		
-		if (!App.hasInTabs(url))
-			App.dispatcher.trigger('lastClosedUrl', App.catchSpecURL(url));
-
-		App.dispatcher.trigger('closedUrl', App.catchSpecURL(url));
-	},
-
-	tabActivatedHandler: function(event) {
-		var tab = App.tabs[event.tabId];
-		if (tab) {
-			App.activeUrl = tab.url;
-			App.dispatcher.trigger('newUrl', App.catchSpecURL(tab.url));
-		}
-	},
-
-	focusChangeHandler: function() {
-		chrome.windows.getLastFocused({populate:true}, App.windowIsFocused);
-	},
-
-	windowIsFocused: function(win) {
-
-		if (!win.focused) {
-			App.hasFocus = false;
-			App.dispatcher.trigger('newUrl', '');
-			App.dispatcher.trigger('firstOpenedUrl', '');
-
-		} else {
-			App.hasFocus = true;
-			App.dispatcher.trigger('lastClosedUrl', '');
-			for (var i in win.tabs) {
-				var url = win.tabs[i].url;
-				if (win.tabs[i].active && App.activeUrl != url) {
-					App.dispatcher.trigger('newUrl', App.catchSpecURL(url));
-					break;
-				}
-			}
-		}
-	},
-
-	catchSpecURL: function(url) {
-
-		if (url.indexOf('chrome-devtools') === 0)
-			url = 'chrome-devtools';
-
-		return url;
-	},
-
-	setHabitRPGOptionsFromChange: function(params) {
-		var obj = {}, name;
-		for (name in params) 
-			obj[name] = params[name].newValue;
-
-		App.dispatcher.trigger('optionsChanged', obj);
-		
-	},
-
-	showNotification: function(data) {
-
-		var score = data.score.toFixed(4),
-			notification = webkitNotifications.createNotification(
-			"/img/icon-48-" + (score < 0 ? 'down' : 'up') + ".png", 
-			'HabitRPG', 
-			data.message ? data.message :
-			('You '+(score < 0 ? 'lost' : 'gained')+' '+score+' '+(score < 0 ? 'HP! Work or will die...' : 'Exp/Gold! Keep up the good work!'))
-		);
-		notification.show();
-		setTimeout(function(){notification.close();}, App.notificationShowTime);
-	},
-
-	isOpenedUrlHandler: function(url) {
-		if (App.hasInTabs(url))
-			App.dispatcher.trigger('isOpened');
-	},
-
-	triggerFirstOpenedUrl: function(url) {
-		if (!App.hasInTabs(url))
-			App.dispatcher.trigger('firstOpenedUrl', App.catchSpecURL(url));
-	},
-
-	hasInTabs: function(url) {
-		var urls = $.map(App.tabs, App.filterUrlsWrap(App.getHost(url)));
-		if (urls.indexOf(true) === -1 ) return false;
-
-		return true;
-	},
-
-	filterUrlsWrap: function(refUrl){
-		return function(tab){
-			var url = App.getHost(tab.url);
-			if (refUrl == url) return true;
-			return false;
-		};
-	},
-
-	filterUrls: function(refUrl, tab) {
-	},
-
-	getHost: function(url) { 
-		return url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1'); 
-	},
-
-	createLogger: function() {
-		this.dispatcher.addListener('newUrl', function(url) {console.log('new: '+url); });
-		this.dispatcher.addListener('optionsChanged', function(data){ console.log(data); });
-		this.dispatcher.addListener('closedUrl', function(url) { console.log('closed: '+url);});
-		this.dispatcher.addListener('lastClosedUrl', function(url) {console.log('lastClosedUrl: '+url); });
-		this.dispatcher.addListener('firstOpenedUrl', function(url) {console.log('firstOpenedUrl: '+url); });
-	}
-};
-
-/* ------------- Mainloop ---------- */
-
-App.init();

@@ -86,4 +86,56 @@ describe('Utilies test', function(){
 
     });
 
+
+    describe('Period', function(){
+
+        var period;
+
+        beforeEach(function(){
+             dispatcher = new utilies.Period();
+        });
+
+    });
+
+    describe('Pomodore test', function(){
+
+        var pomo, dispatcher;
+
+        beforeEach(function(){
+            dispatcher = new utilies.EventDispatcher();
+            pomo = new utilies.Pomodore(dispatcher);
+        });
+
+        it('Work cycle', function(){
+
+            expect(pomo.workCount).toBe(0);
+            expect(pomo.currentPeriod.type).toBe('break');
+
+            pomo.start();
+            expect(pomo.workCount).toBe(1);
+            expect(pomo.currentPeriod.type).toBe('work');
+
+            pomo.start();
+            expect(pomo.workCount).toBe(1);
+            expect(pomo.currentPeriod.type).toBe('break');
+
+            pomo.start();
+            pomo.start();
+            pomo.start();
+            pomo.start();
+            pomo.start();
+
+            pomo.start();
+            expect(pomo.workCount).toBe(4);
+            expect(pomo.currentPeriod.type).toBe('break');
+            expect(pomo.currentPeriod.getExpectedLength()).toBe(15);
+        });
+
+        it('Stoping', function(){
+
+            pomo.start();
+
+        });
+    });
+
 });
