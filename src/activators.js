@@ -11,10 +11,9 @@ var Activators = (function() {
     AlwaysActivator.prototype.disable = function() { };
     AlwaysActivator.prototype.setOptions = function() { };
     AlwaysActivator.prototype.setState = function(value) { 
-        this.bridge.trigger('changed', value);
+        this.bridge.trigger('watcher.activator.changed', value);
         this.state = value;
     };
-    
 
     /*---------------- Page link activator ------------*/
 
@@ -27,16 +26,16 @@ var Activators = (function() {
     PageLinkActivator.prototype.init = AlwaysActivator.prototype.init;
     PageLinkActivator.prototype.setState = AlwaysActivator.prototype.setState;
     PageLinkActivator.prototype.enable = function() {
-        this.bridge.addListener('firstOpenedUrl', this.handleNewUrl);
-        this.bridge.addListener('lastClosedUrl', this.handleClosedUrl);
-        this.bridge.addListener('isOpened', this.isOpenedHandler);
+        this.bridge.addListener('app.firstOpenedUrl', this.handleNewUrl);
+        this.bridge.addListener('app.lastClosedUrl', this.handleClosedUrl);
+        this.bridge.addListener('app.isOpened', this.isOpenedHandler);
         
         this.check();
     };
     PageLinkActivator.prototype.disable = function() {
         this.state = false;
-        this.bridge.removeListener('firstOpenedUrl', this.handleNewUrl);
-        this.bridge.removeListener('lastClosedUrl', this.handleClosedUrl);
+        this.bridge.removeListener('app.firstOpenedUrl', this.handleNewUrl);
+        this.bridge.removeListener('app.lastClosedUrl', this.handleClosedUrl);
     };
     PageLinkActivator.prototype.setOptions = function(params) {
         this.url = params.watchedUrl !== undefined ? params.watchedUrl : this.url;
@@ -51,7 +50,7 @@ var Activators = (function() {
     };
 
     PageLinkActivator.prototype.check = function() {
-        this.bridge.trigger('isOpenedUrl', this.url);
+        this.bridge.trigger('app.isOpenedUrl', this.url);
     };
 
     PageLinkActivator.prototype.isOpenedHandler = function() {
@@ -164,12 +163,47 @@ var Activators = (function() {
         this.timeOutId = setTimeout(this.check, this.getTimeoutTime(now, start, end));
     };
 
+    /* ---------------- Tomatoes activator ------------ */
 
+    function TomatoesActivator(value) {
+        this.state = value;
+        this.stopHandler();
+        this.startHandler();
+    }
+    TomatoesActivator.prototype.init = AlwaysActivator.prototype.init;
+    TomatoesActivator.prototype.setState = AlwaysActivator.prototype.setState;
+    TomatoesActivator.prototype.setOptions = AlwaysActivator.prototype.setOptions;
+    TomatoesActivator.prototype.enable = function(){ 
+        this.bridge.addListener('tomatoes.reset', this.stopHandler);
+        this.bridge.addListener('tomatoes.stopped', this.stopHandler);
+        this.bridge.addListener('tomatoes.pom.started', this.startHandler);
+    };
+    TomatoesActivator.prototype.disable = function() {
+        this.bridge.removeListener('tomatoes.reset', this.stopHandler);
+        this.bridge.removeListener('tomatoes.stopped', this.stopHandler);
+        this.bridge.removeListener('tomatoes.pom.started', this.startHandler);
+    };
+    TomatoesActivator.prototype.stopHandler = function() {
+        var self = this;
+        this.stopHandler = function(data) {
+            self.bridge.trigger('watcher.swapHosts', false);
+            self.setState(false);
+        };
+    };
+    TomatoesActivator.prototype.startHandler = function() {
+        var self = this;
+        this.startHandler = function(data) {
+            self.bridge.trigger('watcher.swapHosts', data.type == 'break');
+            self.setState(true);
+        };
+    };
+    
     /* ---------------- Return -------------------- */
 
     return {
         'days': new DaysActivator(),
         'webpage': new PageLinkActivator(),
+        'tomatoes': new TomatoesActivator(),
         'alwayson': new AlwaysActivator(true),
         'alwaysoff': new AlwaysActivator(false)
         };

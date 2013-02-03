@@ -18,9 +18,9 @@ var App = {
 
 	init: function() {
 
-		this.dispatcher.addListener('notify', this.showNotification);
-		this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
-		this.dispatcher.addListener('newUrl', function(url){App.activeUrl = url; });
+		this.dispatcher.addListener('app.notify', this.showNotification);
+		this.dispatcher.addListener('app.isOpenedUrl', this.isOpenedUrlHandler);
+		this.dispatcher.addListener('app.newUrl', function(url){App.activeUrl = url; });
 
 		if (this.appTest > 0) {
 			this.createLogger();
@@ -35,9 +35,10 @@ var App = {
 		chrome.tabs.onCreated.addListener(this.tabCreatedHandler);
 		chrome.tabs.onUpdated.addListener(this.tabUpdatedHandler);
 		chrome.tabs.onRemoved.addListener(this.tabRemovedHandler);
+		chrome.extension.onMessage.addListener(this.messageHandler);
 		chrome.tabs.onActivated.addListener(this.tabActivatedHandler);
 		chrome.webNavigation.onCommitted.addListener(this.navCommittedHandler);
-
+		
 		chrome.windows.onFocusChanged.addListener(this.focusChangeHandler);		
 		chrome.storage.onChanged.addListener(this.setHabitRPGOptionsFromChange);
 
@@ -51,8 +52,12 @@ var App = {
             }
         });
 
-        this.storage.get(defaultOptions, function(data){ App.dispatcher.trigger('optionsChanged', data); });
+        this.storage.get(defaultOptions, function(data){ App.dispatcher.trigger('app.optionsChanged', data); });
 
+	},
+
+	messageHandler: function(request, sender, sendResponse) {
+		App.dispatcher.trigger(request.type, request);
 	},
 
 	navCommittedHandler: function(tab) {
@@ -63,7 +68,7 @@ var App = {
 		App.tabs[tab.id] = tab;
 		if (App.hasFocus && tab.active && tab.url && App.invalidTransitionTypes.indexOf(tab.transitionType) == -1) {
 			App.triggerFirstOpenedUrl(tab.url);
-			App.dispatcher.trigger('newUrl', App.catchSpecURL(tab.url));
+			App.dispatcher.trigger('app.newUrl', App.catchSpecURL(tab.url));
 			App.activeUrl = tab.url;
 		}
 	},
@@ -80,7 +85,7 @@ var App = {
 	tabUpdatedHandler: function(id, changed, tab) {
 		if (App.hasFocus && tab.active && tab.url && App.activeUrl != tab.url) {
 			App.triggerFirstOpenedUrl(tab.url);
-			App.dispatcher.trigger('newUrl', App.catchSpecURL(tab.url));
+			App.dispatcher.trigger('app.newUrl', App.catchSpecURL(tab.url));
 			App.activeUrl = tab.url;
 		}
 	},
@@ -91,16 +96,16 @@ var App = {
 		delete App.tabs[tabId];
 		
 		if (!App.hasInTabs(url))
-			App.dispatcher.trigger('lastClosedUrl', App.catchSpecURL(url));
+			App.dispatcher.trigger('app.lastClosedUrl', App.catchSpecURL(url));
 
-		App.dispatcher.trigger('closedUrl', App.catchSpecURL(url));
+		App.dispatcher.trigger('app.closedUrl', App.catchSpecURL(url));
 	},
 
 	tabActivatedHandler: function(event) {
 		var tab = App.tabs[event.tabId];
 		if (tab) {
 			App.activeUrl = tab.url;
-			App.dispatcher.trigger('newUrl', App.catchSpecURL(tab.url));
+			App.dispatcher.trigger('app.newUrl', App.catchSpecURL(tab.url));
 		}
 	},
 
@@ -112,16 +117,16 @@ var App = {
 
 		if (!win.focused) {
 			App.hasFocus = false;
-			App.dispatcher.trigger('newUrl', '');
-			App.dispatcher.trigger('firstOpenedUrl', '');
+			App.dispatcher.trigger('app.newUrl', '');
+			App.dispatcher.trigger('app.firstOpenedUrl', '');
 
 		} else {
 			App.hasFocus = true;
-			App.dispatcher.trigger('lastClosedUrl', '');
+			App.dispatcher.trigger('app.lastClosedUrl', '');
 			for (var i in win.tabs) {
 				var url = win.tabs[i].url;
 				if (win.tabs[i].active && App.activeUrl != url) {
-					App.dispatcher.trigger('newUrl', App.catchSpecURL(url));
+					App.dispatcher.trigger('app.newUrl', App.catchSpecURL(url));
 					break;
 				}
 			}
@@ -141,18 +146,19 @@ var App = {
 		for (name in params) 
 			obj[name] = params[name].newValue;
 
-		App.dispatcher.trigger('optionsChanged', obj);
+		App.dispatcher.trigger('app.optionsChanged', obj);
 		
 	},
 
 	showNotification: function(data) {
 
 		var score = data.score.toFixed(4),
+			imgVersion = !data.score ? '' : (score < 0 ? '-down' : '-up'),
 			notification = webkitNotifications.createNotification(
-			"/img/icon-48-" + (score < 0 ? 'down' : 'up') + ".png", 
+			"/img/icon-48" + imgVersion + ".png", 
 			'HabitRPG', 
 			data.message ? data.message :
-			('You '+(score < 0 ? 'lost' : 'gained')+' '+score+' '+(score < 0 ? 'HP! Work or will die...' : 'Exp/Gold! Keep up the good work!'))
+			('You '+(score < 0 ? 'lost' : 'gained')+' '+score+' '+(score < 0 ? 'HP! Lets go...' : 'Exp/Gold! Keep up!'))
 		);
 		notification.show();
 		setTimeout(function(){notification.close();}, App.notificationShowTime);
@@ -160,12 +166,12 @@ var App = {
 
 	isOpenedUrlHandler: function(url) {
 		if (App.hasInTabs(url))
-			App.dispatcher.trigger('isOpened');
+			App.dispatcher.trigger('app.isOpened');
 	},
 
 	triggerFirstOpenedUrl: function(url) {
 		if (!App.hasInTabs(url))
-			App.dispatcher.trigger('firstOpenedUrl', App.catchSpecURL(url));
+			App.dispatcher.trigger('app.firstOpenedUrl', App.catchSpecURL(url));
 	},
 
 	hasInTabs: function(url) {
@@ -191,11 +197,11 @@ var App = {
 	},
 
 	createLogger: function() {
-		this.dispatcher.addListener('newUrl', function(url) {console.log('new: '+url); });
-		this.dispatcher.addListener('optionsChanged', function(data){ console.log(data); });
-		this.dispatcher.addListener('closedUrl', function(url) { console.log('closed: '+url);});
-		this.dispatcher.addListener('lastClosedUrl', function(url) {console.log('lastClosedUrl: '+url); });
-		this.dispatcher.addListener('firstOpenedUrl', function(url) {console.log('firstOpenedUrl: '+url); });
+		this.dispatcher.addListener('app.newUrl', function(url) {console.log('new: '+url); });
+		this.dispatcher.addListener('app.optionsChanged', function(data){ console.log(data); });
+		this.dispatcher.addListener('app.closedUrl', function(url) { console.log('closed: '+url);});
+		this.dispatcher.addListener('app.lastClosedUrl', function(url) {console.log('lastClosedUrl: '+url); });
+		this.dispatcher.addListener('app.firstOpenedUrl', function(url) {console.log('firstOpenedUrl: '+url); });
 	}
 };
 

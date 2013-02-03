@@ -1,11 +1,11 @@
 {
 
    "name": "HabitRPG",
-   "version": "0.5",
-   "permissions": ["storage", "tabs", "webNavigation", "notifications", "https://habitrpg.com/" ],
+   "version": "0.6",
+   "permissions": ["storage", "tabs", "webNavigation", "notifications", "https://habitrpg.com/", "http://tomato.es/" ],
   
    "description": "Monitors your browsing habits to divvy points to your HabitRPG character.",
-   "web_accessible_resources": [ "img/icon-48-up.png", "img/icon-48-down.png" ],
+   "web_accessible_resources": [ "img/icon-48.png", "img/icon-48-up.png", "img/icon-48-down.png" ],
    "icons": {
       "128": "img/icon-128.png",
       "19": "img/icon-19.png",
@@ -20,8 +20,11 @@
    },
    
    "content_scripts": [
-     
-   ],
+    {
+      "matches": ["http://tomato.es/*"],
+      "js": ["vendor/jquery-1.8.0.min.js", "tomatoes_bind.js"]
+    }
+  ],
 
    "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDqmcPXz4CjBphP+HlVjJXbzLI3RrOlEtXJkdd5vVs57nm/uV5wC61SjMh5jDNRfQ/cJ6C/E10k2qp3OKv0vrY1f4HK2MNJ6WTUF1byqk3Rrpj4V0DlKS69ZqzHr4D1w2WfdHt/W43k+1G53ZKsXrmgxaFHsX7O2wg55FUb8Yr7pQIDAQAB"
 }

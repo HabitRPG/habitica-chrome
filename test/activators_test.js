@@ -44,7 +44,7 @@ describe('Activators', function(){
 
         beforeEach(function(){
             bridge = new utilies.EventDispatcher();
-            triggerOpened = function() { bridge.trigger('isOpened'); };
+            triggerOpened = function() { bridge.trigger('app.isOpened'); };
             notOpened = function(){ var alam; };
 
             activator.init(bridge);
@@ -57,7 +57,7 @@ describe('Activators', function(){
             activator.setOptions({watchedUrl: 'http://habitrpg.com'});
             expect(activator.state).toBe(false);
 
-            bridge.addListener('isOpenedUrl', triggerOpened);
+            bridge.addListener('app.isOpenedUrl', triggerOpened);
             activator.enable();
             expect(activator.state).toBe(true);
             
@@ -69,38 +69,38 @@ describe('Activators', function(){
         it('Only activation for new url', function(){
             activator.enable();
 
-            bridge.trigger('firstOpenedUrl', 'http://asdyxc.com');
+            bridge.trigger('app.firstOpenedUrl', 'http://asdyxc.com');
             expect(activator.state).toBe(false);
 
             activator.setOptions({watchedUrl: 'http://phantomjs.org'});
-            bridge.trigger('firstOpenedUrl', 'http://phantomjs.org');
+            bridge.trigger('app.firstOpenedUrl', 'http://phantomjs.org');
             expect(activator.state).toBe(true);
 
             activator.disable();
             expect(activator.state).toBe(false);
-            bridge.trigger('firstOpenedUrl', 'http://phantomjs.org');
+            bridge.trigger('app.firstOpenedUrl', 'http://phantomjs.org');
             expect(activator.state).toBe(false);
 
             activator.enable();
-            bridge.trigger('firstOpenedUrl', 'http://phantomjs.org');
+            bridge.trigger('app.firstOpenedUrl', 'http://phantomjs.org');
             expect(activator.state).toBe(true);
 
         });
 
         it ('Deactivation only if the windows not have any tab with the watched url', function() {
             activator.setOptions({watchedUrl: 'http://habitrpg.com'});
-            bridge.addListener('isOpenedUrl', triggerOpened);
+            bridge.addListener('app.isOpenedUrl', triggerOpened);
             activator.enable();
 
             expect(activator.state).toBe(true);
             
-            bridge.trigger('lastClosedUrl', 'http://habitrpg.com');
+            bridge.trigger('app.lastClosedUrl', 'http://habitrpg.com');
             expect(activator.state).toBe(false);
 
             activator.disable();
 
             activator.setOptions({watchedUrl: 'http://gruntjs.com'});
-            bridge.trigger('lastClosedUrl', 'http://gruntjs.com');
+            bridge.trigger('app.lastClosedUrl', 'http://gruntjs.com');
             expect(activator.state).toBe(false);
 
         });

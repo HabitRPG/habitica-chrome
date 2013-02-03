@@ -4,6 +4,7 @@ var defaultOptions = {
       sendInterval: '25',
       activatorName: 'alwayon',
       siteWatcherIsActive: 'true',
+      tomatoesIsActive: 'true',
       viceDomains: 'reddit.com\n9gag.com\nfacebook.com',
       goodDomains: 'lifehacker.com\ncodeacadamy.com\nkhanacadamy.org',
       days: {
@@ -76,8 +77,137 @@ var utilies = (function(){
             listeners[i].apply(this.context, [data]);
     };
 
+
+    /* ----------------- Time Period ---------------- */
+    function Period(length, type) {
+        this.setExpectedLength(length);
+        this.type = type;
+    }
+
+    Period.prototype.start = function() {
+        this.begun = new Date().getTime();
+        this.overTime = undefined;
+    };
+
+    Period.prototype.setExpectedLength = function(length) {
+        this.expectedLength = length * 60000;
+    };
+
+    Period.prototype.getExpectedLength = function(length) {
+        return this.expectedLength / 60000;
+    };
+
+    Period.prototype.getOverTime = function() {
+        var time = new Date().getTime() - this.begun;
+        return (time - this.expectedLength) / 60000;
+    };
+
+    Period.prototype.stop = function() {
+        this.begun = undefined;
+        this.overTime = this.getOverTime();
+    };
+    Period.prototype.isStarted = function() { return this.begun !== undefined; };
+    Period.prototype.isFinnished = function() { return this.overTime !== undefined; };
+
+
+
+    /* ----------------- Pomodore ---------------- */
+    var Pomodore = function(eventNamespace, parentBridge){
+        this.workCount = 0;
+        this.parentBridge = parentBridge;
+        this.eventNamespace = eventNamespace || 'pomodore';
+
+        this.periods = {
+            'work': new Period(25, 'work'),
+            'break': new Period(5, 'break'),
+            'bigBreak': new Period(15, 'break')
+        };
+        this.currentPeriod = new Period(0, 'break');
+
+        this.maxOverTimeInterval = 45000;
+        this.overTimeInterval = this.maxOverTimeInterval;
+        this.timeOutId = undefined;
+        this.handleOverTime();
+    };
+
+    Pomodore.prototype.isRunning = function() {
+        return this.timeOutId !== undefined;
+    };
+
+    Pomodore.prototype.reset = function() {
+        this.stop();
+        this.workCount = 0;
+    };    
+
+    Pomodore.prototype.stop = function(isSilent) {
+        var wasWork = false;
+        this.currentPeriod.stop();
+
+        if (this.currentPeriod.type == 'work') {
+            wasWork = true;
+            this.workCount--;
+            this.currentPeriod = this.periods['break'];
+        } 
+
+        this.timeOutId = clearTimeout(this.timeOutId);
+
+        if (!isSilent)
+            this.parentBridge.trigger(this.eventNamespace+'.stopped', wasWork);
+    };
+
+    Pomodore.prototype.start = function() {
+
+        var isWork, overTime = 0;
+
+        if (!this.currentPeriod.isStarted()) {
+            this.currentPeriod.stop();
+            overTime = this.currentPeriod.overTime;
+        }
+        
+        if (this.currentPeriod.type == 'break' ) {
+            isWork = true;
+            this.workCount++;
+            this.currentPeriod = this.periods.work;
+
+        } else if (this.workCount % 4 === 0) {
+            this.currentPeriod = this.periods.bigBreak;
+
+        } else {
+            this.currentPeriod = this.periods['break'];
+        }
+
+        this.currentPeriod.start();
+
+        clearTimeout(this.timeOutId);
+        this.overTimeInterval = this.maxOverTimeInterval;
+        this.timeOutId = setTimeout(this.handleOverTime, this.currentPeriod.expectedLength + this.maxOverTimeInterval);
+
+        this.parentBridge.trigger(this.eventNamespace+'.started', {
+                type: this.currentPeriod.type, 
+                tomatoCount: this.workCount, 
+                lastOverTime: overTime 
+            });
+    };
+
+    Pomodore.prototype.handleOverTime = function() {
+        var self = this;
+        this.handleOverTime = function() {
+
+            self.parentBridge.trigger(self.eventNamespace+'.overTime', {type: self.currentPeriod.type, time:self.currentPeriod.getOverTime() });
+
+            clearTimeout(self.timeOutId);
+            self.timeOutId = setTimeout(self.handleOverTime, self.overTimeInterval);
+
+            if (self.overTimeInterval > 15000)
+                self.overTimeInterval -= 5000; 
+        };
+    };
+
+    /* ----------------- return ---------------- */
     return {
-        EventDispatcher: EventDispatcher
+        EventDispatcher: EventDispatcher,
+        Pomodore:Pomodore,
+        Period:Period
     };
 
 
@@ -95,10 +225,9 @@ var Activators = (function() {
     AlwaysActivator.prototype.disable = function() { };
     AlwaysActivator.prototype.setOptions = function() { };
     AlwaysActivator.prototype.setState = function(value) { 
-        this.bridge.trigger('changed', value);
+        this.bridge.trigger('watcher.activator.changed', value);
         this.state = value;
     };
-    
 
     /*---------------- Page link activator ------------*/
 
@@ -111,16 +240,16 @@ var Activators = (function() {
     PageLinkActivator.prototype.init = AlwaysActivator.prototype.init;
     PageLinkActivator.prototype.setState = AlwaysActivator.prototype.setState;
     PageLinkActivator.prototype.enable = function() {
-        this.bridge.addListener('firstOpenedUrl', this.handleNewUrl);
-        this.bridge.addListener('lastClosedUrl', this.handleClosedUrl);
-        this.bridge.addListener('isOpened', this.isOpenedHandler);
+        this.bridge.addListener('app.firstOpenedUrl', this.handleNewUrl);
+        this.bridge.addListener('app.lastClosedUrl', this.handleClosedUrl);
+        this.bridge.addListener('app.isOpened', this.isOpenedHandler);
         
         this.check();
     };
     PageLinkActivator.prototype.disable = function() {
         this.state = false;
-        this.bridge.removeListener('firstOpenedUrl', this.handleNewUrl);
-        this.bridge.removeListener('lastClosedUrl', this.handleClosedUrl);
+        this.bridge.removeListener('app.firstOpenedUrl', this.handleNewUrl);
+        this.bridge.removeListener('app.lastClosedUrl', this.handleClosedUrl);
     };
     PageLinkActivator.prototype.setOptions = function(params) {
         this.url = params.watchedUrl !== undefined ? params.watchedUrl : this.url;
@@ -135,7 +264,7 @@ var Activators = (function() {
     };
 
     PageLinkActivator.prototype.check = function() {
-        this.bridge.trigger('isOpenedUrl', this.url);
+        this.bridge.trigger('app.isOpenedUrl', this.url);
     };
 
     PageLinkActivator.prototype.isOpenedHandler = function() {
@@ -248,12 +377,47 @@ var Activators = (function() {
         this.timeOutId = setTimeout(this.check, this.getTimeoutTime(now, start, end));
     };
 
+    /* ---------------- Tomatoes activator ------------ */
 
+    function TomatoesActivator(value) {
+        this.state = value;
+        this.stopHandler();
+        this.startHandler();
+    }
+    TomatoesActivator.prototype.init = AlwaysActivator.prototype.init;
+    TomatoesActivator.prototype.setState = AlwaysActivator.prototype.setState;
+    TomatoesActivator.prototype.setOptions = AlwaysActivator.prototype.setOptions;
+    TomatoesActivator.prototype.enable = function(){ 
+        this.bridge.addListener('tomatoes.reset', this.stopHandler);
+        this.bridge.addListener('tomatoes.stopped', this.stopHandler);
+        this.bridge.addListener('tomatoes.pom.started', this.startHandler);
+    };
+    TomatoesActivator.prototype.disable = function() {
+        this.bridge.removeListener('tomatoes.reset', this.stopHandler);
+        this.bridge.removeListener('tomatoes.stopped', this.stopHandler);
+        this.bridge.removeListener('tomatoes.pom.started', this.startHandler);
+    };
+    TomatoesActivator.prototype.stopHandler = function() {
+        var self = this;
+        this.stopHandler = function(data) {
+            self.bridge.trigger('watcher.swapHosts', false);
+            self.setState(false);
+        };
+    };
+    TomatoesActivator.prototype.startHandler = function() {
+        var self = this;
+        this.startHandler = function(data) {
+            self.bridge.trigger('watcher.swapHosts', data.type == 'break');
+            self.setState(true);
+        };
+    };
+    
     /* ---------------- Return -------------------- */
 
     return {
         'days': new DaysActivator(),
         'webpage': new PageLinkActivator(),
+        'tomatoes': new TomatoesActivator(),
         'alwayson': new AlwaysActivator(true),
         'alwaysoff': new AlwaysActivator(false)
         };
@@ -263,7 +427,7 @@ var Activators = (function() {
 
 var SiteWatcher = (function() {
 /*
-    BaseController.prototype.init = function() {  };
+    BaseController.prototype.init = function(appBridge) {  };
     BaseController.prototype.enable = function() {  }; // private use in setOptions
     BaseController.prototype.disable = function() {  }; // private use in setOptions
     BaseController.prototype.setOptions = function() { };
@@ -276,61 +440,53 @@ var SiteWatcher = (function() {
         goodTimeMultiplier: 0.05,
         badTimeMultiplier: 0.1,
 
+        isSwapped: false,
+
         sendInterval: 3000,
         sendIntervalID: 0,
 
         score: 0,
         timestamp: new Date().getTime(),
 
-        parentBridge: undefined,
-        dispatcher: new utilies.EventDispatcher(),
-
+        appBridge: undefined,
+        
         activator: undefined,
         activators: undefined,
 
         productivityState: 0,
 
-        init: function(parentBridge) {
+        init: function(appBridge) {
 
-            this.parentBridge = parentBridge;
+            this.appBridge = appBridge;
             this.activators = Activators;
 
             for (var name in this.activators) 
-                this.activators[name].init(this.dispatcher);
+                this.activators[name].init(this.appBridge);
 
             this.activator = this.activators.alwaysoff;
         },
 
         enable:function() {
-            this.parentBridge.addListener('newUrl', this.checkNewUrl);
-            this.parentBridge.addListener('lastClosedUrl', this.lastClosedUrlHandler);
-            this.parentBridge.addListener('firstOpenedUrl', this.firstOpenedUrlHandler);
-            this.parentBridge.addListener('isOpened', this.isOpenedHandler);
-
-            this.dispatcher.addListener('changed', this.controllSendingState);
-            this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
+            this.appBridge.addListener('app.newUrl', this.checkNewUrl);
+            this.appBridge.addListener('watcher.swapHosts', this.swapHosts);
+            this.appBridge.addListener('watcher.activator.changed', this.controllSendingState);
         },
 
         disable: function() {
 
-            this.turnOffTheSender();
+            this.setProductivityState();
+            this.triggerSendRequest();
 
-            this.parentBridge.removeListener('newUrl', this.checkNewUrl);
-            this.parentBridge.removeListener('lastClosedUrl', this.lastClosedUrlHandler);
-            this.parentBridge.removeListener('firstOpenedUrl', this.firstOpenedUrlHandler);
-            this.parentBridge.removeListener('isOpened', this.isOpenedHandler);
-
-            this.dispatcher.removeListener('changed', this.controllSendingState);
-            this.dispatcher.removeListener('isOpenedUrl', this.isOpenedUrlHandler);
+            this.appBridge.removeListener('app.newUrl', this.checkNewUrl);
+            this.appBridge.removeListener('watcher.swapHosts', this.swapHosts);
+            this.appBridge.removeListener('watcher.activator.changed', this.controllSendingState);
         },
 
         setOptions: function(params) {
 
             this.setValue(params, 'viceDomains');
-            this.badHosts = this.viceDomains.split('\n');
-
             this.setValue(params, 'goodDomains');
-            this.goodHosts = this.goodDomains.split('\n');
+            this.swapHosts(this.isSwapped);
 
             if (!params.isSandBox) {
                 if (params.sendInterval) {
@@ -368,43 +524,24 @@ var SiteWatcher = (function() {
             this.activator.enable();
         },
 
-        setProductivityState: function() {
-            var state = 0, data;
-            if (this.goodHosts.indexOf(this.host) != -1)
-                state = 1;
-            else if (this.badHosts.indexOf(this.host) != -1)
-                state = -1;
+        getHost: function(url) { return url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1'); },
 
-            if (this.productivityState !== state) {
-                if (state > 0) {
-                    data = {
-                        score: 1,
-                        message: 'Great! Maybe you are started working:)'
-                    };
-                } else if (state < 0) {
-                    data = {
-                        score: -1,
-                        message: "I'm watching you! Lets go to work!"
-                    };
-                }
+        checkNewUrl: function(url) {
+            
+            var host = watcher.getHost(url);
+            
+            if (host == watcher.host) return;
+            
+            watcher.host = host;
 
-                this.productivityState = state;
+            watcher.setProductivityState(watcher.activator.state);
 
-                if (data)
-                    this.parentBridge.trigger('notify', data);
-            }
+            if (!watcher.activator.state) return;
+            
+            watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
+            
         },
-
-        addScoreFromSpentTime: function(spentTime) {
-            var score = 0;
-            if (this.productivityState > 0)
-                score = spentTime * this.goodTimeMultiplier;
-            else if (this.productivityState < 0)
-                score = (spentTime * this.badTimeMultiplier) * -1;
-
-            this.score += score;
-        },
-
+        
         getandResetSpentTime: function() {
             var spent = new Date().getTime() - this.timestamp;
 
@@ -413,39 +550,47 @@ var SiteWatcher = (function() {
             return spent * 0.001 / 60;
         },
 
-        getHost: function(url) { return url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1'); },
+        addScoreFromSpentTime: function(spentTime) {
+            var score = 0;
 
-        checkNewUrl: function(url) {
-            
-            var host = watcher.getHost(url);
-            
-            if (host == watcher.host) return;
-            watcher.host = host;
-            
-            if (!watcher.activator.state) return;
-            
-            watcher.setProductivityState();
+            if (this.productivityState > 0)
+                score = spentTime * this.goodTimeMultiplier;
+            else if (this.productivityState < 0)
+                score = (spentTime * this.badTimeMultiplier) * -1;
 
-            watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
-            
-        },
-
-        isOpenedHandler: function() {
-            watcher.dispatcher.trigger('isOpened');
-        },
-
-        isOpenedUrlHandler: function(url) {
-            watcher.parentBridge.trigger('isOpenedUrl', url);
-        },
-
-        firstOpenedUrlHandler: function(url) {
-            watcher.dispatcher.trigger('firstOpenedUrl', url);
-        },
-
-        lastClosedUrlHandler: function(url) {
-            watcher.dispatcher.trigger('lastClosedUrl', url);
+            this.score += score;
         },
         
+        setProductivityState: function(notify) {
+            var state = 0, data;
+            if (this.goodHosts.indexOf(this.host) != -1)
+                state = 1;
+            else if (this.badHosts.indexOf(this.host) != -1)
+                state = -1;
+
+            if (!this.productivityState)
+                this.timestamp = new Date().getTime();
+            
+            if (this.productivityState !== state) {
+                if (state > 0) {
+                    data = {
+                        score: 0,
+                        message: 'Great!'+(this.isSwapped ? ' Just relax :)' : ' Maybe you are started working:)')
+                    };
+                } else if (state < 0) {
+                    data = {
+                        score: 0,
+                        message: "I'm watching you!"+(this.isSwapped ? "Do not work now!" :" Lets go to work!")
+                    };
+                }
+
+                this.productivityState = state;
+
+                if (notify && data)
+                    this.appBridge.trigger('app.notify', data);
+            }
+        },
+
         controllSendingState: function(value) {
 
             if (watcher.activator.state && !value) {
@@ -469,7 +614,7 @@ var SiteWatcher = (function() {
             watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
             
             if (watcher.score !== 0) {
-                watcher.parentBridge.trigger('sendRequest', {
+                watcher.appBridge.trigger('controller.sendRequest', {
                     urlSuffix: watcher.urlPrefix+(watcher.score < 0 ? 'down' : 'up'), 
                     score: watcher.score 
                 });
@@ -485,6 +630,18 @@ var SiteWatcher = (function() {
 
         turnOffTheSender: function() {
             this.sendIntervalID = clearInterval(this.sendIntervalID);
+        },
+
+        swapHosts: function(isSwapped) {
+            if (isSwapped) { 
+                watcher.badHosts = watcher.goodDomains.split('\n');
+                watcher.goodHosts = watcher.viceDomains.split('\n');
+            } else {
+                watcher.badHosts = watcher.viceDomains.split('\n');
+                watcher.goodHosts = watcher.goodDomains.split('\n');
+            }
+
+            watcher.isSwapped = isSwapped;
         }
 
     };
@@ -492,15 +649,122 @@ var SiteWatcher = (function() {
     return {
         get: function() { return watcher; },
         getScore: function() { return watcher.score; },
-        isEnabled: function() { return watcher.parentBridge.hasListener('newUrl', watcher.checkNewUrl); },
-        init: function(parentBridge) { watcher.init(parentBridge); },
-        setOptions: function(parentBridge) { watcher.setOptions(parentBridge); },
+        isEnabled: function() { return watcher.appBridge.hasListener('app.newUrl', watcher.checkNewUrl); },
+        init: function(appBridge) { watcher.init(appBridge); },
+        setOptions: function(params) { watcher.setOptions(params); },
         forceSendRequest: function() { watcher.triggerSendRequest(); }
     };
 
 })();
     
 
+var Tomatoes = (function() {
+/*
+    BaseController.prototype.init = function(appBridge) {  };
+    BaseController.prototype.enable = function() {  }; // private use in setOptions
+    BaseController.prototype.disable = function() {  }; // private use in setOptions
+    BaseController.prototype.setOptions = function(params) { };
+*/
+
+    var tomatoes = {
+
+        url: 'http://tomato.es',
+
+        urlPrefix: 'tasks/tomatoes/',
+        pomodore: undefined,
+
+        appBridge: undefined,
+        overTimeCounter: 0,
+
+        init: function(appBridge) {
+
+            this.appBridge = appBridge;
+            this.pomodore = new utilies.Pomodore('tomatoes.pom', appBridge);
+
+        },
+
+        enable:function() {            
+            this.appBridge.addListener('tomatoes.reset', this.resetHandler);
+            this.appBridge.addListener('tomatoes.started', this.startedFromPageHandler);
+            this.appBridge.addListener('tomatoes.stopped', this.stoppedFromPageHandler);
+            this.appBridge.addListener('tomatoes.pom.started', this.startedHandler);
+            this.appBridge.addListener('tomatoes.pom.overTime', this.overTimeHandler);
+        },
+
+        disable: function() {
+            this.appBridge.removeListener('tomatoes.reset', this.resetHandler);
+            this.appBridge.removeListener('tomatoes.started', this.startedFromPageHandler);
+            this.appBridge.removeListener('tomatoes.stopped', this.stoppedFromPageHandler);
+            this.appBridge.removeListener('tomatoes.pom.started', this.startedHandler);
+            this.appBridge.removeListener('tomatoes.pom.overTime', this.overTimeHandler);
+        },
+
+        setOptions: function(params) {
+
+            if (params.tomatoesIsActive) {
+                if (params.tomatoesIsActive == 'true')
+                    this.enable();
+                else 
+                    this.disable();
+            }
+
+        },
+
+        setValue: function(params, name) { 
+            if (params[name]) this[name] = params[name];
+        },
+
+        resetHandler: function() {
+            tomatoes.pomodore.stop(true);
+            tomatoes.overTimeCounter= 0;
+        },
+
+        startedFromPageHandler: function(data) {
+            tomatoes.pomodore.workCount = data.tomatoCount;
+            tomatoes.pomodore.start();
+            tomatoes.overTimeCounter= 0;
+        },
+
+        stoppedFromPageHandler: function() {
+            tomatoes.pomodore.stop();
+            tomatoes.appBridge.trigger('controller.sendRequest', {score:-1, message: 'You breaked the flow!! [-1] HP...'});
+        },
+
+        startedHandler: function(data) {
+            if (data.type == 'break')
+                tomatoes.appBridge.trigger('controller.sendRequest', {
+                    score:1, 
+                    message: 'You made your '+(data.tomatoCount+1)+' tomato! Well done [+1] Exp/Gold!' 
+                });
+        },
+
+        overTimeHandler: function(data) {
+            var message = 'You are over '+(data.type == 'work' ? 'working' : 'breaking');
+            if (tomatoes.overTimeCounter % 2 == 1)
+                tomatoes.appBridge.trigger('app.notify', {
+                        score:0, 
+                        message: message+'! Next time you will lose HP!'
+                    });
+            else 
+                tomatoes.appBridge.trigger('controller.sendRequest', {
+                    score:-1, 
+                    message: message+' [-1] HP!!' 
+                });
+
+
+            tomatoes.overTimeCounter++;
+        }
+    };
+
+
+    return {
+        get: function() { return tomatoes; },
+        isEnabled: function() { return tomatoes.appBridge.hasListener('tomatoes.started', tomatoes.injectCode); },
+        init: function(appBridge) { tomatoes.init(appBridge); },
+        setOptions: function(params) { tomatoes.setOptions(params); }
+    };
+
+})();
 
 var habitRPG = (function(){
 
@@ -520,29 +784,23 @@ var habitRPG = (function(){
         habitUrl: '',
         sourceHabitUrl: "https://habitrpg.com/users/{UID}/",
 
-        parentBridge: undefined,
-        dispatcher: new utilies.EventDispatcher(),
+        appBridge: undefined,
 
         init: function(bridge) {
 
-            this.parentBridge = bridge;
-            this.parentBridge.addListener('newUrl', this.newUrl);
-            this.parentBridge.addListener('closedUrl', this.closedUrl);
-            this.parentBridge.addListener('isOpened', this.isOpenedHandler);
-            this.parentBridge.addListener('optionsChanged', this.setOptions);
-            this.parentBridge.addListener('lastClosedUrl', this.lastClosedUrlHandler);
-            this.parentBridge.addListener('firstOpenedUrl', this.firstOpenedUrlHandler);
-
-            this.dispatcher.addListener('sendRequest', this.send);
-            this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
-            this.dispatcher.addListener('notify', this.delegateNotifyRequest);
+            this.appBridge = bridge;
+            
+            this.appBridge.addListener('controller.sendRequest', this.send);
+            this.appBridge.addListener('app.optionsChanged', this.setOptions);
+            
 
             this.controllers = {
-                'sitewatcher': SiteWatcher 
+                'sitewatcher': SiteWatcher,
+                'tomatoes': Tomatoes
             };
 
             for (var name in this.controllers) 
-                this.controllers[name].init(this.dispatcher);
+                this.controllers[name].init(this.appBridge);
         
         },
 
@@ -560,40 +818,12 @@ var habitRPG = (function(){
             
         },
 
-        newUrl: function(url) { 
-            habitrpg.dispatcher.trigger('newUrl', url); 
-        },
-
-        closedUrl: function(url) { 
-            habitrpg.dispatcher.trigger('closedUrl', url); 
-        },
-
-        lastClosedUrlHandler: function(url) { 
-            habitrpg.dispatcher.trigger('lastClosedUrl', url); 
-        },
-
-        firstOpenedUrlHandler: function(url) { 
-            habitrpg.dispatcher.trigger('firstOpenedUrl', url); 
-        },
-
-        isOpenedHandler: function() {
-            habitrpg.dispatcher.trigger('isOpened');
-        },
-
-        isOpenedUrlHandler: function(url) {
-            habitrpg.parentBridge.trigger('isOpenedUrl', url);
-        },
-
-        delegateNotifyRequest: function(data) {
-            habitrpg.parentBridge.trigger('notify', data);
-        },
-
         send: function(data) {
 
             if (!habitrpg.uid) return;
 
             if (habitrpg.isSandBox) {
-                habitrpg.parentBridge.trigger('notify', data);
+                habitrpg.appBridge.trigger('app.notify', data);
                 
             } else {
                 
@@ -602,7 +832,7 @@ var habitRPG = (function(){
                     url: habitrpg.habitUrl + data.urlSuffix
                     
                 }).done(function(){
-                    habitrpg.parentBridge.trigger('notify', data);
+                    habitrpg.appBridge.trigger('app.notify', data);
 
                 });
             }
@@ -635,9 +865,9 @@ var App = {
 
 	init: function() {
 
-		this.dispatcher.addListener('notify', this.showNotification);
-		this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
-		this.dispatcher.addListener('newUrl', function(url){App.activeUrl = url; });
+		this.dispatcher.addListener('app.notify', this.showNotification);
+		this.dispatcher.addListener('app.isOpenedUrl', this.isOpenedUrlHandler);
+		this.dispatcher.addListener('app.newUrl', function(url){App.activeUrl = url; });
 
 		if (this.appTest > 0) {
 			this.createLogger();
@@ -652,9 +882,10 @@ var App = {
 		chrome.tabs.onCreated.addListener(this.tabCreatedHandler);
 		chrome.tabs.onUpdated.addListener(this.tabUpdatedHandler);
 		chrome.tabs.onRemoved.addListener(this.tabRemovedHandler);
+		chrome.extension.onMessage.addListener(this.messageHandler);
 		chrome.tabs.onActivated.addListener(this.tabActivatedHandler);
 		chrome.webNavigation.onCommitted.addListener(this.navCommittedHandler);
-
+		
 		chrome.windows.onFocusChanged.addListener(this.focusChangeHandler);		
 		chrome.storage.onChanged.addListener(this.setHabitRPGOptionsFromChange);
 
@@ -668,8 +899,12 @@ var App = {
             }
         });
 
-        this.storage.get(defaultOptions, function(data){ App.dispatcher.trigger('optionsChanged', data); });
+        this.storage.get(defaultOptions, function(data){ App.dispatcher.trigger('app.optionsChanged', data); });
 
+	},
+
+	messageHandler: function(request, sender, sendResponse) {
+		App.dispatcher.trigger(request.type, request);
 	},
 
 	navCommittedHandler: function(tab) {
@@ -680,7 +915,7 @@ var App = {
 		App.tabs[tab.id] = tab;
 		if (App.hasFocus && tab.active && tab.url && App.invalidTransitionTypes.indexOf(tab.transitionType) == -1) {
 			App.triggerFirstOpenedUrl(tab.url);
-			App.dispatcher.trigger('newUrl', App.catchSpecURL(tab.url));
+			App.dispatcher.trigger('app.newUrl', App.catchSpecURL(tab.url));
 			App.activeUrl = tab.url;
 		}
 	},
@@ -697,7 +932,7 @@ var App = {
 	tabUpdatedHandler: function(id, changed, tab) {
 		if (App.hasFocus && tab.active && tab.url && App.activeUrl != tab.url) {
 			App.triggerFirstOpenedUrl(tab.url);
-			App.dispatcher.trigger('newUrl', App.catchSpecURL(tab.url));
+			App.dispatcher.trigger('app.newUrl', App.catchSpecURL(tab.url));
 			App.activeUrl = tab.url;
 		}
 	},
@@ -708,16 +943,16 @@ var App = {
 		delete App.tabs[tabId];
 		
 		if (!App.hasInTabs(url))
-			App.dispatcher.trigger('lastClosedUrl', App.catchSpecURL(url));
+			App.dispatcher.trigger('app.lastClosedUrl', App.catchSpecURL(url));
 
-		App.dispatcher.trigger('closedUrl', App.catchSpecURL(url));
+		App.dispatcher.trigger('app.closedUrl', App.catchSpecURL(url));
 	},
 
 	tabActivatedHandler: function(event) {
 		var tab = App.tabs[event.tabId];
 		if (tab) {
 			App.activeUrl = tab.url;
-			App.dispatcher.trigger('newUrl', App.catchSpecURL(tab.url));
+			App.dispatcher.trigger('app.newUrl', App.catchSpecURL(tab.url));
 		}
 	},
 
@@ -729,16 +964,16 @@ var App = {
 
 		if (!win.focused) {
 			App.hasFocus = false;
-			App.dispatcher.trigger('newUrl', '');
-			App.dispatcher.trigger('firstOpenedUrl', '');
+			App.dispatcher.trigger('app.newUrl', '');
+			App.dispatcher.trigger('app.firstOpenedUrl', '');
 
 		} else {
 			App.hasFocus = true;
-			App.dispatcher.trigger('lastClosedUrl', '');
+			App.dispatcher.trigger('app.lastClosedUrl', '');
 			for (var i in win.tabs) {
 				var url = win.tabs[i].url;
 				if (win.tabs[i].active && App.activeUrl != url) {
-					App.dispatcher.trigger('newUrl', App.catchSpecURL(url));
+					App.dispatcher.trigger('app.newUrl', App.catchSpecURL(url));
 					break;
 				}
 			}
@@ -758,15 +993,16 @@ var App = {
 		for (name in params) 
 			obj[name] = params[name].newValue;
 
-		App.dispatcher.trigger('optionsChanged', obj);
+		App.dispatcher.trigger('app.optionsChanged', obj);
 		
 	},
 
 	showNotification: function(data) {
 
 		var score = data.score.toFixed(4),
+			imgVersion = !data.score ? '' : (score < 0 ? '-down' : '-up'),
 			notification = webkitNotifications.createNotification(
-			"/img/icon-48-" + (score < 0 ? 'down' : 'up') + ".png", 
+			"/img/icon-48" + imgVersion + ".png", 
 			'HabitRPG', 
 			data.message ? data.message :
 			('You '+(score < 0 ? 'lost' : 'gained')+' '+score+' '+(score < 0 ? 'HP! Work or will die...' : 'Exp/Gold! Keep up the good work!'))
@@ -777,12 +1013,12 @@ var App = {
 
 	isOpenedUrlHandler: function(url) {
 		if (App.hasInTabs(url))
-			App.dispatcher.trigger('isOpened');
+			App.dispatcher.trigger('app.isOpened');
 	},
 
 	triggerFirstOpenedUrl: function(url) {
 		if (!App.hasInTabs(url))
-			App.dispatcher.trigger('firstOpenedUrl', App.catchSpecURL(url));
+			App.dispatcher.trigger('app.firstOpenedUrl', App.catchSpecURL(url));
 	},
 
 	hasInTabs: function(url) {
@@ -808,11 +1044,11 @@ var App = {
 	},
 
 	createLogger: function() {
-		this.dispatcher.addListener('newUrl', function(url) {console.log('new: '+url); });
-		this.dispatcher.addListener('optionsChanged', function(data){ console.log(data); });
-		this.dispatcher.addListener('closedUrl', function(url) { console.log('closed: '+url);});
-		this.dispatcher.addListener('lastClosedUrl', function(url) {console.log('lastClosedUrl: '+url); });
-		this.dispatcher.addListener('firstOpenedUrl', function(url) {console.log('firstOpenedUrl: '+url); });
+		this.dispatcher.addListener('app.newUrl', function(url) {console.log('new: '+url); });
+		this.dispatcher.addListener('app.optionsChanged', function(data){ console.log(data); });
+		this.dispatcher.addListener('app.closedUrl', function(url) { console.log('closed: '+url);});
+		this.dispatcher.addListener('app.lastClosedUrl', function(url) {console.log('lastClosedUrl: '+url); });
+		this.dispatcher.addListener('app.firstOpenedUrl', function(url) {console.log('firstOpenedUrl: '+url); });
 	}
 };
 

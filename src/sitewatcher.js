@@ -1,7 +1,7 @@
 
 var SiteWatcher = (function() {
 /*
-    BaseController.prototype.init = function() {  };
+    BaseController.prototype.init = function(appBridge) {  };
     BaseController.prototype.enable = function() {  }; // private use in setOptions
     BaseController.prototype.disable = function() {  }; // private use in setOptions
     BaseController.prototype.setOptions = function() { };
@@ -14,61 +14,53 @@ var SiteWatcher = (function() {
         goodTimeMultiplier: 0.05,
         badTimeMultiplier: 0.1,
 
+        isSwapped: false,
+
         sendInterval: 3000,
         sendIntervalID: 0,
 
         score: 0,
         timestamp: new Date().getTime(),
 
-        parentBridge: undefined,
-        dispatcher: new utilies.EventDispatcher(),
-
+        appBridge: undefined,
+        
         activator: undefined,
         activators: undefined,
 
         productivityState: 0,
 
-        init: function(parentBridge) {
+        init: function(appBridge) {
 
-            this.parentBridge = parentBridge;
+            this.appBridge = appBridge;
             this.activators = Activators;
 
             for (var name in this.activators) 
-                this.activators[name].init(this.dispatcher);
+                this.activators[name].init(this.appBridge);
 
             this.activator = this.activators.alwaysoff;
         },
 
         enable:function() {
-            this.parentBridge.addListener('newUrl', this.checkNewUrl);
-            this.parentBridge.addListener('lastClosedUrl', this.lastClosedUrlHandler);
-            this.parentBridge.addListener('firstOpenedUrl', this.firstOpenedUrlHandler);
-            this.parentBridge.addListener('isOpened', this.isOpenedHandler);
-
-            this.dispatcher.addListener('changed', this.controllSendingState);
-            this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
+            this.appBridge.addListener('app.newUrl', this.checkNewUrl);
+            this.appBridge.addListener('watcher.swapHosts', this.swapHosts);
+            this.appBridge.addListener('watcher.activator.changed', this.controllSendingState);
         },
 
         disable: function() {
 
-            this.turnOffTheSender();
+            this.setProductivityState();
+            this.triggerSendRequest();
 
-            this.parentBridge.removeListener('newUrl', this.checkNewUrl);
-            this.parentBridge.removeListener('lastClosedUrl', this.lastClosedUrlHandler);
-            this.parentBridge.removeListener('firstOpenedUrl', this.firstOpenedUrlHandler);
-            this.parentBridge.removeListener('isOpened', this.isOpenedHandler);
-
-            this.dispatcher.removeListener('changed', this.controllSendingState);
-            this.dispatcher.removeListener('isOpenedUrl', this.isOpenedUrlHandler);
+            this.appBridge.removeListener('app.newUrl', this.checkNewUrl);
+            this.appBridge.removeListener('watcher.swapHosts', this.swapHosts);
+            this.appBridge.removeListener('watcher.activator.changed', this.controllSendingState);
         },
 
         setOptions: function(params) {
 
             this.setValue(params, 'viceDomains');
-            this.badHosts = this.viceDomains.split('\n');
-
             this.setValue(params, 'goodDomains');
-            this.goodHosts = this.goodDomains.split('\n');
+            this.swapHosts(this.isSwapped);
 
             if (!params.isSandBox) {
                 if (params.sendInterval) {
@@ -106,43 +98,24 @@ var SiteWatcher = (function() {
             this.activator.enable();
         },
 
-        setProductivityState: function() {
-            var state = 0, data;
-            if (this.goodHosts.indexOf(this.host) != -1)
-                state = 1;
-            else if (this.badHosts.indexOf(this.host) != -1)
-                state = -1;
+        getHost: function(url) { return url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1'); },
 
-            if (this.productivityState !== state) {
-                if (state > 0) {
-                    data = {
-                        score: 1,
-                        message: 'Great! Maybe you are started working:)'
-                    };
-                } else if (state < 0) {
-                    data = {
-                        score: -1,
-                        message: "I'm watching you! Lets go to work!"
-                    };
-                }
+        checkNewUrl: function(url) {
+            
+            var host = watcher.getHost(url);
+            
+            if (host == watcher.host) return;
+            
+            watcher.host = host;
 
-                this.productivityState = state;
+            watcher.setProductivityState(watcher.activator.state);
 
-                if (data)
-                    this.parentBridge.trigger('notify', data);
-            }
+            if (!watcher.activator.state) return;
+            
+            watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
+            
         },
-
-        addScoreFromSpentTime: function(spentTime) {
-            var score = 0;
-            if (this.productivityState > 0)
-                score = spentTime * this.goodTimeMultiplier;
-            else if (this.productivityState < 0)
-                score = (spentTime * this.badTimeMultiplier) * -1;
-
-            this.score += score;
-        },
-
+        
         getandResetSpentTime: function() {
             var spent = new Date().getTime() - this.timestamp;
 
@@ -151,39 +124,47 @@ var SiteWatcher = (function() {
             return spent * 0.001 / 60;
         },
 
-        getHost: function(url) { return url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1'); },
+        addScoreFromSpentTime: function(spentTime) {
+            var score = 0;
 
-        checkNewUrl: function(url) {
-            
-            var host = watcher.getHost(url);
-            
-            if (host == watcher.host) return;
-            watcher.host = host;
-            
-            if (!watcher.activator.state) return;
-            
-            watcher.setProductivityState();
+            if (this.productivityState > 0)
+                score = spentTime * this.goodTimeMultiplier;
+            else if (this.productivityState < 0)
+                score = (spentTime * this.badTimeMultiplier) * -1;
 
-            watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
-            
-        },
-
-        isOpenedHandler: function() {
-            watcher.dispatcher.trigger('isOpened');
-        },
-
-        isOpenedUrlHandler: function(url) {
-            watcher.parentBridge.trigger('isOpenedUrl', url);
-        },
-
-        firstOpenedUrlHandler: function(url) {
-            watcher.dispatcher.trigger('firstOpenedUrl', url);
-        },
-
-        lastClosedUrlHandler: function(url) {
-            watcher.dispatcher.trigger('lastClosedUrl', url);
+            this.score += score;
         },
         
+        setProductivityState: function(notify) {
+            var state = 0, data;
+            if (this.goodHosts.indexOf(this.host) != -1)
+                state = 1;
+            else if (this.badHosts.indexOf(this.host) != -1)
+                state = -1;
+
+            if (!this.productivityState)
+                this.timestamp = new Date().getTime();
+            
+            if (this.productivityState !== state) {
+                if (state > 0) {
+                    data = {
+                        score: 0,
+                        message: 'Great!'+(this.isSwapped ? ' Just relax :)' : ' Maybe started working:)')
+                    };
+                } else if (state < 0) {
+                    data = {
+                        score: 0,
+                        message: "I'm watching you!"+(this.isSwapped ? "Do not work now!" :" Lets go to work!")
+                    };
+                }
+
+                this.productivityState = state;
+
+                if (notify && data)
+                    this.appBridge.trigger('app.notify', data);
+            }
+        },
+
         controllSendingState: function(value) {
 
             if (watcher.activator.state && !value) {
@@ -207,7 +188,7 @@ var SiteWatcher = (function() {
             watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
             
             if (watcher.score !== 0) {
-                watcher.parentBridge.trigger('sendRequest', {
+                watcher.appBridge.trigger('controller.sendRequest', {
                     urlSuffix: watcher.urlPrefix+(watcher.score < 0 ? 'down' : 'up'), 
                     score: watcher.score 
                 });
@@ -223,6 +204,18 @@ var SiteWatcher = (function() {
 
         turnOffTheSender: function() {
             this.sendIntervalID = clearInterval(this.sendIntervalID);
+        },
+
+        swapHosts: function(isSwapped) {
+            if (isSwapped) { 
+                watcher.badHosts = watcher.goodDomains.split('\n');
+                watcher.goodHosts = watcher.viceDomains.split('\n');
+            } else {
+                watcher.badHosts = watcher.viceDomains.split('\n');
+                watcher.goodHosts = watcher.goodDomains.split('\n');
+            }
+
+            watcher.isSwapped = isSwapped;
         }
 
     };
@@ -230,9 +223,9 @@ var SiteWatcher = (function() {
     return {
         get: function() { return watcher; },
         getScore: function() { return watcher.score; },
-        isEnabled: function() { return watcher.parentBridge.hasListener('newUrl', watcher.checkNewUrl); },
-        init: function(parentBridge) { watcher.init(parentBridge); },
-        setOptions: function(parentBridge) { watcher.setOptions(parentBridge); },
+        isEnabled: function() { return watcher.appBridge.hasListener('app.newUrl', watcher.checkNewUrl); },
+        init: function(appBridge) { watcher.init(appBridge); },
+        setOptions: function(params) { watcher.setOptions(params); },
         forceSendRequest: function() { watcher.triggerSendRequest(); }
     };
 
