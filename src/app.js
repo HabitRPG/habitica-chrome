@@ -148,8 +148,9 @@ var App = {
 	showNotification: function(data) {
 
 		var score = data.score.toFixed(4),
+			imgVersion = !data.score ? '' : (score < 0 ? '-down' : '-up'),
 			notification = webkitNotifications.createNotification(
-			"/img/icon-48-" + (score < 0 ? 'down' : 'up') + ".png", 
+			"/img/icon-48" + imgVersion + ".png", 
 			'HabitRPG', 
 			data.message ? data.message :
 			('You '+(score < 0 ? 'lost' : 'gained')+' '+score+' '+(score < 0 ? 'HP! Work or will die...' : 'Exp/Gold! Keep up the good work!'))

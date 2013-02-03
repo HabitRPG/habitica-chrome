@@ -146,12 +146,12 @@ var SiteWatcher = (function() {
             if (this.productivityState !== state) {
                 if (state > 0) {
                     data = {
-                        score: 1,
+                        score: 0,
                         message: 'Great! Maybe you are started working:)'
                     };
                 } else if (state < 0) {
                     data = {
-                        score: -1,
+                        score: 0,
                         message: "I'm watching you! Lets go to work!"
                     };
                 }
