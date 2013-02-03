@@ -190,7 +190,7 @@ var SiteWatcher = (function() {
             if (watcher.score !== 0) {
                 watcher.appBridge.trigger('controller.sendRequest', {
                     urlSuffix: watcher.urlPrefix+(watcher.score < 0 ? 'down' : 'up'), 
-                    score: watcher.score 
+                    score: watcher.score < 0 ? -1 : 1
                 });
 
                 watcher.score = 0;
