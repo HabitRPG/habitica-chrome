@@ -112,9 +112,10 @@ var utilies = (function(){
 
 
     /* ----------------- Pomodore ---------------- */
-    var Pomodore = function(parentBridge){
+    var Pomodore = function(eventNamespace, parentBridge){
         this.workCount = 0;
         this.parentBridge = parentBridge;
+        this.eventNamespace = eventNamespace || 'pomodore';
 
         this.periods = {
             'work': new Period(25, 'work'),
@@ -123,7 +124,7 @@ var utilies = (function(){
         };
         this.currentPeriod = new Period(0, 'break');
 
-        this.maxOverTimeInterval = 60000;
+        this.maxOverTimeInterval = 45000;
         this.overTimeInterval = this.maxOverTimeInterval;
         this.timeOutId = undefined;
         this.handleOverTime();
@@ -138,7 +139,7 @@ var utilies = (function(){
         this.workCount = 0;
     };    
 
-    Pomodore.prototype.stop = function() {
+    Pomodore.prototype.stop = function(isSilent) {
         var wasWork = false;
         this.currentPeriod.stop();
 
@@ -150,7 +151,8 @@ var utilies = (function(){
 
         this.timeOutId = clearTimeout(this.timeOutId);
 
-        this.parentBridge.trigger('pomodore.stopped', wasWork);
+        if (!isSilent)
+            this.parentBridge.trigger(this.eventNamespace+'.stopped', wasWork);
     };
 
     Pomodore.prototype.start = function() {
@@ -178,16 +180,20 @@ var utilies = (function(){
 
         clearTimeout(this.timeOutId);
         this.overTimeInterval = this.maxOverTimeInterval;
-        this.timeOutId = setTimeout(this.handleOverTime, this.currentPeriod.expectedLength);
+        this.timeOutId = setTimeout(this.handleOverTime, this.currentPeriod.expectedLength + this.maxOverTimeInterval);
 
-        this.parentBridge.trigger('pomodore.started', {type: this.currentPeriod.type, lastOverTime: overTime });
+        this.parentBridge.trigger(this.eventNamespace+'.started', {
+                type: this.currentPeriod.type, 
+                tomatoCount: this.workCount, 
+                lastOverTime: overTime 
+            });
     };
 
     Pomodore.prototype.handleOverTime = function() {
         var self = this;
         this.handleOverTime = function() {
 
-            self.parentBridge.trigger('pomodore.overTime', {type: self.currentPeriod.type, time:self.currentPeriod.getOverTime() });
+            self.parentBridge.trigger(self.eventNamespace+'.overTime', {type: self.currentPeriod.type, time:self.currentPeriod.getOverTime() });
 
             clearTimeout(self.timeOutId);
             self.timeOutId = setTimeout(self.handleOverTime, self.overTimeInterval);
@@ -222,7 +228,6 @@ var Activators = (function() {
         this.bridge.trigger('watcher.activator.changed', value);
         this.state = value;
     };
-    
 
     /*---------------- Page link activator ------------*/
 
@@ -372,12 +377,47 @@ var Activators = (function() {
         this.timeOutId = setTimeout(this.check, this.getTimeoutTime(now, start, end));
     };
 
+    /* ---------------- Tomatoes activator ------------ */
 
+    function TomatoesActivator(value) {
+        this.state = value;
+        this.stopHandler();
+        this.startHandler();
+    }
+    TomatoesActivator.prototype.init = AlwaysActivator.prototype.init;
+    TomatoesActivator.prototype.setState = AlwaysActivator.prototype.setState;
+    TomatoesActivator.prototype.setOptions = AlwaysActivator.prototype.setOptions;
+    TomatoesActivator.prototype.enable = function(){ 
+        this.bridge.addListener('tomatoes.reset', this.stopHandler);
+        this.bridge.addListener('tomatoes.stopped', this.stopHandler);
+        this.bridge.addListener('tomatoes.pom.started', this.startHandler);
+    };
+    TomatoesActivator.prototype.disable = function() {
+        this.bridge.removeListener('tomatoes.reset', this.stopHandler);
+        this.bridge.removeListener('tomatoes.stopped', this.stopHandler);
+        this.bridge.removeListener('tomatoes.pom.started', this.startHandler);
+    };
+    TomatoesActivator.prototype.stopHandler = function() {
+        var self = this;
+        this.stopHandler = function(data) {
+            self.bridge.trigger('watcher.swapHosts', false);
+            self.setState(false);
+        };
+    };
+    TomatoesActivator.prototype.startHandler = function() {
+        var self = this;
+        this.startHandler = function(data) {
+            self.bridge.trigger('watcher.swapHosts', data.type == 'break');
+            self.setState(true);
+        };
+    };
+    
     /* ---------------- Return -------------------- */
 
     return {
         'days': new DaysActivator(),
         'webpage': new PageLinkActivator(),
+        'tomatoes': new TomatoesActivator(),
         'alwayson': new AlwaysActivator(true),
         'alwaysoff': new AlwaysActivator(false)
         };
@@ -399,6 +439,8 @@ var SiteWatcher = (function() {
 
         goodTimeMultiplier: 0.05,
         badTimeMultiplier: 0.1,
+
+        isSwapped: false,
 
         sendInterval: 3000,
         sendIntervalID: 0,
@@ -426,6 +468,7 @@ var SiteWatcher = (function() {
 
         enable:function() {
             this.appBridge.addListener('app.newUrl', this.checkNewUrl);
+            this.appBridge.addListener('watcher.swapHosts', this.swapHosts);
             this.appBridge.addListener('watcher.activator.changed', this.controllSendingState);
         },
 
@@ -435,16 +478,15 @@ var SiteWatcher = (function() {
             this.triggerSendRequest();
 
             this.appBridge.removeListener('app.newUrl', this.checkNewUrl);
+            this.appBridge.removeListener('watcher.swapHosts', this.swapHosts);
             this.appBridge.removeListener('watcher.activator.changed', this.controllSendingState);
         },
 
         setOptions: function(params) {
 
             this.setValue(params, 'viceDomains');
-            this.badHosts = this.viceDomains.split('\n');
-
             this.setValue(params, 'goodDomains');
-            this.goodHosts = this.goodDomains.split('\n');
+            this.swapHosts(this.isSwapped);
 
             if (!params.isSandBox) {
                 if (params.sendInterval) {
@@ -532,13 +574,13 @@ var SiteWatcher = (function() {
             if (this.productivityState !== state) {
                 if (state > 0) {
                     data = {
-                        score: 1,
-                        message: 'Great! Maybe you are started working:)'
+                        score: 0,
+                        message: 'Great!'+(this.isSwapped ? ' Just relax :)' : ' Maybe you are started working:)')
                     };
                 } else if (state < 0) {
                     data = {
-                        score: -1,
-                        message: "I'm watching you! Lets go to work!"
+                        score: 0,
+                        message: "I'm watching you!"+(this.isSwapped ? "Do not work now!" :" Lets go to work!")
                     };
                 }
 
@@ -588,6 +630,18 @@ var SiteWatcher = (function() {
 
         turnOffTheSender: function() {
             this.sendIntervalID = clearInterval(this.sendIntervalID);
+        },
+
+        swapHosts: function(isSwapped) {
+            if (isSwapped) { 
+                watcher.badHosts = watcher.goodDomains.split('\n');
+                watcher.goodHosts = watcher.viceDomains.split('\n');
+            } else {
+                watcher.badHosts = watcher.viceDomains.split('\n');
+                watcher.goodHosts = watcher.goodDomains.split('\n');
+            }
+
+            watcher.isSwapped = isSwapped;
         }
 
     };
@@ -615,34 +669,37 @@ var Tomatoes = (function() {
     var tomatoes = {
 
         url: 'http://tomato.es',
+
         urlPrefix: 'tasks/tomatoes/',
+        pomodore: undefined,
+
         appBridge: undefined,
+        overTimeCounter: 0,
 
         init: function(appBridge) {
 
             this.appBridge = appBridge;
+            this.pomodore = new utilies.Pomodore('tomatoes.pom', appBridge);
 
-            this.injectCode();
         },
 
         enable:function() {            
-            this.appBridge.addListener('app.newUrl', this.injectCode);
-            this.appBridge.addListener('app.isOpened', this.isOpenedHandler);
-
+            this.appBridge.addListener('tomatoes.reset', this.resetHandler);
+            this.appBridge.addListener('tomatoes.started', this.startedFromPageHandler);
+            this.appBridge.addListener('tomatoes.stopped', this.stoppedFromPageHandler);
+            this.appBridge.addListener('tomatoes.pom.started', this.startedHandler);
+            this.appBridge.addListener('tomatoes.pom.overTime', this.overTimeHandler);
         },
 
         disable: function() {
-            this.appBridge.removeListener('app.newUrl', this.injectCode);
-            this.appBridge.removeListener('app.isOpened', this.isOpenedHandler);
-
+            this.appBridge.removeListener('tomatoes.reset', this.resetHandler);
+            this.appBridge.removeListener('tomatoes.started', this.startedFromPageHandler);
+            this.appBridge.removeListener('tomatoes.stopped', this.stoppedFromPageHandler);
+            this.appBridge.removeListener('tomatoes.pom.started', this.startedHandler);
+            this.appBridge.removeListener('tomatoes.pom.overTime', this.overTimeHandler);
         },
 
         setOptions: function(params) {
-
-
-            if (!params.isSandBox) {
-
-            }
 
             if (params.tomatoesIsActive) {
                 if (params.tomatoesIsActive == 'true')
@@ -657,24 +714,52 @@ var Tomatoes = (function() {
             if (params[name]) this[name] = params[name];
         },
 
-        isOpenedHandler: function() {
-
+        resetHandler: function() {
+            tomatoes.pomodore.stop(true);
+            tomatoes.overTimeCounter= 0;
         },
 
-        injectCode: function() {
-            var self = this;
-            this.injectCode = function(url) {
-                if (url.indexOf(self.url) === 0) {
+        startedFromPageHandler: function(data) {
+            tomatoes.pomodore.workCount = data.tomatoCount;
+            tomatoes.pomodore.start();
+            tomatoes.overTimeCounter= 0;
+        },
 
-                }
-            };
+        stoppedFromPageHandler: function() {
+            tomatoes.pomodore.stop();
+            tomatoes.appBridge.trigger('controller.sendRequest', {score:-1, message: 'You breaked the flow!! [-1] HP...'});
+        },
+
+        startedHandler: function(data) {
+            if (data.type == 'break')
+                tomatoes.appBridge.trigger('controller.sendRequest', {
+                    score:1, 
+                    message: 'You made your '+(data.tomatoCount+1)+' tomato! Well done [+1] Exp/Gold!' 
+                });
+        },
+
+        overTimeHandler: function(data) {
+            var message = 'You are over '+(data.type == 'work' ? 'working' : 'breaking');
+            if (tomatoes.overTimeCounter % 2 == 1)
+                tomatoes.appBridge.trigger('app.notify', {
+                        score:0, 
+                        message: message+'! Next time you will lose HP!'
+                    });
+            else 
+                tomatoes.appBridge.trigger('controller.sendRequest', {
+                    score:-1, 
+                    message: message+' [-1] HP!!' 
+                });
+
+
+            tomatoes.overTimeCounter++;
         }
     };
 
 
     return {
         get: function() { return tomatoes; },
-        isEnabled: function() { return tomatoes.appBridge.hasListener('app.firstOpenedUrl', tomatoes.injectCode); },
+        isEnabled: function() { return tomatoes.appBridge.hasListener('tomatoes.started', tomatoes.injectCode); },
         init: function(appBridge) { tomatoes.init(appBridge); },
         setOptions: function(params) { tomatoes.setOptions(params); }
     };
@@ -797,9 +882,10 @@ var App = {
 		chrome.tabs.onCreated.addListener(this.tabCreatedHandler);
 		chrome.tabs.onUpdated.addListener(this.tabUpdatedHandler);
 		chrome.tabs.onRemoved.addListener(this.tabRemovedHandler);
+		chrome.extension.onMessage.addListener(this.messageHandler);
 		chrome.tabs.onActivated.addListener(this.tabActivatedHandler);
 		chrome.webNavigation.onCommitted.addListener(this.navCommittedHandler);
-
+		
 		chrome.windows.onFocusChanged.addListener(this.focusChangeHandler);		
 		chrome.storage.onChanged.addListener(this.setHabitRPGOptionsFromChange);
 
@@ -815,6 +901,10 @@ var App = {
 
         this.storage.get(defaultOptions, function(data){ App.dispatcher.trigger('app.optionsChanged', data); });
 
+	},
+
+	messageHandler: function(request, sender, sendResponse) {
+		App.dispatcher.trigger(request.type, request);
 	},
 
 	navCommittedHandler: function(tab) {
@@ -910,8 +1000,9 @@ var App = {
 	showNotification: function(data) {
 
 		var score = data.score.toFixed(4),
+			imgVersion = !data.score ? '' : (score < 0 ? '-down' : '-up'),
 			notification = webkitNotifications.createNotification(
-			"/img/icon-48-" + (score < 0 ? 'down' : 'up') + ".png", 
+			"/img/icon-48" + imgVersion + ".png", 
 			'HabitRPG', 
 			data.message ? data.message :
 			('You '+(score < 0 ? 'lost' : 'gained')+' '+score+' '+(score < 0 ? 'HP! Work or will die...' : 'Exp/Gold! Keep up the good work!'))

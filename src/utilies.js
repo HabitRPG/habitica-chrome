@@ -72,9 +72,10 @@ var utilies = (function(){
 
 
     /* ----------------- Pomodore ---------------- */
-    var Pomodore = function(parentBridge){
+    var Pomodore = function(eventNamespace, parentBridge){
         this.workCount = 0;
         this.parentBridge = parentBridge;
+        this.eventNamespace = eventNamespace || 'pomodore';
 
         this.periods = {
             'work': new Period(25, 'work'),
@@ -83,7 +84,7 @@ var utilies = (function(){
         };
         this.currentPeriod = new Period(0, 'break');
 
-        this.maxOverTimeInterval = 60000;
+        this.maxOverTimeInterval = 45000;
         this.overTimeInterval = this.maxOverTimeInterval;
         this.timeOutId = undefined;
         this.handleOverTime();
@@ -98,7 +99,7 @@ var utilies = (function(){
         this.workCount = 0;
     };    
 
-    Pomodore.prototype.stop = function() {
+    Pomodore.prototype.stop = function(isSilent) {
         var wasWork = false;
         this.currentPeriod.stop();
 
@@ -110,7 +111,8 @@ var utilies = (function(){
 
         this.timeOutId = clearTimeout(this.timeOutId);
 
-        this.parentBridge.trigger('pomodore.stopped', wasWork);
+        if (!isSilent)
+            this.parentBridge.trigger(this.eventNamespace+'.stopped', wasWork);
     };
 
     Pomodore.prototype.start = function() {
@@ -138,16 +140,20 @@ var utilies = (function(){
 
         clearTimeout(this.timeOutId);
         this.overTimeInterval = this.maxOverTimeInterval;
-        this.timeOutId = setTimeout(this.handleOverTime, this.currentPeriod.expectedLength);
+        this.timeOutId = setTimeout(this.handleOverTime, this.currentPeriod.expectedLength + this.maxOverTimeInterval);
 
-        this.parentBridge.trigger('pomodore.started', {type: this.currentPeriod.type, lastOverTime: overTime });
+        this.parentBridge.trigger(this.eventNamespace+'.started', {
+                type: this.currentPeriod.type, 
+                tomatoCount: this.workCount, 
+                lastOverTime: overTime 
+            });
     };
 
     Pomodore.prototype.handleOverTime = function() {
         var self = this;
         this.handleOverTime = function() {
 
-            self.parentBridge.trigger('pomodore.overTime', {type: self.currentPeriod.type, time:self.currentPeriod.getOverTime() });
+            self.parentBridge.trigger(self.eventNamespace+'.overTime', {type: self.currentPeriod.type, time:self.currentPeriod.getOverTime() });
 
             clearTimeout(self.timeOutId);
             self.timeOutId = setTimeout(self.handleOverTime, self.overTimeInterval);

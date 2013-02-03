@@ -9,34 +9,37 @@ var Tomatoes = (function() {
     var tomatoes = {
 
         url: 'http://tomato.es',
+
         urlPrefix: 'tasks/tomatoes/',
+        pomodore: undefined,
+
         appBridge: undefined,
+        overTimeCounter: 0,
 
         init: function(appBridge) {
 
             this.appBridge = appBridge;
+            this.pomodore = new utilies.Pomodore('tomatoes.pom', appBridge);
 
-            this.injectCode();
         },
 
         enable:function() {            
-            this.appBridge.addListener('app.newUrl', this.injectCode);
-            this.appBridge.addListener('app.isOpened', this.isOpenedHandler);
-
+            this.appBridge.addListener('tomatoes.reset', this.resetHandler);
+            this.appBridge.addListener('tomatoes.started', this.startedFromPageHandler);
+            this.appBridge.addListener('tomatoes.stopped', this.stoppedFromPageHandler);
+            this.appBridge.addListener('tomatoes.pom.started', this.startedHandler);
+            this.appBridge.addListener('tomatoes.pom.overTime', this.overTimeHandler);
         },
 
         disable: function() {
-            this.appBridge.removeListener('app.newUrl', this.injectCode);
-            this.appBridge.removeListener('app.isOpened', this.isOpenedHandler);
-
+            this.appBridge.removeListener('tomatoes.reset', this.resetHandler);
+            this.appBridge.removeListener('tomatoes.started', this.startedFromPageHandler);
+            this.appBridge.removeListener('tomatoes.stopped', this.stoppedFromPageHandler);
+            this.appBridge.removeListener('tomatoes.pom.started', this.startedHandler);
+            this.appBridge.removeListener('tomatoes.pom.overTime', this.overTimeHandler);
         },
 
         setOptions: function(params) {
-
-
-            if (!params.isSandBox) {
-
-            }
 
             if (params.tomatoesIsActive) {
                 if (params.tomatoesIsActive == 'true')
@@ -51,24 +54,52 @@ var Tomatoes = (function() {
             if (params[name]) this[name] = params[name];
         },
 
-        isOpenedHandler: function() {
-
+        resetHandler: function() {
+            tomatoes.pomodore.stop(true);
+            tomatoes.overTimeCounter= 0;
         },
 
-        injectCode: function() {
-            var self = this;
-            this.injectCode = function(url) {
-                if (url.indexOf(self.url) === 0) {
+        startedFromPageHandler: function(data) {
+            tomatoes.pomodore.workCount = data.tomatoCount;
+            tomatoes.pomodore.start();
+            tomatoes.overTimeCounter= 0;
+        },
 
-                }
-            };
+        stoppedFromPageHandler: function() {
+            tomatoes.pomodore.stop();
+            tomatoes.appBridge.trigger('controller.sendRequest', {score:-1, message: 'You breaked the flow!! [-1] HP...'});
+        },
+
+        startedHandler: function(data) {
+            if (data.type == 'break')
+                tomatoes.appBridge.trigger('controller.sendRequest', {
+                    score:1, 
+                    message: 'You made your '+(data.tomatoCount+1)+' tomato! Well done [+1] Exp/Gold!' 
+                });
+        },
+
+        overTimeHandler: function(data) {
+            var message = 'You are over '+(data.type == 'work' ? 'working' : 'breaking');
+            if (tomatoes.overTimeCounter % 2 == 1)
+                tomatoes.appBridge.trigger('app.notify', {
+                        score:0, 
+                        message: message+'! Next time you will lose HP!'
+                    });
+            else 
+                tomatoes.appBridge.trigger('controller.sendRequest', {
+                    score:-1, 
+                    message: message+' [-1] HP!!' 
+                });
+
+
+            tomatoes.overTimeCounter++;
         }
     };
 
 
     return {
         get: function() { return tomatoes; },
-        isEnabled: function() { return tomatoes.appBridge.hasListener('app.firstOpenedUrl', tomatoes.injectCode); },
+        isEnabled: function() { return tomatoes.appBridge.hasListener('tomatoes.started', tomatoes.injectCode); },
         init: function(appBridge) { tomatoes.init(appBridge); },
         setOptions: function(params) { tomatoes.setOptions(params); }
     };

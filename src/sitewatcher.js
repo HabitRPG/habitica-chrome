@@ -14,6 +14,8 @@ var SiteWatcher = (function() {
         goodTimeMultiplier: 0.05,
         badTimeMultiplier: 0.1,
 
+        isSwapped: false,
+
         sendInterval: 3000,
         sendIntervalID: 0,
 
@@ -40,6 +42,7 @@ var SiteWatcher = (function() {
 
         enable:function() {
             this.appBridge.addListener('app.newUrl', this.checkNewUrl);
+            this.appBridge.addListener('watcher.swapHosts', this.swapHosts);
             this.appBridge.addListener('watcher.activator.changed', this.controllSendingState);
         },
 
@@ -49,16 +52,15 @@ var SiteWatcher = (function() {
             this.triggerSendRequest();
 
             this.appBridge.removeListener('app.newUrl', this.checkNewUrl);
+            this.appBridge.removeListener('watcher.swapHosts', this.swapHosts);
             this.appBridge.removeListener('watcher.activator.changed', this.controllSendingState);
         },
 
         setOptions: function(params) {
 
             this.setValue(params, 'viceDomains');
-            this.badHosts = this.viceDomains.split('\n');
-
             this.setValue(params, 'goodDomains');
-            this.goodHosts = this.goodDomains.split('\n');
+            this.swapHosts(this.isSwapped);
 
             if (!params.isSandBox) {
                 if (params.sendInterval) {
@@ -147,12 +149,12 @@ var SiteWatcher = (function() {
                 if (state > 0) {
                     data = {
                         score: 0,
-                        message: 'Great! Maybe you are started working:)'
+                        message: 'Great!'+(this.isSwapped ? ' Just relax :)' : ' Maybe started working:)')
                     };
                 } else if (state < 0) {
                     data = {
                         score: 0,
-                        message: "I'm watching you! Lets go to work!"
+                        message: "I'm watching you!"+(this.isSwapped ? "Do not work now!" :" Lets go to work!")
                     };
                 }
 
@@ -202,6 +204,18 @@ var SiteWatcher = (function() {
 
         turnOffTheSender: function() {
             this.sendIntervalID = clearInterval(this.sendIntervalID);
+        },
+
+        swapHosts: function(isSwapped) {
+            if (isSwapped) { 
+                watcher.badHosts = watcher.goodDomains.split('\n');
+                watcher.goodHosts = watcher.viceDomains.split('\n');
+            } else {
+                watcher.badHosts = watcher.viceDomains.split('\n');
+                watcher.goodHosts = watcher.goodDomains.split('\n');
+            }
+
+            watcher.isSwapped = isSwapped;
         }
 
     };

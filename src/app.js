@@ -35,9 +35,10 @@ var App = {
 		chrome.tabs.onCreated.addListener(this.tabCreatedHandler);
 		chrome.tabs.onUpdated.addListener(this.tabUpdatedHandler);
 		chrome.tabs.onRemoved.addListener(this.tabRemovedHandler);
+		chrome.extension.onMessage.addListener(this.messageHandler);
 		chrome.tabs.onActivated.addListener(this.tabActivatedHandler);
 		chrome.webNavigation.onCommitted.addListener(this.navCommittedHandler);
-
+		
 		chrome.windows.onFocusChanged.addListener(this.focusChangeHandler);		
 		chrome.storage.onChanged.addListener(this.setHabitRPGOptionsFromChange);
 
@@ -53,6 +54,10 @@ var App = {
 
         this.storage.get(defaultOptions, function(data){ App.dispatcher.trigger('app.optionsChanged', data); });
 
+	},
+
+	messageHandler: function(request, sender, sendResponse) {
+		App.dispatcher.trigger(request.type, request);
 	},
 
 	navCommittedHandler: function(tab) {

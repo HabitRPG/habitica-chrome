@@ -14,7 +14,6 @@ var Activators = (function() {
         this.bridge.trigger('watcher.activator.changed', value);
         this.state = value;
     };
-    
 
     /*---------------- Page link activator ------------*/
 
@@ -164,12 +163,47 @@ var Activators = (function() {
         this.timeOutId = setTimeout(this.check, this.getTimeoutTime(now, start, end));
     };
 
+    /* ---------------- Tomatoes activator ------------ */
 
+    function TomatoesActivator(value) {
+        this.state = value;
+        this.stopHandler();
+        this.startHandler();
+    }
+    TomatoesActivator.prototype.init = AlwaysActivator.prototype.init;
+    TomatoesActivator.prototype.setState = AlwaysActivator.prototype.setState;
+    TomatoesActivator.prototype.setOptions = AlwaysActivator.prototype.setOptions;
+    TomatoesActivator.prototype.enable = function(){ 
+        this.bridge.addListener('tomatoes.reset', this.stopHandler);
+        this.bridge.addListener('tomatoes.stopped', this.stopHandler);
+        this.bridge.addListener('tomatoes.pom.started', this.startHandler);
+    };
+    TomatoesActivator.prototype.disable = function() {
+        this.bridge.removeListener('tomatoes.reset', this.stopHandler);
+        this.bridge.removeListener('tomatoes.stopped', this.stopHandler);
+        this.bridge.removeListener('tomatoes.pom.started', this.startHandler);
+    };
+    TomatoesActivator.prototype.stopHandler = function() {
+        var self = this;
+        this.stopHandler = function(data) {
+            self.bridge.trigger('watcher.swapHosts', false);
+            self.setState(false);
+        };
+    };
+    TomatoesActivator.prototype.startHandler = function() {
+        var self = this;
+        this.startHandler = function(data) {
+            self.bridge.trigger('watcher.swapHosts', data.type == 'break');
+            self.setState(true);
+        };
+    };
+    
     /* ---------------- Return -------------------- */
 
     return {
         'days': new DaysActivator(),
         'webpage': new PageLinkActivator(),
+        'tomatoes': new TomatoesActivator(),
         'alwayson': new AlwaysActivator(true),
         'alwaysoff': new AlwaysActivator(false)
         };
