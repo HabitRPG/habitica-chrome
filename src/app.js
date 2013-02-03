@@ -153,7 +153,7 @@ var App = {
 			"/img/icon-48" + imgVersion + ".png", 
 			'HabitRPG', 
 			data.message ? data.message :
-			('You '+(score < 0 ? 'lost' : 'gained')+' '+score+' '+(score < 0 ? 'HP! Work or will die...' : 'Exp/Gold! Keep up the good work!'))
+			('You '+(score < 0 ? 'lost' : 'gained')+' '+score+' '+(score < 0 ? 'HP! Lets go...' : 'Exp/Gold! Keep up!'))
 		);
 		notification.show();
 		setTimeout(function(){notification.close();}, App.notificationShowTime);
