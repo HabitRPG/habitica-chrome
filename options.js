@@ -4,6 +4,7 @@ var defaultOptions = {
       sendInterval: '25',
       activatorName: 'alwayon',
       siteWatcherIsActive: 'true',
+      tomatoesIsActive: 'true',
       viceDomains: 'reddit.com\n9gag.com\nfacebook.com',
       goodDomains: 'lifehacker.com\ncodeacadamy.com\nkhanacadamy.org',
       days: {

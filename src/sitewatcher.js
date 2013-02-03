@@ -1,7 +1,7 @@
 
 var SiteWatcher = (function() {
 /*
-    BaseController.prototype.init = function() {  };
+    BaseController.prototype.init = function(appBridge) {  };
     BaseController.prototype.enable = function() {  }; // private use in setOptions
     BaseController.prototype.disable = function() {  }; // private use in setOptions
     BaseController.prototype.setOptions = function() { };
@@ -20,33 +20,27 @@ var SiteWatcher = (function() {
         score: 0,
         timestamp: new Date().getTime(),
 
-        parentBridge: undefined,
-        dispatcher: new utilies.EventDispatcher(),
-
+        appBridge: undefined,
+        
         activator: undefined,
         activators: undefined,
 
         productivityState: 0,
 
-        init: function(parentBridge) {
+        init: function(appBridge) {
 
-            this.parentBridge = parentBridge;
+            this.appBridge = appBridge;
             this.activators = Activators;
 
             for (var name in this.activators) 
-                this.activators[name].init(this.dispatcher);
+                this.activators[name].init(this.appBridge);
 
             this.activator = this.activators.alwaysoff;
         },
 
         enable:function() {
-            this.parentBridge.addListener('newUrl', this.checkNewUrl);
-            this.parentBridge.addListener('lastClosedUrl', this.lastClosedUrlHandler);
-            this.parentBridge.addListener('firstOpenedUrl', this.firstOpenedUrlHandler);
-            this.parentBridge.addListener('isOpened', this.isOpenedHandler);
-
-            this.dispatcher.addListener('changed', this.controllSendingState);
-            this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
+            this.appBridge.addListener('app.newUrl', this.checkNewUrl);
+            this.appBridge.addListener('watcher.activator.changed', this.controllSendingState);
         },
 
         disable: function() {
@@ -54,13 +48,8 @@ var SiteWatcher = (function() {
             this.setProductivityState();
             this.triggerSendRequest();
 
-            this.parentBridge.removeListener('newUrl', this.checkNewUrl);
-            this.parentBridge.removeListener('lastClosedUrl', this.lastClosedUrlHandler);
-            this.parentBridge.removeListener('firstOpenedUrl', this.firstOpenedUrlHandler);
-            this.parentBridge.removeListener('isOpened', this.isOpenedHandler);
-
-            this.dispatcher.removeListener('changed', this.controllSendingState);
-            this.dispatcher.removeListener('isOpenedUrl', this.isOpenedUrlHandler);
+            this.appBridge.removeListener('app.newUrl', this.checkNewUrl);
+            this.appBridge.removeListener('watcher.activator.changed', this.controllSendingState);
         },
 
         setOptions: function(params) {
@@ -169,8 +158,8 @@ var SiteWatcher = (function() {
 
                 this.productivityState = state;
 
-                if (data)
-                    this.parentBridge.trigger('notify', data);
+                if (notify && data)
+                    this.appBridge.trigger('app.notify', data);
             }
         },
 
@@ -197,7 +186,7 @@ var SiteWatcher = (function() {
             watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
             
             if (watcher.score !== 0) {
-                watcher.parentBridge.trigger('sendRequest', {
+                watcher.appBridge.trigger('controller.sendRequest', {
                     urlSuffix: watcher.urlPrefix+(watcher.score < 0 ? 'down' : 'up'), 
                     score: watcher.score 
                 });
@@ -220,9 +209,9 @@ var SiteWatcher = (function() {
     return {
         get: function() { return watcher; },
         getScore: function() { return watcher.score; },
-        isEnabled: function() { return watcher.parentBridge.hasListener('newUrl', watcher.checkNewUrl); },
-        init: function(parentBridge) { watcher.init(parentBridge); },
-        setOptions: function(parentBridge) { watcher.setOptions(parentBridge); },
+        isEnabled: function() { return watcher.appBridge.hasListener('app.newUrl', watcher.checkNewUrl); },
+        init: function(appBridge) { watcher.init(appBridge); },
+        setOptions: function(params) { watcher.setOptions(params); },
         forceSendRequest: function() { watcher.triggerSendRequest(); }
     };
 

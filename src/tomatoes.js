@@ -1,6 +1,6 @@
 var Tomatoes = (function() {
 /*
-    BaseController.prototype.init = function(parentBridge) {  };
+    BaseController.prototype.init = function(appBridge) {  };
     BaseController.prototype.enable = function() {  }; // private use in setOptions
     BaseController.prototype.disable = function() {  }; // private use in setOptions
     BaseController.prototype.setOptions = function(params) { };
@@ -10,23 +10,24 @@ var Tomatoes = (function() {
 
         url: 'http://tomato.es',
         urlPrefix: 'tasks/tomatoes/',
+        appBridge: undefined,
 
-        init: function(parentBridge) {
+        init: function(appBridge) {
 
-            this.parentBridge = parentBridge;
+            this.appBridge = appBridge;
 
             this.injectCode();
         },
 
         enable:function() {            
-            this.parentBridge.addListener('newUrl', this.injectCode);
-            this.parentBridge.addListener('isOpened', this.isOpenedHandler);
+            this.appBridge.addListener('app.newUrl', this.injectCode);
+            this.appBridge.addListener('app.isOpened', this.isOpenedHandler);
 
         },
 
         disable: function() {
-            this.parentBridge.removeListener('newUrl', this.injectCode);
-            this.parentBridge.removeListener('isOpened', this.isOpenedHandler);
+            this.appBridge.removeListener('app.newUrl', this.injectCode);
+            this.appBridge.removeListener('app.isOpened', this.isOpenedHandler);
 
         },
 
@@ -67,8 +68,8 @@ var Tomatoes = (function() {
 
     return {
         get: function() { return tomatoes; },
-        isEnabled: function() { return tomatoes.parentBridge.hasListener('firstOpenedUrl', tomatoes.injectCode); },
-        init: function(parentBridge) { tomatoes.init(parentBridge); },
+        isEnabled: function() { return tomatoes.appBridge.hasListener('app.firstOpenedUrl', tomatoes.injectCode); },
+        init: function(appBridge) { tomatoes.init(appBridge); },
         setOptions: function(params) { tomatoes.setOptions(params); }
     };
 

@@ -150,7 +150,7 @@ var utilies = (function(){
 
         this.timeOutId = clearTimeout(this.timeOutId);
 
-        this.parentBridge.trigger('stopped', wasWork);
+        this.parentBridge.trigger('pomodore.stopped', wasWork);
     };
 
     Pomodore.prototype.start = function() {
@@ -180,14 +180,14 @@ var utilies = (function(){
         this.overTimeInterval = this.maxOverTimeInterval;
         this.timeOutId = setTimeout(this.handleOverTime, this.currentPeriod.expectedLength);
 
-        this.parentBridge.trigger('started', {type: this.currentPeriod.type, lastOverTime: overTime });
+        this.parentBridge.trigger('pomodore.started', {type: this.currentPeriod.type, lastOverTime: overTime });
     };
 
     Pomodore.prototype.handleOverTime = function() {
         var self = this;
         this.handleOverTime = function() {
 
-            self.parentBridge.trigger('overTime', {type: self.currentPeriod.type, time:self.currentPeriod.getOverTime() });
+            self.parentBridge.trigger('pomodore.overTime', {type: self.currentPeriod.type, time:self.currentPeriod.getOverTime() });
 
             clearTimeout(self.timeOutId);
             self.timeOutId = setTimeout(self.handleOverTime, self.overTimeInterval);
@@ -219,7 +219,7 @@ var Activators = (function() {
     AlwaysActivator.prototype.disable = function() { };
     AlwaysActivator.prototype.setOptions = function() { };
     AlwaysActivator.prototype.setState = function(value) { 
-        this.bridge.trigger('changed', value);
+        this.bridge.trigger('watcher.activator.changed', value);
         this.state = value;
     };
     
@@ -235,16 +235,16 @@ var Activators = (function() {
     PageLinkActivator.prototype.init = AlwaysActivator.prototype.init;
     PageLinkActivator.prototype.setState = AlwaysActivator.prototype.setState;
     PageLinkActivator.prototype.enable = function() {
-        this.bridge.addListener('firstOpenedUrl', this.handleNewUrl);
-        this.bridge.addListener('lastClosedUrl', this.handleClosedUrl);
-        this.bridge.addListener('isOpened', this.isOpenedHandler);
+        this.bridge.addListener('app.firstOpenedUrl', this.handleNewUrl);
+        this.bridge.addListener('app.lastClosedUrl', this.handleClosedUrl);
+        this.bridge.addListener('app.isOpened', this.isOpenedHandler);
         
         this.check();
     };
     PageLinkActivator.prototype.disable = function() {
         this.state = false;
-        this.bridge.removeListener('firstOpenedUrl', this.handleNewUrl);
-        this.bridge.removeListener('lastClosedUrl', this.handleClosedUrl);
+        this.bridge.removeListener('app.firstOpenedUrl', this.handleNewUrl);
+        this.bridge.removeListener('app.lastClosedUrl', this.handleClosedUrl);
     };
     PageLinkActivator.prototype.setOptions = function(params) {
         this.url = params.watchedUrl !== undefined ? params.watchedUrl : this.url;
@@ -259,7 +259,7 @@ var Activators = (function() {
     };
 
     PageLinkActivator.prototype.check = function() {
-        this.bridge.trigger('isOpenedUrl', this.url);
+        this.bridge.trigger('app.isOpenedUrl', this.url);
     };
 
     PageLinkActivator.prototype.isOpenedHandler = function() {
@@ -387,7 +387,7 @@ var Activators = (function() {
 
 var SiteWatcher = (function() {
 /*
-    BaseController.prototype.init = function() {  };
+    BaseController.prototype.init = function(appBridge) {  };
     BaseController.prototype.enable = function() {  }; // private use in setOptions
     BaseController.prototype.disable = function() {  }; // private use in setOptions
     BaseController.prototype.setOptions = function() { };
@@ -406,46 +406,36 @@ var SiteWatcher = (function() {
         score: 0,
         timestamp: new Date().getTime(),
 
-        parentBridge: undefined,
-        dispatcher: new utilies.EventDispatcher(),
-
+        appBridge: undefined,
+        
         activator: undefined,
         activators: undefined,
 
         productivityState: 0,
 
-        init: function(parentBridge) {
+        init: function(appBridge) {
 
-            this.parentBridge = parentBridge;
+            this.appBridge = appBridge;
             this.activators = Activators;
 
             for (var name in this.activators) 
-                this.activators[name].init(this.dispatcher);
+                this.activators[name].init(this.appBridge);
 
             this.activator = this.activators.alwaysoff;
         },
 
         enable:function() {
-            this.parentBridge.addListener('newUrl', this.checkNewUrl);
-            this.parentBridge.addListener('lastClosedUrl', this.lastClosedUrlHandler);
-            this.parentBridge.addListener('firstOpenedUrl', this.firstOpenedUrlHandler);
-            this.parentBridge.addListener('isOpened', this.isOpenedHandler);
-
-            this.dispatcher.addListener('changed', this.controllSendingState);
-            this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
+            this.appBridge.addListener('app.newUrl', this.checkNewUrl);
+            this.appBridge.addListener('watcher.activator.changed', this.controllSendingState);
         },
 
         disable: function() {
 
-            this.turnOffTheSender();
+            this.setProductivityState();
+            this.triggerSendRequest();
 
-            this.parentBridge.removeListener('newUrl', this.checkNewUrl);
-            this.parentBridge.removeListener('lastClosedUrl', this.lastClosedUrlHandler);
-            this.parentBridge.removeListener('firstOpenedUrl', this.firstOpenedUrlHandler);
-            this.parentBridge.removeListener('isOpened', this.isOpenedHandler);
-
-            this.dispatcher.removeListener('changed', this.controllSendingState);
-            this.dispatcher.removeListener('isOpenedUrl', this.isOpenedUrlHandler);
+            this.appBridge.removeListener('app.newUrl', this.checkNewUrl);
+            this.appBridge.removeListener('watcher.activator.changed', this.controllSendingState);
         },
 
         setOptions: function(params) {
@@ -492,13 +482,53 @@ var SiteWatcher = (function() {
             this.activator.enable();
         },
 
-        setProductivityState: function() {
+        getHost: function(url) { return url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1'); },
+
+        checkNewUrl: function(url) {
+            
+            var host = watcher.getHost(url);
+            
+            if (host == watcher.host) return;
+            
+            watcher.host = host;
+
+            watcher.setProductivityState(watcher.activator.state);
+
+            if (!watcher.activator.state) return;
+            
+            watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
+            
+        },
+        
+        getandResetSpentTime: function() {
+            var spent = new Date().getTime() - this.timestamp;
+
+            this.timestamp = new Date().getTime();
+
+            return spent * 0.001 / 60;
+        },
+
+        addScoreFromSpentTime: function(spentTime) {
+            var score = 0;
+
+            if (this.productivityState > 0)
+                score = spentTime * this.goodTimeMultiplier;
+            else if (this.productivityState < 0)
+                score = (spentTime * this.badTimeMultiplier) * -1;
+
+            this.score += score;
+        },
+        
+        setProductivityState: function(notify) {
             var state = 0, data;
             if (this.goodHosts.indexOf(this.host) != -1)
                 state = 1;
             else if (this.badHosts.indexOf(this.host) != -1)
                 state = -1;
 
+            if (!this.productivityState)
+                this.timestamp = new Date().getTime();
+            
             if (this.productivityState !== state) {
                 if (state > 0) {
                     data = {
@@ -514,62 +544,11 @@ var SiteWatcher = (function() {
 
                 this.productivityState = state;
 
-                if (data)
-                    this.parentBridge.trigger('notify', data);
+                if (notify && data)
+                    this.appBridge.trigger('app.notify', data);
             }
         },
 
-        addScoreFromSpentTime: function(spentTime) {
-            var score = 0;
-            if (this.productivityState > 0)
-                score = spentTime * this.goodTimeMultiplier;
-            else if (this.productivityState < 0)
-                score = (spentTime * this.badTimeMultiplier) * -1;
-
-            this.score += score;
-        },
-
-        getandResetSpentTime: function() {
-            var spent = new Date().getTime() - this.timestamp;
-
-            this.timestamp = new Date().getTime();
-
-            return spent * 0.001 / 60;
-        },
-
-        getHost: function(url) { return url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1'); },
-
-        checkNewUrl: function(url) {
-            
-            var host = watcher.getHost(url);
-            
-            if (host == watcher.host) return;
-            watcher.host = host;
-            
-            if (!watcher.activator.state) return;
-            
-            watcher.setProductivityState();
-
-            watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
-            
-        },
-
-        isOpenedHandler: function() {
-            watcher.dispatcher.trigger('isOpened');
-        },
-
-        isOpenedUrlHandler: function(url) {
-            watcher.parentBridge.trigger('isOpenedUrl', url);
-        },
-
-        firstOpenedUrlHandler: function(url) {
-            watcher.dispatcher.trigger('firstOpenedUrl', url);
-        },
-
-        lastClosedUrlHandler: function(url) {
-            watcher.dispatcher.trigger('lastClosedUrl', url);
-        },
-        
         controllSendingState: function(value) {
 
             if (watcher.activator.state && !value) {
@@ -593,7 +572,7 @@ var SiteWatcher = (function() {
             watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
             
             if (watcher.score !== 0) {
-                watcher.parentBridge.trigger('sendRequest', {
+                watcher.appBridge.trigger('controller.sendRequest', {
                     urlSuffix: watcher.urlPrefix+(watcher.score < 0 ? 'down' : 'up'), 
                     score: watcher.score 
                 });
@@ -616,9 +595,9 @@ var SiteWatcher = (function() {
     return {
         get: function() { return watcher; },
         getScore: function() { return watcher.score; },
-        isEnabled: function() { return watcher.parentBridge.hasListener('newUrl', watcher.checkNewUrl); },
-        init: function(parentBridge) { watcher.init(parentBridge); },
-        setOptions: function(parentBridge) { watcher.setOptions(parentBridge); },
+        isEnabled: function() { return watcher.appBridge.hasListener('app.newUrl', watcher.checkNewUrl); },
+        init: function(appBridge) { watcher.init(appBridge); },
+        setOptions: function(params) { watcher.setOptions(params); },
         forceSendRequest: function() { watcher.triggerSendRequest(); }
     };
 
@@ -627,7 +606,7 @@ var SiteWatcher = (function() {
 
 var Tomatoes = (function() {
 /*
-    BaseController.prototype.init = function(parentBridge) {  };
+    BaseController.prototype.init = function(appBridge) {  };
     BaseController.prototype.enable = function() {  }; // private use in setOptions
     BaseController.prototype.disable = function() {  }; // private use in setOptions
     BaseController.prototype.setOptions = function(params) { };
@@ -637,23 +616,24 @@ var Tomatoes = (function() {
 
         url: 'http://tomato.es',
         urlPrefix: 'tasks/tomatoes/',
+        appBridge: undefined,
 
-        init: function(parentBridge) {
+        init: function(appBridge) {
 
-            this.parentBridge = parentBridge;
+            this.appBridge = appBridge;
 
             this.injectCode();
         },
 
         enable:function() {            
-            this.parentBridge.addListener('newUrl', this.injectCode);
-            this.parentBridge.addListener('isOpened', this.isOpenedHandler);
+            this.appBridge.addListener('app.newUrl', this.injectCode);
+            this.appBridge.addListener('app.isOpened', this.isOpenedHandler);
 
         },
 
         disable: function() {
-            this.parentBridge.removeListener('newUrl', this.injectCode);
-            this.parentBridge.removeListener('isOpened', this.isOpenedHandler);
+            this.appBridge.removeListener('app.newUrl', this.injectCode);
+            this.appBridge.removeListener('app.isOpened', this.isOpenedHandler);
 
         },
 
@@ -694,8 +674,8 @@ var Tomatoes = (function() {
 
     return {
         get: function() { return tomatoes; },
-        isEnabled: function() { return tomatoes.parentBridge.hasListener('firstOpenedUrl', tomatoes.injectCode); },
-        init: function(parentBridge) { tomatoes.init(parentBridge); },
+        isEnabled: function() { return tomatoes.appBridge.hasListener('app.firstOpenedUrl', tomatoes.injectCode); },
+        init: function(appBridge) { tomatoes.init(appBridge); },
         setOptions: function(params) { tomatoes.setOptions(params); }
     };
 
@@ -719,22 +699,15 @@ var habitRPG = (function(){
         habitUrl: '',
         sourceHabitUrl: "https://habitrpg.com/users/{UID}/",
 
-        parentBridge: undefined,
-        dispatcher: new utilies.EventDispatcher(),
+        appBridge: undefined,
 
         init: function(bridge) {
 
-            this.parentBridge = bridge;
-            this.parentBridge.addListener('newUrl', this.newUrl);
-            this.parentBridge.addListener('closedUrl', this.closedUrl);
-            this.parentBridge.addListener('isOpened', this.isOpenedHandler);
-            this.parentBridge.addListener('optionsChanged', this.setOptions);
-            this.parentBridge.addListener('lastClosedUrl', this.lastClosedUrlHandler);
-            this.parentBridge.addListener('firstOpenedUrl', this.firstOpenedUrlHandler);
-
-            this.dispatcher.addListener('sendRequest', this.send);
-            this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
-            this.dispatcher.addListener('notify', this.delegateNotifyRequest);
+            this.appBridge = bridge;
+            
+            this.appBridge.addListener('controller.sendRequest', this.send);
+            this.appBridge.addListener('app.optionsChanged', this.setOptions);
+            
 
             this.controllers = {
                 'sitewatcher': SiteWatcher,
@@ -742,7 +715,7 @@ var habitRPG = (function(){
             };
 
             for (var name in this.controllers) 
-                this.controllers[name].init(this.dispatcher);
+                this.controllers[name].init(this.appBridge);
         
         },
 
@@ -760,40 +733,12 @@ var habitRPG = (function(){
             
         },
 
-        newUrl: function(url) { 
-            habitrpg.dispatcher.trigger('newUrl', url); 
-        },
-
-        closedUrl: function(url) { 
-            habitrpg.dispatcher.trigger('closedUrl', url); 
-        },
-
-        lastClosedUrlHandler: function(url) { 
-            habitrpg.dispatcher.trigger('lastClosedUrl', url); 
-        },
-
-        firstOpenedUrlHandler: function(url) { 
-            habitrpg.dispatcher.trigger('firstOpenedUrl', url); 
-        },
-
-        isOpenedHandler: function() {
-            habitrpg.dispatcher.trigger('isOpened');
-        },
-
-        isOpenedUrlHandler: function(url) {
-            habitrpg.parentBridge.trigger('isOpenedUrl', url);
-        },
-
-        delegateNotifyRequest: function(data) {
-            habitrpg.parentBridge.trigger('notify', data);
-        },
-
         send: function(data) {
 
             if (!habitrpg.uid) return;
 
             if (habitrpg.isSandBox) {
-                habitrpg.parentBridge.trigger('notify', data);
+                habitrpg.appBridge.trigger('app.notify', data);
                 
             } else {
                 
@@ -802,7 +747,7 @@ var habitRPG = (function(){
                     url: habitrpg.habitUrl + data.urlSuffix
                     
                 }).done(function(){
-                    habitrpg.parentBridge.trigger('notify', data);
+                    habitrpg.appBridge.trigger('app.notify', data);
 
                 });
             }
@@ -814,3 +759,208 @@ var habitRPG = (function(){
     return returnObj;
 
 })();
+
+var App = {
+
+	appTest: 0, // -1 without habitrpg; +1 with habitrpg; 0 nothing logged from the app
+
+	tabs: {},
+	activeUrl: '',
+	hasFocus: true,
+
+	habitrpg: habitRPG,
+	invalidTransitionTypes: ['auto_subframe', 'form_submit'],
+
+  //storage: chrome.storage.managed,
+	storage: chrome.storage.local,
+
+	notificationShowTime: 4000,
+
+	dispatcher: new utilies.EventDispatcher(),
+
+	init: function() {
+
+		this.dispatcher.addListener('app.notify', this.showNotification);
+		this.dispatcher.addListener('app.isOpenedUrl', this.isOpenedUrlHandler);
+		this.dispatcher.addListener('app.newUrl', function(url){App.activeUrl = url; });
+
+		if (this.appTest > 0) {
+			this.createLogger();
+			App.habitrpg.init(this.dispatcher);
+
+		} else if (this.appTest < 0)
+			this.createLogger();
+
+		else 
+			App.habitrpg.init(this.dispatcher);
+
+		chrome.tabs.onCreated.addListener(this.tabCreatedHandler);
+		chrome.tabs.onUpdated.addListener(this.tabUpdatedHandler);
+		chrome.tabs.onRemoved.addListener(this.tabRemovedHandler);
+		chrome.tabs.onActivated.addListener(this.tabActivatedHandler);
+		chrome.webNavigation.onCommitted.addListener(this.navCommittedHandler);
+
+		chrome.windows.onFocusChanged.addListener(this.focusChangeHandler);		
+		chrome.storage.onChanged.addListener(this.setHabitRPGOptionsFromChange);
+
+		chrome.windows.getAll({populate:true}, function(windows){
+            for (var wi in windows) {
+                win = windows[wi];
+                for (var ti in win.tabs) {
+                    tab = win.tabs[ti];
+                    App.tabs[tab.id] = tab;
+                }
+            }
+        });
+
+        this.storage.get(defaultOptions, function(data){ App.dispatcher.trigger('app.optionsChanged', data); });
+
+	},
+
+	navCommittedHandler: function(tab) {
+		if (!tab.id) return;
+
+		App.triggerFirstOpenedUrl(tab.url);
+
+		App.tabs[tab.id] = tab;
+		if (App.hasFocus && tab.active && tab.url && App.invalidTransitionTypes.indexOf(tab.transitionType) == -1) {
+			App.triggerFirstOpenedUrl(tab.url);
+			App.dispatcher.trigger('app.newUrl', App.catchSpecURL(tab.url));
+			App.activeUrl = tab.url;
+		}
+	},
+
+	tabCreatedHandler: function(tab) {
+		if (!tab.id) return;
+
+		App.triggerFirstOpenedUrl(tab.url);
+
+		App.tabs[tab.id] = tab;
+		App.tabUpdatedHandler(undefined, undefined, tab);
+	},
+
+	tabUpdatedHandler: function(id, changed, tab) {
+		if (App.hasFocus && tab.active && tab.url && App.activeUrl != tab.url) {
+			App.triggerFirstOpenedUrl(tab.url);
+			App.dispatcher.trigger('app.newUrl', App.catchSpecURL(tab.url));
+			App.activeUrl = tab.url;
+		}
+	},
+
+	// This event fired after the remove action, so we forced to store the tabs
+	tabRemovedHandler: function(tabId) {
+		var url = App.tabs[tabId].url;
+		delete App.tabs[tabId];
+		
+		if (!App.hasInTabs(url))
+			App.dispatcher.trigger('app.lastClosedUrl', App.catchSpecURL(url));
+
+		App.dispatcher.trigger('app.closedUrl', App.catchSpecURL(url));
+	},
+
+	tabActivatedHandler: function(event) {
+		var tab = App.tabs[event.tabId];
+		if (tab) {
+			App.activeUrl = tab.url;
+			App.dispatcher.trigger('app.newUrl', App.catchSpecURL(tab.url));
+		}
+	},
+
+	focusChangeHandler: function() {
+		chrome.windows.getLastFocused({populate:true}, App.windowIsFocused);
+	},
+
+	windowIsFocused: function(win) {
+
+		if (!win.focused) {
+			App.hasFocus = false;
+			App.dispatcher.trigger('app.newUrl', '');
+			App.dispatcher.trigger('app.firstOpenedUrl', '');
+
+		} else {
+			App.hasFocus = true;
+			App.dispatcher.trigger('app.lastClosedUrl', '');
+			for (var i in win.tabs) {
+				var url = win.tabs[i].url;
+				if (win.tabs[i].active && App.activeUrl != url) {
+					App.dispatcher.trigger('app.newUrl', App.catchSpecURL(url));
+					break;
+				}
+			}
+		}
+	},
+
+	catchSpecURL: function(url) {
+
+		if (url.indexOf('chrome-devtools') === 0)
+			url = 'chrome-devtools';
+
+		return url;
+	},
+
+	setHabitRPGOptionsFromChange: function(params) {
+		var obj = {}, name;
+		for (name in params) 
+			obj[name] = params[name].newValue;
+
+		App.dispatcher.trigger('app.optionsChanged', obj);
+		
+	},
+
+	showNotification: function(data) {
+
+		var score = data.score.toFixed(4),
+			notification = webkitNotifications.createNotification(
+			"/img/icon-48-" + (score < 0 ? 'down' : 'up') + ".png", 
+			'HabitRPG', 
+			data.message ? data.message :
+			('You '+(score < 0 ? 'lost' : 'gained')+' '+score+' '+(score < 0 ? 'HP! Work or will die...' : 'Exp/Gold! Keep up the good work!'))
+		);
+		notification.show();
+		setTimeout(function(){notification.close();}, App.notificationShowTime);
+	},
+
+	isOpenedUrlHandler: function(url) {
+		if (App.hasInTabs(url))
+			App.dispatcher.trigger('app.isOpened');
+	},
+
+	triggerFirstOpenedUrl: function(url) {
+		if (!App.hasInTabs(url))
+			App.dispatcher.trigger('app.firstOpenedUrl', App.catchSpecURL(url));
+	},
+
+	hasInTabs: function(url) {
+		var urls = $.map(App.tabs, App.filterUrlsWrap(App.getHost(url)));
+		if (urls.indexOf(true) === -1 ) return false;
+
+		return true;
+	},
+
+	filterUrlsWrap: function(refUrl){
+		return function(tab){
+			var url = App.getHost(tab.url);
+			if (refUrl == url) return true;
+			return false;
+		};
+	},
+
+	filterUrls: function(refUrl, tab) {
+	},
+
+	getHost: function(url) { 
+		return url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1'); 
+	},
+
+	createLogger: function() {
+		this.dispatcher.addListener('app.newUrl', function(url) {console.log('new: '+url); });
+		this.dispatcher.addListener('app.optionsChanged', function(data){ console.log(data); });
+		this.dispatcher.addListener('app.closedUrl', function(url) { console.log('closed: '+url);});
+		this.dispatcher.addListener('app.lastClosedUrl', function(url) {console.log('lastClosedUrl: '+url); });
+		this.dispatcher.addListener('app.firstOpenedUrl', function(url) {console.log('firstOpenedUrl: '+url); });
+	}
+};
+
+/* ------------- Mainloop ---------- */
+
+App.init();

@@ -17,22 +17,15 @@ var habitRPG = (function(){
         habitUrl: '',
         sourceHabitUrl: "https://habitrpg.com/users/{UID}/",
 
-        parentBridge: undefined,
-        dispatcher: new utilies.EventDispatcher(),
+        appBridge: undefined,
 
         init: function(bridge) {
 
-            this.parentBridge = bridge;
-            this.parentBridge.addListener('newUrl', this.newUrl);
-            this.parentBridge.addListener('closedUrl', this.closedUrl);
-            this.parentBridge.addListener('isOpened', this.isOpenedHandler);
-            this.parentBridge.addListener('optionsChanged', this.setOptions);
-            this.parentBridge.addListener('lastClosedUrl', this.lastClosedUrlHandler);
-            this.parentBridge.addListener('firstOpenedUrl', this.firstOpenedUrlHandler);
-
-            this.dispatcher.addListener('sendRequest', this.send);
-            this.dispatcher.addListener('isOpenedUrl', this.isOpenedUrlHandler);
-            this.dispatcher.addListener('notify', this.delegateNotifyRequest);
+            this.appBridge = bridge;
+            
+            this.appBridge.addListener('controller.sendRequest', this.send);
+            this.appBridge.addListener('app.optionsChanged', this.setOptions);
+            
 
             this.controllers = {
                 'sitewatcher': SiteWatcher,
@@ -40,7 +33,7 @@ var habitRPG = (function(){
             };
 
             for (var name in this.controllers) 
-                this.controllers[name].init(this.dispatcher);
+                this.controllers[name].init(this.appBridge);
         
         },
 
@@ -58,40 +51,12 @@ var habitRPG = (function(){
             
         },
 
-        newUrl: function(url) { 
-            habitrpg.dispatcher.trigger('newUrl', url); 
-        },
-
-        closedUrl: function(url) { 
-            habitrpg.dispatcher.trigger('closedUrl', url); 
-        },
-
-        lastClosedUrlHandler: function(url) { 
-            habitrpg.dispatcher.trigger('lastClosedUrl', url); 
-        },
-
-        firstOpenedUrlHandler: function(url) { 
-            habitrpg.dispatcher.trigger('firstOpenedUrl', url); 
-        },
-
-        isOpenedHandler: function() {
-            habitrpg.dispatcher.trigger('isOpened');
-        },
-
-        isOpenedUrlHandler: function(url) {
-            habitrpg.parentBridge.trigger('isOpenedUrl', url);
-        },
-
-        delegateNotifyRequest: function(data) {
-            habitrpg.parentBridge.trigger('notify', data);
-        },
-
         send: function(data) {
 
             if (!habitrpg.uid) return;
 
             if (habitrpg.isSandBox) {
-                habitrpg.parentBridge.trigger('notify', data);
+                habitrpg.appBridge.trigger('app.notify', data);
                 
             } else {
                 
@@ -100,7 +65,7 @@ var habitRPG = (function(){
                     url: habitrpg.habitUrl + data.urlSuffix
                     
                 }).done(function(){
-                    habitrpg.parentBridge.trigger('notify', data);
+                    habitrpg.appBridge.trigger('app.notify', data);
 
                 });
             }

@@ -110,7 +110,7 @@ var utilies = (function(){
 
         this.timeOutId = clearTimeout(this.timeOutId);
 
-        this.parentBridge.trigger('stopped', wasWork);
+        this.parentBridge.trigger('pomodore.stopped', wasWork);
     };
 
     Pomodore.prototype.start = function() {
@@ -140,14 +140,14 @@ var utilies = (function(){
         this.overTimeInterval = this.maxOverTimeInterval;
         this.timeOutId = setTimeout(this.handleOverTime, this.currentPeriod.expectedLength);
 
-        this.parentBridge.trigger('started', {type: this.currentPeriod.type, lastOverTime: overTime });
+        this.parentBridge.trigger('pomodore.started', {type: this.currentPeriod.type, lastOverTime: overTime });
     };
 
     Pomodore.prototype.handleOverTime = function() {
         var self = this;
         this.handleOverTime = function() {
 
-            self.parentBridge.trigger('overTime', {type: self.currentPeriod.type, time:self.currentPeriod.getOverTime() });
+            self.parentBridge.trigger('pomodore.overTime', {type: self.currentPeriod.type, time:self.currentPeriod.getOverTime() });
 
             clearTimeout(self.timeOutId);
             self.timeOutId = setTimeout(self.handleOverTime, self.overTimeInterval);

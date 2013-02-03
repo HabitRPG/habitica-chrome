@@ -11,7 +11,7 @@ var Activators = (function() {
     AlwaysActivator.prototype.disable = function() { };
     AlwaysActivator.prototype.setOptions = function() { };
     AlwaysActivator.prototype.setState = function(value) { 
-        this.bridge.trigger('changed', value);
+        this.bridge.trigger('watcher.activator.changed', value);
         this.state = value;
     };
     
@@ -27,16 +27,16 @@ var Activators = (function() {
     PageLinkActivator.prototype.init = AlwaysActivator.prototype.init;
     PageLinkActivator.prototype.setState = AlwaysActivator.prototype.setState;
     PageLinkActivator.prototype.enable = function() {
-        this.bridge.addListener('firstOpenedUrl', this.handleNewUrl);
-        this.bridge.addListener('lastClosedUrl', this.handleClosedUrl);
-        this.bridge.addListener('isOpened', this.isOpenedHandler);
+        this.bridge.addListener('app.firstOpenedUrl', this.handleNewUrl);
+        this.bridge.addListener('app.lastClosedUrl', this.handleClosedUrl);
+        this.bridge.addListener('app.isOpened', this.isOpenedHandler);
         
         this.check();
     };
     PageLinkActivator.prototype.disable = function() {
         this.state = false;
-        this.bridge.removeListener('firstOpenedUrl', this.handleNewUrl);
-        this.bridge.removeListener('lastClosedUrl', this.handleClosedUrl);
+        this.bridge.removeListener('app.firstOpenedUrl', this.handleNewUrl);
+        this.bridge.removeListener('app.lastClosedUrl', this.handleClosedUrl);
     };
     PageLinkActivator.prototype.setOptions = function(params) {
         this.url = params.watchedUrl !== undefined ? params.watchedUrl : this.url;
@@ -51,7 +51,7 @@ var Activators = (function() {
     };
 
     PageLinkActivator.prototype.check = function() {
-        this.bridge.trigger('isOpenedUrl', this.url);
+        this.bridge.trigger('app.isOpenedUrl', this.url);
     };
 
     PageLinkActivator.prototype.isOpenedHandler = function() {
