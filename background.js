@@ -575,7 +575,7 @@ var SiteWatcher = (function() {
                 if (state > 0) {
                     data = {
                         score: 0,
-                        message: 'Great!'+(this.isSwapped ? ' Just relax :)' : ' Maybe you are started working:)')
+                        message: 'Great!'+(this.isSwapped ? ' Just relax :)' : ' Maybe started working:)')
                     };
                 } else if (state < 0) {
                     data = {
@@ -616,7 +616,7 @@ var SiteWatcher = (function() {
             if (watcher.score !== 0) {
                 watcher.appBridge.trigger('controller.sendRequest', {
                     urlSuffix: watcher.urlPrefix+(watcher.score < 0 ? 'down' : 'up'), 
-                    score: watcher.score 
+                    score: watcher.score < 0 ? -1 : 1
                 });
 
                 watcher.score = 0;
@@ -1005,7 +1005,7 @@ var App = {
 			"/img/icon-48" + imgVersion + ".png", 
 			'HabitRPG', 
 			data.message ? data.message :
-			('You '+(score < 0 ? 'lost' : 'gained')+' '+score+' '+(score < 0 ? 'HP! Work or will die...' : 'Exp/Gold! Keep up the good work!'))
+			('You '+(score < 0 ? 'lost' : 'gained')+' '+score+' '+(score < 0 ? 'HP! Lets go...' : 'Exp/Gold! Keep up!'))
 		);
 		notification.show();
 		setTimeout(function(){notification.close();}, App.notificationShowTime);
