@@ -165,10 +165,12 @@ tab1 = tab.replace("http://", "");
 					}
 			});
 			
-		}, localStorage.interval*60000); 
+		}, 60000); 
 						
 	};
-	  
+	
+	//localStorage.interval*60000
+  
 //TabCheck function
 
 var tabCheck = function(siteToCheck, callback){
