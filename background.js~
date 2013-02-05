@@ -135,11 +135,13 @@ var getHostname = function(href) {
 var goodClickHandler = function(e) {
 	var goodURL = getHostname(e.pageUrl);
 	appendToStorage('goodDomains', "\n"+goodURL.hostname);
+	console.log(localStorage["goodDomains"]);
 };
 
 var badClickHandler = function(e) {
 	var badURL = getHostname(e.pageUrl);
 	appendToStorage('viceDomains', "\n"+badURL.hostname);
+	console.log(localStorage["viceDomains"]);
 };
 
 //Adds the two context menu items under "HabitRPG" subheading with icons.
