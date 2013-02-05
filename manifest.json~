@@ -19,8 +19,8 @@
    
    "page_action" :
    {
-   "default_icon" : "img/icon-19.png",
-   "default_title" : "This is a restricted site!"
+   "default_icon" : "img/icon-48-down.png",
+   "default_title" : "Vice list site!"
    },
 
    "manifest_version": 2,
