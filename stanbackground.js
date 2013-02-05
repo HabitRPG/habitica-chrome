@@ -90,19 +90,6 @@ var websiteTypeCheck = function(tab){
     };
 	}
 
-<<<<<<< HEAD
-//Listener which is updated by currently loaded pages. 
-
-chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
-    if (request.method === "getLocalStorage") {
-      sendResponse({data: localStorage});
-    } 
-    else if (request.method === "showNotification") {
-      spec = request.notification;
-      notification = webkitNotifications.createNotification(spec.icon, spec.title, spec.text);
-      notification.show();
-      setTimeout(function(){notification.close();}, spec.time);
-=======
     var wwwGoodDomains = function(){
 	console.log("checking good list");
 		for (i=0; i<goodDomains.length; i++){
@@ -144,7 +131,6 @@ chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
 	  console.log("Site not on good or bad list");
 	  }
   };	
->>>>>>> upstream/master
 
 //Timer functions
     var newSite = function(website, direction){
@@ -267,70 +253,6 @@ var habitrpgUrl = null;
         if (url !== undefined && changeinfo.status == "complete") {
 		websiteTypeCheck(url);
     }
-<<<<<<< HEAD
-});
-
-//Function that writes to local storage, appending to the end NOT replacing.
-
-var appendToStorage = function(storage, data){
-    var tempStorage = localStorage.getItem(storage);
-    if(tempStorage === null) tempStorage = "";
-    localStorage.setItem(storage, tempStorage + data);
-}
-
-//Function that converts a URL into a hostname AND path.
-//Hostname used for vice/good lists and is variable.hostname
-//Path could be useful so is returned in h as variable.path
-
-var getHostname = function(href) {
-    var h = document.createElement("a");
-    h.href = href;
-    return h;
-};
-
-//Handlers for context menu. One for good, one for bad.
-//Takes the page url, converts to a hostname+path object, appends to local storage for good lists/badlists.
-
-var check_if_bad_site = function(tab_id, data, tab){
-	var viceDomains = options.viceDomains.split('\n');
-	
-	var length = viceDomains.length,
-    	element = null;
-	for (var i = 0; i < length; i++) {
-  		element = viceDomains[i];
-  		if(tab.url.indexOf(element) > -1)
-		{
-			chrome.pageAction.show(tab_id);
-		}
-	}
-};
-chrome.tabs.onUpdated.addListener(check_if_bad_site);
-
-
-var goodClickHandler = function(e) {
-	var goodURL = getHostname(e.pageUrl);
-	appendToStorage('goodDomains', "\n"+goodURL.hostname);
-};
-
-var badClickHandler = function(e) {
-	var badURL = getHostname(e.pageUrl);
-	appendToStorage('viceDomains', "\n"+badURL.hostname);
-};
-
-//Adds the two context menu items under "HabitRPG" subheading with icons.
-
-chrome.contextMenus.create({
-    "title": "Add page to Good sites",
-    "contexts": ["page", "selection", "image", "link"],
-    "onclick" : goodClickHandler
-  });
-
-chrome.contextMenus.create({
-    "title": "Add page to Vices",
-    "contexts": ["page", "selection", "image", "link"],
-    "onclick" : badClickHandler
-  });
-=======
    });
 	
 /*	
@@ -345,5 +267,4 @@ chrome.tabs.onActivated.addListener(function(activeInfo) {
 
 
 
->>>>>>> upstream/master
 
