@@ -59,6 +59,7 @@ var notificationDefaults = null;
     };
 
 //Listener which is updated by currently loaded pages. 
+
 chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
     if (request.method === "getLocalStorage") {
       sendResponse({data: localStorage});
@@ -109,3 +110,51 @@ chrome.extension.onMessage.addListener(function(request, sender, sendResponse) {
       sendResponse({}); // snub them.
     }
 });
+
+//Function that writes to local storage, appending to the end NOT replacing.
+
+var appendToStorage = function(storage, data){
+    var tempStorage = localStorage.getItem(storage);
+    if(tempStorage === null) tempStorage = "";
+    localStorage.setItem(storage, tempStorage + data);
+}
+
+//Function that converts a URL into a hostname AND path.
+//Hostname used for vice/good lists and is variable.hostname
+//Path could be useful so is returned in h as variable.path
+
+var getHostname = function(href) {
+    var h = document.createElement("a");
+    h.href = href;
+    return h;
+};
+
+//Handlers for context menu. One for good, one for bad.
+//Takes the page url, converts to a hostname+path object, appends to local storage for good lists/badlists.
+
+var goodClickHandler = function(e) {
+	var goodURL = getHostname(e.pageUrl);
+	appendToStorage('goodDomains', "\n"+goodURL.hostname);
+	alert(localStorage["goodDomains"]);
+};
+
+var badClickHandler = function(e) {
+	var badURL = getHostname(e.pageUrl);
+	appendToStorage('viceDomains', "\n"+badURL.hostname);
+	alert(localStorage["viceDomains"]);
+};
+
+//Adds the two context menu items under "HabitRPG" subheading with icons.
+
+chrome.contextMenus.create({
+    "title": "Add page to Good sites",
+    "contexts": ["page", "selection", "image", "link"],
+    "onclick" : goodClickHandler
+  });
+
+chrome.contextMenus.create({
+    "title": "Add page to Vices",
+    "contexts": ["page", "selection", "image", "link"],
+    "onclick" : badClickHandler
+  });
+

@@ -23,6 +23,7 @@ function getCookie(c_name){
 }
 
 
+
 var habitrpgUrl = null;
 chrome.extension.sendMessage({method: "getLocalStorage"}, function(response) {
   if (!response.data.uid) {
