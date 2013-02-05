@@ -6,7 +6,7 @@
    },
    
    "content_scripts": [ {
-      "js": [ "vendor/lodash.min.js", "options.js" ],
+      "js": [ "vendor/jquery-1.8.0.min.js", "options.js" ],
       "matches": [ "http://*/*", "https://*/*" ]
    } ],
    
@@ -21,7 +21,7 @@
    "manifest_version": 2,
    "name": "HabitRPG",
    "options_page": "options.html",
-	"permissions": ["tabs", "webNavigation", "notifications", "https://habitrpg.com/", "http://*/*", "https://*/*"],
+	"permissions": ["tabs", "webNavigation", "notifications", "contextMenus", "https://habitrpg.com/", "http://*/*", "https://*/*"],
    "update_url": "http://clients2.google.com/service/update2/crx",
    "version": "0.1.1",
    "web_accessible_resources": [ "img/icon-48-up.png", "img/icon-48-down.png" ]

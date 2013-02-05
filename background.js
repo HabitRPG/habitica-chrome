@@ -56,16 +56,16 @@ var siteList = function(operation, site){
 	
 	
 var options = localStorage;	
-//Website Type Check
+//Website Type Chec
 var websiteTypeCheck = function(tab){
 
-	tab1 = tab.replace("http://", "");
+tab1 = tab.replace("http://", "");
 	tab2 = tab1.replace("https://", "");
 	tab3 = tab2.replace("www.", "");
 	tab4 = tab3.substring(0, tab3.length-1);
 	tab = tab4;
-	
-	
+
+
 	// Variables for Bad Domains
     var viceDomains = options.viceDomains.split('\n');
 	var goodDomains = options.goodDomains.split('\n');
@@ -73,8 +73,8 @@ var websiteTypeCheck = function(tab){
 	console.log(goodDomains);
 	console.log("Running WebsiteCheck");
 	console.log(tab);
-	
-	
+
+
 	var wwwViceDomains = function(){
 		console.log("checking vice list");
 		for (i=0; i<viceDomains.length; i++){
@@ -82,8 +82,8 @@ var websiteTypeCheck = function(tab){
 			console.log(viceDomains[i] + " returning true")
 
 			return [1, viceDomains[i]]
-			
-			
+
+
 		}else{
 		console.log("domain returned = "  + viceDomains[i] + " looking for " + tab);
 		}
@@ -97,7 +97,7 @@ var websiteTypeCheck = function(tab){
 			return [1, goodDomains[i]]
 			console.log(goodDomains[i] + " returning true")
 			}
-			
+
 		else {
 		console.log("domain returned = "  + goodDomains[i] + " looking for " + tab);
 		}
@@ -106,7 +106,7 @@ var websiteTypeCheck = function(tab){
 	// Check if site is on badHosts list
 	var viceSitesCheck = wwwViceDomains()
 	var goodSitesCheck = wwwGoodDomains()
-	
+
 	if (viceSitesCheck[0]) {
 	//Check if there is a timer for the site - If true do nothing else start a timer. 
 		if(siteList("search", viceSitesCheck[1])){
@@ -115,7 +115,7 @@ var websiteTypeCheck = function(tab){
 			siteList("add", viceSitesCheck[1])
 			newSite(viceSitesCheck[1], "down")
 			console.log("First time, starting timer");
-		
+
 		}
 	//If not on badHost list, checks goodHost list
 	}else if(goodSitesCheck[0]){
@@ -131,6 +131,7 @@ var websiteTypeCheck = function(tab){
 	  console.log("Site not on good or bad list");
 	  }
   };	
+
 
 //Timer functions
     var newSite = function(website, direction){
@@ -164,7 +165,7 @@ var websiteTypeCheck = function(tab){
 					}
 			});
 			
-		}, 1000); 
+		}, 60000); 
 						
 	};
 	
@@ -218,7 +219,7 @@ var tabCheck = function(siteToCheck, callback){
         url: habitrpgUrl + '/' + direction,
         type: 'POST'
       }).done(function(data){
-        
+        console.log(data.delta);
 		var effectedStats = 'HP';
         if (direction==='up') {
           effectedStats = 'Exp, GP';
@@ -226,7 +227,7 @@ var tabCheck = function(siteToCheck, callback){
         
 		var notification = jQuery.extend(notificationDefaults, {
           icon: "/img/icon-48-" + direction + ".png", 
-          text: "[" + data.delta.toFixed(2) + " " + effectedStats + "] " + message
+          text: "["+ effectedStats + "] " + message
         });
         showNotification(notification); 
       });
@@ -245,6 +246,42 @@ var habitrpgUrl = null;
         time: 3000
       };
 }
+
+//Function that converts a URL into a hostname AND path.
+//Hostname used for vice/good lists and is variable.hostname
+//Path could be useful so is returned in h as variable.path
+
+var getHostname = function(href) {
+    var h = document.createElement("a");
+    h.href = href;
+    return h;
+};
+
+//Add two handlers for adding vice/good sites via the context menu.
+
+var goodClickHandler = function(e) {
+	var goodURL = getHostname(e.pageUrl);
+	appendToStorage('goodDomains', "\n"+goodURL.hostname);
+};
+
+var badClickHandler = function(e) {
+	var badURL = getHostname(e.pageUrl);
+	appendToStorage('viceDomains', "\n"+badURL.hostname);
+};
+
+//Adds the two context menu items under "HabitRPG" subheading with icons.
+
+chrome.contextMenus.create({
+    "title": "Add page to Good sites",
+    "contexts": ["page", "selection", "image", "link"],
+    "onclick" : goodClickHandler
+  });
+
+chrome.contextMenus.create({
+    "title": "Add page to Vices",
+    "contexts": ["page", "selection", "image", "link"],
+    "onclick" : badClickHandler
+  });
 
 
 //Listeners
