@@ -47,16 +47,19 @@ var siteList = function(operation, site){
 	}
 };
 
-	
-			
+//Function that writes to local storage, appending to the end NOT replacing.
 
-	
-	
+var appendToStorage = function(storage, data){
+    var tempStorage = localStorage.getItem(storage);
+    if(tempStorage === null) tempStorage = "";
+    localStorage.setItem(storage, tempStorage + data);
+}
+
 var options = localStorage;	
 //Website Type Chec
-var websiteTypeCheck = function(tab){
+var websiteTypeCheck = function(tab, url){
 
-	var tabAddress1 = getHostname(tab);
+	var tabAddress1 = getHostname(url);
 	var tabAddress = tabAddress1.toString();
 	var tabFullAddress1 = tabAddress.host+tabAddress.path;
 	var tabFullAddress = tabFullAddress1.toString();
@@ -88,10 +91,11 @@ var websiteTypeCheck = function(tab){
 	if (domainStatus != "good"){
 	console.log("checking vice list");
 	for (i=0; i<viceDomains.length; i++){
-		if (tab.indexOf(viceDomains[i]) !== -1){
+		if (tabAddress.indexOf(viceDomains[i]) !== -1){
 		console.log(viceDomains[i] + " returning status of vice")
 		domainStatus = "vice";
 		domainListName = viceDomains[i];
+		chrome.pageAction.show(tab.id);
     };
 	}
 	}
@@ -247,12 +251,12 @@ var getHostname = function(href) {
 
 var goodClickHandler = function(e) {
 	var goodURL = getHostname(e.pageUrl);
-	appendToStorage('goodDomains', "\n"+goodURL.hostname);
+	appendToStorage('goodDomains', "\n"+goodURL);
 };
 
 var badClickHandler = function(e) {
 	var badURL = getHostname(e.pageUrl);
-	appendToStorage('viceDomains', "\n"+badURL.hostname);
+	appendToStorage('viceDomains', "\n"+badURL);
 };
 
 //Adds the two context menu items under "HabitRPG" subheading with icons.
@@ -274,7 +278,7 @@ chrome.contextMenus.create({
    chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
     var url = tab.url;
         if (url !== undefined && changeinfo.status == "complete") {
-		websiteTypeCheck(url);
+		websiteTypeCheck(tab, url);
     }
    });
 	
