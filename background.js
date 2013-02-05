@@ -20,17 +20,14 @@ var siteList = function(operation, site){
 	
 	if(operation == "add"){
 		timedSites.push(site);
-		var position = timedSites.indexOf(site);
+		
 	
 	} else if (operation == "search"){
-		
 		var length = timedSites.length;
-		
 		for (i=0; i<=length; i++){
 			if (timedSites[i] == site){
 			return true
 			}
-		
 		}
 		
 	} else if (operation == "del"){
@@ -59,72 +56,63 @@ var options = localStorage;
 //Website Type Chec
 var websiteTypeCheck = function(tab){
 
-tab1 = tab.replace("http://", "");
-	tab2 = tab1.replace("https://", "");
-	tab3 = tab2.replace("www.", "");
-	tab4 = tab3.substring(0, tab3.length-1);
-	tab = tab4;
-
-
+	var tabAddress1 = getHostname(tab);
+	var tabAddress = tabAddress1.toString();
+	var tabFullAddress1 = tabAddress.host+tabAddress.path;
+	var tabFullAddress = tabFullAddress1.toString();
+	
 	// Variables for Bad Domains
     var viceDomains = options.viceDomains.split('\n');
 	var goodDomains = options.goodDomains.split('\n');
+	var domainStatus;
+	var domainListName;
+	
 	console.log(viceDomains);
 	console.log(goodDomains);
 	console.log("Running WebsiteCheck");
 	console.log(tab);
-
-
-	var wwwViceDomains = function(){
-		console.log("checking vice list");
-		for (i=0; i<viceDomains.length; i++){
-			if (tab.indexOf(viceDomains[i]) !== -1){
-			console.log(viceDomains[i] + " returning true")
-
-			return [1, viceDomains[i]]
-
-
-		}else{
-		console.log("domain returned = "  + viceDomains[i] + " looking for " + tab);
-		}
-    };
-	}
-
-    var wwwGoodDomains = function(){
+	
 	console.log("checking good list");
 		for (i=0; i<goodDomains.length; i++){
-			if (tab.indexOf(goodDomains[i]) !== -1){
-			return [1, goodDomains[i]]
-			console.log(goodDomains[i] + " returning true")
+			if (tabFullAddress.indexOf(goodDomains[i]) !== -1){
+			console.log(goodDomains[i] + " returning status of good");
+			domainStatus = "good";
+			domainListName = goodDomains[i];
+			} else if(tabAddress.indexOf(goodDomains[i]) !== -1){
+			console.log(goodDomains[i] + " returning status of good");
+			domainStatus = "good";
+			domainListName = goodDomains[i];
 			}
-
-		else {
-		console.log("domain returned = "  + goodDomains[i] + " looking for " + tab);
-		}
+    };
+	
+	if (domainStatus != "good"){
+	console.log("checking vice list");
+	for (i=0; i<viceDomains.length; i++){
+		if (tab.indexOf(viceDomains[i]) !== -1){
+		console.log(viceDomains[i] + " returning status of vice")
+		domainStatus = "vice";
+		domainListName = viceDomains[i];
     };
 	}
-	// Check if site is on badHosts list
-	var viceSitesCheck = wwwViceDomains()
-	var goodSitesCheck = wwwGoodDomains()
-
-	if (viceSitesCheck[0]) {
+	}
+		
+	if (domainStatus = "vice") {
 	//Check if there is a timer for the site - If true do nothing else start a timer. 
-		if(siteList("search", viceSitesCheck[1])){
+		if(siteList("search", domainListName)){
 			console.log("Been on site in last 5 mins");
 		}else{
-			siteList("add", viceSitesCheck[1])
-			newSite(viceSitesCheck[1], "down")
+			siteList("add", domainListName);
+			newSite(domainListName, "down");
 			console.log("First time, starting timer");
-
 		}
 	//If not on badHost list, checks goodHost list
-	}else if(goodSitesCheck[0]){
+	}else if(domainStatus = "good"){
 	//Check if there is a timer for the site - If true do nothing else start a timer. 
-		if(siteList("search", goodSitesCheck[1])){
+		if(siteList("search", domainListName)){
 			console.log("Been on site in last 5 mins");
 		}else{			
-			siteList("add", goodSitesCheck[1])
-			newSite(goodSitesCheck[1], "up")
+			siteList("add", domainListName)
+			newSite(domainListName, "up")
 			console.log("First time, starting timer");
 		}
 	  }else{
@@ -165,11 +153,9 @@ tab1 = tab.replace("http://", "");
 					}
 			});
 			
-		}, 60000); 
+		}, localStorage.interval*60000); 
 						
 	};
-	
-	//localStorage.interval*60000
   
 //TabCheck function
 
