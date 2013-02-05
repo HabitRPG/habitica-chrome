@@ -26,11 +26,7 @@
    "manifest_version": 2,
    "name": "HabitRPG",
    "options_page": "options.html",
-<<<<<<< HEAD
-	"permissions": ["tabs", "webNavigation", "notifications", "https://habitrpg.com/", "contextMenus"],
-=======
-	"permissions": ["tabs", "webNavigation", "notifications", "https://habitrpg.com/", "http://*/*", "https://*/*"],
->>>>>>> upstream/master
+   "permissions": ["tabs", "webNavigation", "notifications", "https://habitrpg.com/", "contextMenus", "http://*/*", "https://*/*"],
    "update_url": "http://clients2.google.com/service/update2/crx",
    "version": "0.1.1",
    "web_accessible_resources": [ "img/icon-48-up.png", "img/icon-48-down.png" ]
