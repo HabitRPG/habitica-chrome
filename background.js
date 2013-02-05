@@ -132,6 +132,22 @@ var getHostname = function(href) {
 //Handlers for context menu. One for good, one for bad.
 //Takes the page url, converts to a hostname+path object, appends to local storage for good lists/badlists.
 
+var check_if_bad_site = function(tab_id, data, tab){
+	var viceDomains = options.viceDomains.split('\n');
+	
+	var length = viceDomains.length,
+    	element = null;
+	for (var i = 0; i < length; i++) {
+  		element = viceDomains[i];
+  		if(tab.url.indexOf(element) > -1)
+		{
+			chrome.pageAction.show(tab_id);
+		}
+	}
+};
+chrome.tabs.onUpdated.addListener(check_if_bad_site);
+
+
 var goodClickHandler = function(e) {
 	var goodURL = getHostname(e.pageUrl);
 	appendToStorage('goodDomains', "\n"+goodURL.hostname);

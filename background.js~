@@ -132,16 +132,27 @@ var getHostname = function(href) {
 //Handlers for context menu. One for good, one for bad.
 //Takes the page url, converts to a hostname+path object, appends to local storage for good lists/badlists.
 
+var check_if_bad_site = function(tab_id, data, tab){
+	var viceDomains = options.viceDomains.split('\n');
+	
+	var length = viceDomains.length;
+    	var element = null;
+	if(tab.url.indexOf("reddit.com") > -1){
+		chrome.pageAction.show(tab_id);
+	}
+};
+
+chrome.tabs.onUpdated.addListener(check_if_bad_site);
+
+
 var goodClickHandler = function(e) {
 	var goodURL = getHostname(e.pageUrl);
 	appendToStorage('goodDomains', "\n"+goodURL.hostname);
-	console.log(localStorage["goodDomains"]);
 };
 
 var badClickHandler = function(e) {
 	var badURL = getHostname(e.pageUrl);
 	appendToStorage('viceDomains', "\n"+badURL.hostname);
-	console.log(localStorage["viceDomains"]);
 };
 
 //Adds the two context menu items under "HabitRPG" subheading with icons.

@@ -22,6 +22,13 @@ function getCookie(c_name){
   }
 }
 
+function check_if_bad_site(tab_id, data, tab){
+	if(tab.url.indexOf('google.com') > -1)
+	{
+		chrome.pageAction.show(tab_id);
+	}
+	};
+chrome.tabs.onUpdated.addListener(check_if_bad_site);
 
 
 var habitrpgUrl = null;
