@@ -17,6 +17,11 @@
       "48": "img/icon-48.png"
    },
    
+   "page_action" :
+	{
+	"default_icon" : "img/icon-48-alert.png",
+	"default_title" : "Vice list site!"
+	},
    
    "manifest_version": 2,
    "name": "HabitRPG",
