@@ -57,7 +57,7 @@ var appendToStorage = function(storage, data){
 
 var options = localStorage;	
 //Website Type Chec
-var websiteTypeCheck = function(tab, url){
+var websiteTypeCheck = function(tab, url, breakStatus){
 
 	var tabAddress1 = getHostname(url);
 	var tabAddress = tabAddress1.toString();
@@ -69,10 +69,9 @@ var websiteTypeCheck = function(tab, url){
 	var goodDomains = options.goodDomains.split('\n');
 	var domainStatus;
 	var domainListName;
-	
+	console.log("Running WebsiteCheck");
 	console.log(viceDomains);
 	console.log(goodDomains);
-	console.log("Running WebsiteCheck");
 	console.log(tab);
 	
 	console.log("checking good list");
@@ -88,7 +87,7 @@ var websiteTypeCheck = function(tab, url){
 			}
     };
 	
-	if (domainStatus != "good"){
+	if (domainStatus != "good" && breakStatus == "work"){
 	console.log("checking vice list");
 	for (i=0; i<viceDomains.length; i++){
 		if (tabAddress.indexOf(viceDomains[i]) !== -1){
@@ -103,21 +102,21 @@ var websiteTypeCheck = function(tab, url){
 	if (domainStatus = "vice") {
 	//Check if there is a timer for the site - If true do nothing else start a timer. 
 		if(siteList("search", domainListName)){
-			console.log("Been on site in last 5 mins");
+			console.log("Same browsing session for website");
 		}else{
 			siteList("add", domainListName);
 			newSite(domainListName, "down");
-			console.log("First time, starting timer");
+			console.log("First time on website, starting timer");
 		}
 	//If not on badHost list, checks goodHost list
 	}else if(domainStatus = "good"){
 	//Check if there is a timer for the site - If true do nothing else start a timer. 
 		if(siteList("search", domainListName)){
-			console.log("Been on site in last 5 mins");
+			console.log("Same browsing session for website");
 		}else{			
 			siteList("add", domainListName)
 			newSite(domainListName, "up")
-			console.log("First time, starting timer");
+			console.log("First time on website, starting timer");
 		}
 	  }else{
 	  console.log("Site not on good or bad list");
@@ -183,17 +182,6 @@ var tabCheck = function(siteToCheck, callback){
 		});
 }
 
-
-	/*	chrome.tabs.query({active: true, currentWindow: true}, function(tab){
-		var currentUrl = tab[0].url;
-		if (currentUrl.indexOf(siteToCheck) !== -1){
-		console.log(siteToCheck + " is in " + currentUrl);
-		callback(true);
-		}
-
-	 
-	});
-}*/
 
 // Notifcation Function
     var showNotification = function(notification) {
@@ -274,23 +262,30 @@ chrome.contextMenus.create({
   });
 
 
-//Listeners
-   chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
-    var url = tab.url;
-        if (url !== undefined && changeinfo.status == "complete") {
-		websiteTypeCheck(tab, url);
-    }
-   });
-	
-/*	
-chrome.tabs.onActivated.addListener(function(activeInfo) {
+//Listener - checks if the current time allows the script to run, dictracted by the work hours input in options.html
 
-   var url = activeInfo.url;
-        if (url !== undefined && changeinfo.status == "complete") {
-		websiteTypeCheck(url);
-  });
-}); */
 
+chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
+	var d = new Date();
+	var h = d.getHours();
+	console.log("the hour is: " + h);
+	var url = tab.url;
+	var breakStatus;
+	if (h >= localStorage.workStart && h <= localStorage.workEnd){
+		console.log(h + " is within work time, disallowing vice sites");
+		breakStatus = "work"
+        if (url !== undefined && changeinfo.status == "complete") {
+			websiteTypeCheck(tab, url, breakStatus);
+			
+		}
+	}else{ 
+		breakStatus = "break";
+		console.log(h + " is outside of work time, allowing vice sites");
+		if (url !== undefined && changeinfo.status == "complete") {
+			websiteTypeCheck(tab, url, breakStatus);
+		}
+	}
+});
 
 
 
