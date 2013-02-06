@@ -8,13 +8,13 @@ jQuery('document').ready(function(){
     if(localStorage.workStart) {
     $('#workStart').val(localStorage.workStart);
   }else {
-      $('#workStart').val("9");
+      $('#workStart').val("0");
   }
   
   if(localStorage.workEnd) {
     $('#workEnd').val(localStorage.workEnd);
   }else {
-      $('#workEnd').val("18");
+      $('#workEnd').val("24");
   }
   
   if(localStorage.interval) {

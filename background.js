@@ -160,8 +160,7 @@ var websiteTypeCheck = function(tab, url, breakStatus){
 					}
 			});
 			
-		}, localStorage.interval*60000
-); 
+		}, localStorage.interval*60000); 
 						
 	};
   
