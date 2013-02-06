@@ -14,7 +14,7 @@ jQuery('document').ready(function(){
   if(localStorage.workEnd) {
     $('#workEnd').val(localStorage.workEnd);
   }else {
-      $('#workEnd').val("6");
+      $('#workEnd').val("18");
   }
   
   if(localStorage.interval) {
