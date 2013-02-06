@@ -160,12 +160,12 @@ var websiteTypeCheck = function(tab, url, breakStatus){
 					}
 			});
 			
-		}, 600); 
+		}, localStorage.interval*60000
+); 
 						
 	};
   
-//TabCheck function localStorage.interval*60000
-
+//TabCheck function 
 var tabCheck = function(siteToCheck, callback){
 	var tabsOpen = 0;
 	var tabsActive = 0;
