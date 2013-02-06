@@ -247,6 +247,11 @@ var badClickHandler = function(e) {
 	appendToStorage('viceDomains', "\n"+badURL);
 };
 
+//Plus a link to the options page
+var optionsPageLink = function(e) {
+	chrome.tabs.create({"url":"options.html","selected":true}, function(tab){});
+};
+
 //Adds the two context menu items under "HabitRPG" subheading with icons.
 
 chrome.contextMenus.create({
@@ -259,6 +264,12 @@ chrome.contextMenus.create({
     "title": "Add page to Vices",
     "contexts": ["page", "selection", "image", "link"],
     "onclick" : badClickHandler
+  });
+  
+chrome.contextMenus.create({
+    "title": "View Options",
+    "contexts": ["all"],
+    "onclick" : optionsPageLink
   });
 
 
