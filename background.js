@@ -78,28 +78,32 @@ var websiteTypeCheck = function(tab, url, breakStatus){
 		for (i=0; i<goodDomains.length; i++){
 			if (tabFullAddress.indexOf(goodDomains[i]) !== -1){
 			console.log(goodDomains[i] + " returning status of good");
-			domainStatus = "good";
+			domainStatus = 1;
+			console.log("domain status is")
+			console.log(domainStatus)
 			domainListName = goodDomains[i];
-			} else if(tabAddress.indexOf(goodDomains[i]) !== -1){
+			} else if (tabAddress.indexOf(goodDomains[i]) !== -1){
 			console.log(goodDomains[i] + " returning status of good");
-			domainStatus = "good";
+			domainStatus = 1;
+			console.log("domain status is")
+			console.log(domainStatus)
 			domainListName = goodDomains[i];
 			}
     };
 	
-	if (domainStatus != "good" && breakStatus == "work"){
+	if (domainStatus != 1 ){
 	console.log("checking vice list");
 	for (i=0; i<viceDomains.length; i++){
 		if (tabAddress.indexOf(viceDomains[i]) !== -1){
 		console.log(viceDomains[i] + " returning status of vice")
-		domainStatus = "vice";
+		domainStatus = 0;
 		domainListName = viceDomains[i];
 		chrome.pageAction.show(tab.id);
     };
 	}
 	}
 		
-	if (domainStatus = "vice") {
+	if (domainStatus == 0) {
 	//Check if there is a timer for the site - If true do nothing else start a timer. 
 		if(siteList("search", domainListName)){
 			console.log("Same browsing session for website");
@@ -109,7 +113,7 @@ var websiteTypeCheck = function(tab, url, breakStatus){
 			console.log("First time on website, starting timer");
 		}
 	//If not on badHost list, checks goodHost list
-	}else if(domainStatus = "good"){
+	}else if(domainStatus == 1){
 	//Check if there is a timer for the site - If true do nothing else start a timer. 
 		if(siteList("search", domainListName)){
 			console.log("Same browsing session for website");
@@ -156,11 +160,11 @@ var websiteTypeCheck = function(tab, url, breakStatus){
 					}
 			});
 			
-		}, localStorage.interval*60000); 
+		}, 600); 
 						
 	};
   
-//TabCheck function
+//TabCheck function localStorage.interval*60000
 
 var tabCheck = function(siteToCheck, callback){
 	var tabsOpen = 0;
@@ -195,6 +199,7 @@ var tabCheck = function(siteToCheck, callback){
     var score = function(direction, message) {
       jQuery.ajax({
         url: habitrpgUrl + '/' + direction,
+		data: {apiToken:localStorage.apiToken},
         type: 'POST'
       }).done(function(data){
         console.log(data.delta);
@@ -205,7 +210,7 @@ var tabCheck = function(siteToCheck, callback){
         
 		var notification = jQuery.extend(notificationDefaults, {
           icon: "/img/icon-48-" + direction + ".png", 
-          text: "["+ effectedStats + "] " + message
+          text: "["+ data.delta + effectedStats + "] " + message
         });
         showNotification(notification); 
       });
@@ -214,11 +219,11 @@ var tabCheck = function(siteToCheck, callback){
 	
 //API Setup
 var habitrpgUrl = null;
-  if (!localStorage.uid) {
-    console.log("To use the HabitRPG extension, input your UID in the options page.");
+  if (!localStorage.uid || !localStorage.apiToken) {
+    console.log("To use the HabitRPG extension, input your UID and API Token in the options page.");
   } else {
     var options = localStorage,
-      habitrpgUrl = "https://habitrpg.com/users/" + jQuery.trim(options.uid) + "/tasks/productivity",
+      habitrpgUrl = "https://habitrpg.com/v1/users/" + jQuery.trim(options.uid) + "/tasks/productivity",
       notificationDefaults = {
         title:'HabitRPG', 
         time: 3000

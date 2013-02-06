@@ -3,6 +3,8 @@ jQuery('document').ready(function(){
   // Restore saved values
   $('#uid').val(localStorage.uid);
   
+  $('#apiToken').val(localStorage.apiToken);
+  
     if(localStorage.workStart) {
     $('#workStart').val(localStorage.workStart);
   }else {
@@ -35,6 +37,7 @@ jQuery('document').ready(function(){
   // Saves options to localStorage.
   jQuery('#habitrpgForm').submit(function(){
     localStorage["uid"] = $('#uid').val();
+	localStorage["apiToken"] = $('#apiToken').val();
 	localStorage["interval"] = $('#interval').val();
     localStorage["viceDomains"] = $('#viceDomains').val();
     localStorage["goodDomains"] = $('#goodDomains').val();
