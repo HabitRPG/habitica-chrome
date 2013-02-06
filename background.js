@@ -219,7 +219,7 @@ var tabCheck = function(siteToCheck, callback){
 //API Setup
 var habitrpgUrl = null;
   if (!localStorage.uid || !localStorage.apiToken) {
-    console.log("To use the HabitRPG extension, input your UID and API Token in the options page.");
+    alert("To use the HabitRPG extension, input your UID and API Token in the options page.");
   } else {
     var options = localStorage,
       habitrpgUrl = "https://habitrpg.com/v1/users/" + jQuery.trim(options.uid) + "/tasks/productivity",
