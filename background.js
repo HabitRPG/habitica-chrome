@@ -67,6 +67,18 @@ var websiteTypeCheck = function(tab, url, breakStatus){
 	// Variables for Bad Domains
     var viceDomains = options.viceDomains.split('\n');
 	var goodDomains = options.goodDomains.split('\n');
+		
+   for(var i=0;i<viceDomains.length;i++){
+       if(viceDomains[i] === "")   
+          viceDomains.splice(i, 1);
+   }
+   
+   for(var i=0;i<goodDomains.length;i++){
+       if(goodDomains[i] === "")   
+          goodDomains.splice(i, 1);
+   }
+
+	
 	var domainStatus;
 	var domainListName;
 	console.log("Running WebsiteCheck");
@@ -82,14 +94,12 @@ var websiteTypeCheck = function(tab, url, breakStatus){
 				console.log("domain status is")
 				console.log(domainStatus)
 				domainListName = goodDomains[i];
-				browserIcon("img/icon-48-up.png", "Productive Site!",tab);
 			} else if (tabAddress.indexOf(goodDomains[i]) !== -1){
 				console.log(goodDomains[i] + " returning status of good");
 				domainStatus = 1;
 				console.log("domain status is")
 				console.log(domainStatus)
 				domainListName = goodDomains[i];
-				browserIcon("img/icon-48-up.png", "Productive Site!", tab);
 		}
     };
 	
@@ -100,7 +110,6 @@ var websiteTypeCheck = function(tab, url, breakStatus){
 		console.log(viceDomains[i] + " returning status of vice")
 		domainStatus = 0;
 		domainListName = viceDomains[i];
-		browserIcon("img/icon-48-alert.png", "Vice site!", tab);
     };
 	}
 	}
@@ -109,23 +118,28 @@ var websiteTypeCheck = function(tab, url, breakStatus){
 	//Check if there is a timer for the site - If true do nothing else start a timer. 
 		if(siteList("search", domainListName)){
 			console.log("Same browsing session for website");
+			browserIcon("img/icon-48-alert.png", "Vice site!", tab);
 		}else{
 			siteList("add", domainListName);
 			newSite(domainListName, "down");
 			console.log("First time on website, starting timer");
+			browserIcon("img/icon-48-alert.png", "Vice site!", tab);
 		}
 	//If not on badHost list, checks goodHost list
 	}else if(domainStatus == 1){
 	//Check if there is a timer for the site - If true do nothing else start a timer. 
 		if(siteList("search", domainListName)){
 			console.log("Same browsing session for website");
+			browserIcon("img/icon-48-up.png", "Productive Site!",tab);
 		}else{			
 			siteList("add", domainListName)
 			newSite(domainListName, "up")
 			console.log("First time on website, starting timer");
+			browserIcon("img/icon-48-up.png", "Productive Site!",tab);
 		}
 	  }else{
 	  console.log("Site not on good or bad list");
+	  browserIcon("img/icon-48.png", "HabitRPG is monitoring your browsing!",tab);
 	  }
   };	
 
@@ -234,7 +248,6 @@ var habitrpgUrl = null;
 //Functions for parsing data to the browser action
 
 var browserIcon = function(img, text, tab){
-	console.log(img);
 	chrome.browserAction.setIcon({path: img, tabId: tab.id});
 	chrome.browserAction.setTitle({title: text, tabId: tab.id});
 };
@@ -291,7 +304,6 @@ chrome.contextMenus.create({
 
 
 chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
-	browserIcon("img/icon-19.png", "Habit RPG is running!", tab);
 	var d = new Date();
 	var h = d.getHours();
 	console.log("the hour is: " + h);
