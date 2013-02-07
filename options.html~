@@ -8,10 +8,7 @@
   <div style="background-color:green;" id="status"></div>
   <form id="habitrpgForm">
     <p>HabitRPG UserId: <input id="uid" type="text" /></p>
-	<p>HabitRPG API Token: <input id="apiToken" type="text" /></p>
-	<p>Work Hours: <input id="workStart" size="2" type="number" min="0" max="24" maxlength="2"/> to <input id="workEnd" size="2" type="number" min="0" max="24" maxlength="2"/> <br />
-	For always on set to 0 & 24 </p>
-	<p>Score every <input id="interval" size="2" type="number" min="5" max="30" maxlength="2"/> minutes</p>
+  <p>Score every <input id="interval" type="number" min="5" max="30" maxlength="2"/> minutes</p>
     <p>Websites where you procrastinate (one domain per line)</p>
     <p><textarea id="viceDomains" rows="10">
 reddit.com
