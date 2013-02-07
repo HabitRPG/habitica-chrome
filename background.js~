@@ -98,8 +98,7 @@ var websiteTypeCheck = function(tab, url, breakStatus){
 		console.log(viceDomains[i] + " returning status of vice")
 		domainStatus = 0;
 		domainListName = viceDomains[i];
-		void chrome.browserAction.setIcon({path: "img/icon-48-alert.png", tabId: tab.id});
-		void chrome.browserAction.setTitle({title: "Vice site!", tabId: tab.id});
+		chrome.pageAction.show(tab.id);
     };
 	}
 	}

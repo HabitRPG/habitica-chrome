@@ -39,12 +39,8 @@ jQuery('document').ready(function(){
     localStorage["uid"] = $('#uid').val();
 	localStorage["apiToken"] = $('#apiToken').val();
 	localStorage["interval"] = $('#interval').val();
-
-	viceStripped = $('#viceDomains').val.replace(/^(\r\n)|(\n)/,'');
-    	localStorage["viceDomains"] = viceStripped;
-
-	goodStripped = $('#goodDomains').val.replace(/^(\r\n)|(\n)/,'');
-    	localStorage["goodDomains"] = goodStripped;
+    localStorage["viceDomains"] = $('#viceDomains').val();
+    localStorage["goodDomains"] = $('#goodDomains').val();
 	
 	var work1 = parseInt($('#workStart').val());
 	var work2 = parseInt($('#workEnd').val());
