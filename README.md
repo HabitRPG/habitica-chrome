@@ -5,3 +5,10 @@ Think Stayfocusd for [HabitRPG](http://habitrpg.com). Lose HP for visiting vice 
 Please bear with me on the current bugs, I'm still stablizing HabitRPG's API, then I'll come back & improve this extension. See the [roadmap here](https://workflowy.com/shared/b5eecfbd-4e76-cdcf-624e-529cd65f6ada/).
 
 ![-1 HP for visiting Reddit.com](https://img.skitch.com/20120829-cbb1x1m4kym58pwg95akcxi31p.jpg)
+
+## Current To-Dos
+
+  - Options.html visual makeover
+  - Utilise Cloud Storage
+  - Popup.html design & incorporate API response info 
+  - Take a break function
