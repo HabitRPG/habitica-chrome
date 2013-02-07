@@ -30,6 +30,9 @@ jQuery('document').ready(function(){
   if(localStorage.goodDomains) {
     $('#goodDomains').val(localStorage.goodDomains);
   }
+  
+  
+  
     
   // Saves options to localStorage.
   jQuery('#habitrpgForm').submit(function(){
@@ -38,10 +41,10 @@ jQuery('document').ready(function(){
 	localStorage["interval"] = $('#interval').val();
     localStorage["viceDomains"] = $('#viceDomains').val();
     localStorage["goodDomains"] = $('#goodDomains').val();
-
+	
 	var work1 = parseInt($('#workStart').val());
 	var work2 = parseInt($('#workEnd').val());
-
+	
 	if( work1 >= work2 ){
 	document.getElementById("status").style.backgroundColor="red"
 	$("#status").html("Work Hours Error: The first number must be lower than the second");
