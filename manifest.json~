@@ -17,12 +17,11 @@
       "48": "img/icon-48.png"
    },
    
-   "browser_action": 
+   "page_action" :
 	{
-	"default_icon": "img/icon-19.png",
-	"default_title" : "Habit RPG is running!",
-    	"default_popup": "popup.html"    
-   	},
+	"default_icon" : "img/icon-48-alert.png",
+	"default_title" : "Vice list site!"
+	},
    
    "manifest_version": 2,
    "name": "HabitRPG",
