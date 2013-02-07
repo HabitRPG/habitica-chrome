@@ -57,7 +57,7 @@ var appendToStorage = function(storage, data){
 
 var options = localStorage;	
 //Website Type Chec
-var websiteTypeCheck = function(tab, url){
+var websiteTypeCheck = function(tab, url, breakStatus){
 
 	var tabAddress1 = getHostname(url);
 	var tabAddress = tabAddress1.toString();
@@ -69,55 +69,59 @@ var websiteTypeCheck = function(tab, url){
 	var goodDomains = options.goodDomains.split('\n');
 	var domainStatus;
 	var domainListName;
-	
+	console.log("Running WebsiteCheck");
 	console.log(viceDomains);
 	console.log(goodDomains);
-	console.log("Running WebsiteCheck");
 	console.log(tab);
 	
-	console.log("checking good list ".tabFullAddress);
+	console.log("checking good list");
 		for (i=0; i<goodDomains.length; i++){
 			if (tabFullAddress.indexOf(goodDomains[i]) !== -1){
 			console.log(goodDomains[i] + " returning status of good");
-			domainStatus = "good";
+			domainStatus = 1;
+			console.log("domain status is")
+			console.log(domainStatus)
 			domainListName = goodDomains[i];
-			} else if(tabAddress.indexOf(goodDomains[i]) !== -1){
+			} else if (tabAddress.indexOf(goodDomains[i]) !== -1){
 			console.log(goodDomains[i] + " returning status of good");
-			domainStatus = "good";
+			domainStatus = 1;
+			console.log("domain status is")
+			console.log(domainStatus)
 			domainListName = goodDomains[i];
 			}
     };
 	
-	if (domainStatus != "good"){
+	if (domainStatus != 1 ){
 	console.log("checking vice list");
 	for (i=0; i<viceDomains.length; i++){
 		if (tabAddress.indexOf(viceDomains[i]) !== -1){
 		console.log(viceDomains[i] + " returning status of vice")
-		domainStatus = "vice";
+		domainStatus = 0;
 		domainListName = viceDomains[i];
-		chrome.pageAction.show(tab.id);
+		void chrome.browserAction.setIcon({path: "img/icon-48-alert.png", tabId: tab.id});
+		void chrome.browserAction.setTitle({title: "Vice site!", tabId: tab.id});
     };
 	}
 	}
 		
-	if (domainStatus = "vice") {
+	if (domainStatus == 0) {
 	//Check if there is a timer for the site - If true do nothing else start a timer. 
 		if(siteList("search", domainListName)){
-			console.log("Been on site in last 5 mins");
+			console.log("Same browsing session for website");
 		}else{
 			siteList("add", domainListName);
 			newSite(domainListName, "down");
-			console.log("First time, starting timer");
+			console.log("First time on website, starting timer");
 		}
 	//If not on badHost list, checks goodHost list
-	}else if(domainStatus = "good"){
+	}else if(domainStatus == 1){
 	//Check if there is a timer for the site - If true do nothing else start a timer. 
 		if(siteList("search", domainListName)){
-			console.log("Been on site in last 5 mins");
+			console.log("Same browsing session for website");
 		}else{			
 			siteList("add", domainListName)
 			newSite(domainListName, "up")
-			console.log("First time, starting timer");
+			console.log("First time on website, starting timer");
 		}
 	  }else{
 	  console.log("Site not on good or bad list");
@@ -161,8 +165,7 @@ var websiteTypeCheck = function(tab, url){
 						
 	};
   
-//TabCheck function
-
+//TabCheck function 
 var tabCheck = function(siteToCheck, callback){
 	var tabsOpen = 0;
 	var tabsActive = 0;
@@ -184,17 +187,6 @@ var tabCheck = function(siteToCheck, callback){
 }
 
 
-	/*	chrome.tabs.query({active: true, currentWindow: true}, function(tab){
-		var currentUrl = tab[0].url;
-		if (currentUrl.indexOf(siteToCheck) !== -1){
-		console.log(siteToCheck + " is in " + currentUrl);
-		callback(true);
-		}
-
-	 
-	});
-}*/
-
 // Notifcation Function
     var showNotification = function(notification) {
       spec = notification;
@@ -207,6 +199,7 @@ var tabCheck = function(siteToCheck, callback){
     var score = function(direction, message) {
       jQuery.ajax({
         url: habitrpgUrl + '/' + direction,
+		data: {apiToken:localStorage.apiToken},
         type: 'POST'
       }).done(function(data){
         console.log(data.delta);
@@ -217,7 +210,7 @@ var tabCheck = function(siteToCheck, callback){
         
 		var notification = jQuery.extend(notificationDefaults, {
           icon: "/img/icon-48-" + direction + ".png", 
-          text: "["+ effectedStats + "] " + message
+          text: "["+ data.delta + effectedStats + "] " + message
         });
         showNotification(notification); 
       });
@@ -226,11 +219,11 @@ var tabCheck = function(siteToCheck, callback){
 	
 //API Setup
 var habitrpgUrl = null;
-  if (!localStorage.uid) {
-    console.log("To use the HabitRPG extension, input your UID in the options page.");
+  if (!localStorage.uid || !localStorage.apiToken) {
+    alert("To use the HabitRPG extension, input your UID and API Token in the options page.");
   } else {
     var options = localStorage,
-      habitrpgUrl = "https://habitrpg.com/users/" + jQuery.trim(options.uid) + "/tasks/productivity",
+      habitrpgUrl = "https://habitrpg.com/v1/users/" + jQuery.trim(options.uid) + "/tasks/productivity",
       notificationDefaults = {
         title:'HabitRPG', 
         time: 3000
@@ -259,6 +252,11 @@ var badClickHandler = function(e) {
 	appendToStorage('viceDomains', "\n"+badURL);
 };
 
+//Plus a link to the options page
+var optionsPageLink = function(e) {
+	chrome.tabs.create({"url":"options.html","selected":true}, function(tab){});
+};
+
 //Adds the two context menu items under "HabitRPG" subheading with icons.
 
 chrome.contextMenus.create({
@@ -272,25 +270,38 @@ chrome.contextMenus.create({
     "contexts": ["page", "selection", "image", "link"],
     "onclick" : badClickHandler
   });
-
-
-//Listeners
-   chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
-    var url = tab.url;
-        if (url !== undefined && changeinfo.status == "complete") {
-		websiteTypeCheck(tab, url);
-    }
-   });
-	
-/*	
-chrome.tabs.onActivated.addListener(function(activeInfo) {
-
-   var url = activeInfo.url;
-        if (url !== undefined && changeinfo.status == "complete") {
-		websiteTypeCheck(url);
+  
+chrome.contextMenus.create({
+    "title": "View Options",
+    "contexts": ["all"],
+    "onclick" : optionsPageLink
   });
-}); */
 
+
+//Listener - checks if the current time allows the script to run, dictracted by the work hours input in options.html
+
+
+chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
+	var d = new Date();
+	var h = d.getHours();
+	console.log("the hour is: " + h);
+	var url = tab.url;
+	var breakStatus;
+	if (h >= localStorage.workStart && h <= localStorage.workEnd){
+		console.log(h + " is within work time, disallowing vice sites");
+		breakStatus = "work"
+        if (url !== undefined && changeinfo.status == "complete") {
+			websiteTypeCheck(tab, url, breakStatus);
+			
+		}
+	}else{ 
+		breakStatus = "break";
+		console.log(h + " is outside of work time, allowing vice sites");
+		if (url !== undefined && changeinfo.status == "complete") {
+			websiteTypeCheck(tab, url, breakStatus);
+		}
+	}
+});
 
 
 
