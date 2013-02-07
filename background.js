@@ -75,24 +75,22 @@ var websiteTypeCheck = function(tab, url, breakStatus){
 	console.log(tab);
 	
 	console.log("checking good list");
-		for (i=0; i<goodDomains.length; i++){
+	for (i=0; i<goodDomains.length; i++){
 			if (tabFullAddress.indexOf(goodDomains[i]) !== -1){
-			console.log(goodDomains[i] + " returning status of good");
-			domainStatus = 1;
-			console.log("domain status is")
-			console.log(domainStatus)
-			domainListName = goodDomains[i];
-			chrome.browserAction.setIcon({path: "img/icon-19.png", tabId: tab.id});
-			chrome.browserAction.setTitle({title: "Habit RPG is running!", tabId: tab.id});
+				console.log(goodDomains[i] + " returning status of good");
+				domainStatus = 1;
+				console.log("domain status is")
+				console.log(domainStatus)
+				domainListName = goodDomains[i];
+				browserIcon("img/icon-48-up.png", "Productive Site!",tab);
 			} else if (tabAddress.indexOf(goodDomains[i]) !== -1){
-			console.log(goodDomains[i] + " returning status of good");
-			domainStatus = 1;
-			console.log("domain status is")
-			console.log(domainStatus)
-			domainListName = goodDomains[i];
-			chrome.browserAction.setIcon({path: "img/icon-19.png", tabId: tab.id});
-			chrome.browserAction.setTitle({title: "Habit RPG is running!", tabId: tab.id});
-			}
+				console.log(goodDomains[i] + " returning status of good");
+				domainStatus = 1;
+				console.log("domain status is")
+				console.log(domainStatus)
+				domainListName = goodDomains[i];
+				browserIcon("img/icon-48-up.png", "Productive Site!", tab);
+		}
     };
 	
 	if (domainStatus != 1 ){
@@ -102,14 +100,9 @@ var websiteTypeCheck = function(tab, url, breakStatus){
 		console.log(viceDomains[i] + " returning status of vice")
 		domainStatus = 0;
 		domainListName = viceDomains[i];
-		chrome.pageAction.show(tab.id);
-		chrome.browserAction.setIcon({path: "img/icon-48-alert.png", tabId: tab.id});
-		chrome.browserAction.setTitle({title: "Vice site!", tabId: tab.id});
+		browserIcon("img/icon-48-alert.png", "Vice site!", tab);
     };
 	}
-	} else{
-	chrome.browserAction.setIcon({path: "img/icon-19.png", tabId: tab.id});
-	chrome.browserAction.setTitle({title: "Habit RPG is running!", tabId: tab.id});
 	}
 		
 	if (domainStatus == 0) {
@@ -238,6 +231,14 @@ var habitrpgUrl = null;
       };
 }
 
+//Functions for parsing data to the browser action
+
+var browserIcon = function(img, text, tab){
+	console.log(img);
+	chrome.browserAction.setIcon({path: img, tabId: tab.id});
+	chrome.browserAction.setTitle({title: text, tabId: tab.id});
+};
+
 //Function that converts a URL into a hostname AND path.
 //Hostname used for vice/good lists and is variable.hostname
 //Path could be useful so is returned in h as variable.path
@@ -290,6 +291,7 @@ chrome.contextMenus.create({
 
 
 chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
+	browserIcon("img/icon-19.png", "Habit RPG is running!", tab);
 	var d = new Date();
 	var h = d.getHours();
 	console.log("the hour is: " + h);
