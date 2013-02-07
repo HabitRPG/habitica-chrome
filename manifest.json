@@ -1,15 +1,11 @@
 {
-  
-  "background": {
-        "scripts": [ "background.js"]
-	  
+   "background": {
+      "scripts": [ "background.js" ]
    },
-   
    "content_scripts": [ {
       "js": [ "vendor/jquery-1.8.0.min.js", "options.js" ],
       "matches": [ "http://*/*", "https://*/*" ]
    } ],
-   
    "description": "Monitors your browsing habits to divvy points to your HabitRPG character.",
    "icons": {
       "128": "img/icon-128.png",
@@ -17,18 +13,20 @@
       "48": "img/icon-48.png"
    },
    
-   "browser_action": 
+      "browser_action": 
 	{
 	"default_icon": "img/icon-19.png",
 	"default_title" : "Habit RPG is running!",
-    	"default_popup": "popup.html"    
+    "default_popup": "popup.html"    
    	},
-   
+	
+   "key": "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDqmcPXz4CjBphP+HlVjJXbzLI3RrOlEtXJkdd5vVs57nm/uV5wC61SjMh5jDNRfQ/cJ6C/E10k2qp3OKv0vrY1f4HK2MNJ6WTUF1byqk3Rrpj4V0DlKS69ZqzHr4D1w2WfdHt/W43k+1G53ZKsXrmgxaFHsX7O2wg55FUb8Yr7pQIDAQAB",
    "manifest_version": 2,
    "name": "HabitRPG",
    "options_page": "options.html",
-	"permissions": ["tabs", "webNavigation", "notifications", "contextMenus", "https://habitrpg.com/", "http://*/*", "https://*/*"],
+ 
+   "permissions": [ "tabs", "webNavigation", "notifications", "contextMenus", "https://habitrpg.com/", "http://*/*", "https://*/*" ],
    "update_url": "http://clients2.google.com/service/update2/crx",
-   "version": "0.1.1",
+   "version": "0.1.2",
    "web_accessible_resources": [ "img/icon-48-up.png", "img/icon-48-down.png" ]
 }
