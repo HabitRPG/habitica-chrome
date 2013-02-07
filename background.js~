@@ -66,6 +66,9 @@ var websiteTypeCheck = function(tab, url, breakStatus){
 	
 	// Variables for Bad Domains
     var viceDomains = options.viceDomains.split('\n');
+
+	var viceDomains222 = viceDomains.replace(/^\s*$[\n\r]{1,}/gm, '');
+	console.log("Vice domains stripped: ".viceDomains222);	
 	
 	var goodDomains = options.goodDomains.split('\n');
 	var domainStatus;
