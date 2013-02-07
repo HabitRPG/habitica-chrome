@@ -40,11 +40,11 @@ jQuery('document').ready(function(){
 	localStorage["apiToken"] = $('#apiToken').val();
 	localStorage["interval"] = $('#interval').val();
 
-	viceStripped = $('#viceDomains').val.replace(/^(\r\n)|(\n)/,'');
-    	localStorage["viceDomains"] = viceStripped;
-
-	goodStripped = $('#goodDomains').val.replace(/^(\r\n)|(\n)/,'');
-    	localStorage["goodDomains"] = goodStripped;
+	viceStripped = $('#viceDomains').val().replace(/^\s*$[\n\r]{1,}/gm, '');
+	localStorage["viceDomains"] = viceStripped;
+	
+	goodStripped = $('#goodDomains').val().replace(/^\s*$[\n\r]{1,}/gm, '');
+	localStorage["goodDomains"] = goodStripped;		
 	
 	var work1 = parseInt($('#workStart').val());
 	var work2 = parseInt($('#workEnd').val());
