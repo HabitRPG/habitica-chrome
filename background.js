@@ -56,7 +56,7 @@ var appendToStorage = function(storage, data){
 }
 
 var options = localStorage;	
-//Website Type Chec
+//Website Type Check
 var websiteTypeCheck = function(tab, url, breakStatus){
 
 	var tabAddress1 = getHostname(url);
@@ -82,12 +82,16 @@ var websiteTypeCheck = function(tab, url, breakStatus){
 			console.log("domain status is")
 			console.log(domainStatus)
 			domainListName = goodDomains[i];
+			chrome.browserAction.setIcon({path: "img/icon-19.png", tabId: tab.id});
+			chrome.browserAction.setTitle({title: "Habit RPG is running!", tabId: tab.id});
 			} else if (tabAddress.indexOf(goodDomains[i]) !== -1){
 			console.log(goodDomains[i] + " returning status of good");
 			domainStatus = 1;
 			console.log("domain status is")
 			console.log(domainStatus)
 			domainListName = goodDomains[i];
+			chrome.browserAction.setIcon({path: "img/icon-19.png", tabId: tab.id});
+			chrome.browserAction.setTitle({title: "Habit RPG is running!", tabId: tab.id});
 			}
     };
 	
@@ -99,8 +103,13 @@ var websiteTypeCheck = function(tab, url, breakStatus){
 		domainStatus = 0;
 		domainListName = viceDomains[i];
 		chrome.pageAction.show(tab.id);
+		chrome.browserAction.setIcon({path: "img/icon-48-alert.png", tabId: tab.id});
+		chrome.browserAction.setTitle({title: "Vice site!", tabId: tab.id});
     };
 	}
+	} else{
+	chrome.browserAction.setIcon({path: "img/icon-19.png", tabId: tab.id});
+	chrome.browserAction.setTitle({title: "Habit RPG is running!", tabId: tab.id});
 	}
 		
 	if (domainStatus == 0) {
