@@ -301,14 +301,14 @@ chrome.contextMenus.create({
 
 
 //Listener - checks if the current time allows the script to run, dictracted by the work hours input in options.html
-
+var workStatus;
 
 chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
 	var d = new Date();
 	var h = d.getHours();
 	console.log("the hour is: " + h);
 	var url = tab.url;
-	var workStatus;
+	
 	if (h >= localStorage.workStart && h <= localStorage.workEnd){
 		console.log(h + " is within work time, disallowing vice sites");
 		workStatus = 1
