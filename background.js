@@ -57,7 +57,7 @@ var appendToStorage = function(storage, data){
 
 var options = localStorage;	
 //Website Type Check
-var websiteTypeCheck = function(tab, url, breakStatus){
+var websiteTypeCheck = function(tab, url, workStatus){
 
 	var tabAddress1 = getHostname(url);
 	var tabAddress = tabAddress1.toString();
@@ -114,7 +114,7 @@ var websiteTypeCheck = function(tab, url, breakStatus){
 	}
 	}
 		
-	if (domainStatus == 0) {
+	if (domainStatus == 0 && workStatus == 1) {
 	//Check if there is a timer for the site - If true do nothing else start a timer. 
 		if(siteList("search", domainListName)){
 			console.log("Same browsing session for website");
@@ -178,7 +178,7 @@ var websiteTypeCheck = function(tab, url, breakStatus){
 			
 		}, localStorage.interval*60000); 
 						
-	};
+	}; 
   
 //TabCheck function 
 var tabCheck = function(siteToCheck, callback){
@@ -301,26 +301,26 @@ chrome.contextMenus.create({
 
 
 //Listener - checks if the current time allows the script to run, dictracted by the work hours input in options.html
-
+var workStatus;
 
 chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
 	var d = new Date();
 	var h = d.getHours();
 	console.log("the hour is: " + h);
 	var url = tab.url;
-	var breakStatus;
+	
 	if (h >= localStorage.workStart && h <= localStorage.workEnd){
 		console.log(h + " is within work time, disallowing vice sites");
-		breakStatus = "work"
+		workStatus = 1
         if (url !== undefined && changeinfo.status == "complete") {
-			websiteTypeCheck(tab, url, breakStatus);
+			websiteTypeCheck(tab, url, workStatus);
 			
 		}
 	}else{ 
-		breakStatus = "break";
+		workStatus = 0;
 		console.log(h + " is outside of work time, allowing vice sites");
 		if (url !== undefined && changeinfo.status == "complete") {
-			websiteTypeCheck(tab, url, breakStatus);
+			websiteTypeCheck(tab, url, workStatus);
 		}
 	}
 });
