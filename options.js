@@ -58,21 +58,31 @@ jQuery('document').ready(function(){
 		var work1 = parseInt($('#workStart').val());
 		var work2 = parseInt($('#workEnd').val());
 
-		$alert = $($('#hidden .alert').clone().wrap('<div></div>').parent().html());
+		$('#messages > div').each(function() {
+			$(this).fadeOut('slow', function() {
+				$(this).remove();
+			});
+		});
+
+		$alert = $($('#hidden .alert').clone().wrap('<div></div>').parent().html()).hide();
 		if( work1 >= work2 ){
-			$alert.addClass('alert-error').append('<h3>Work Hours Error</h3>The first number must be lower than the second');
+			$alert.addClass('alert-error')
+				.append('<h3>Work Hours Error</h3>The first number must be lower than the second');
 			$('#workHours').addClass('alert-error');
 		} else {
 			localStorage["workStart"] = $('#workStart').val();
 			localStorage["workEnd"] = $('#workEnd').val();
-			$alert.addClass('alert-success').append('Options Saved.');
+			$alert.addClass('alert-success')
+				.append('Options Saved');
 		}
-		$alert.slideDown('slow');
+		$('#messages').append($alert);
+		$alert.fadeIn();
 	});
 
 	jQuery('#alwaysOn').on('click', function(e) {
 		$('#workStart').val(0);
 		$('#workEnd').val(23);
+		$('#workStart').change();
 	});
 
 });
