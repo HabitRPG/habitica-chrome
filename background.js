@@ -55,7 +55,6 @@ var appendToStorage = function(storage, data){
     localStorage.setItem(storage, tempStorage + data);
 }
 
-var options = localStorage;	
 //Website Type Check
 var websiteTypeCheck = function(tab, url, workStatus){
 
@@ -65,8 +64,8 @@ var websiteTypeCheck = function(tab, url, workStatus){
 	var tabFullAddress = tabFullAddress1.toString();
 	
 	// Variables for Bad Domains
-    var viceDomains = options.viceDomains.split('\n');
-	var goodDomains = options.goodDomains.split('\n');
+    var viceDomains = localStorage.viceDomains.split('\n');
+	var goodDomains = localStorage.goodDomains.split('\n');
 		
    for(var i=0;i<viceDomains.length;i++){
        if(viceDomains[i] === "")   
@@ -246,7 +245,7 @@ var populateGlobals = function(displayMessage) {
 		}
 		return false;
 	} else {
-		habitrpgUrl = "https://habitrpg.com/v1/users/" + jQuery.trim(options.uid) + "/tasks/productivity";
+		habitrpgUrl = "https://habitrpg.com/v1/users/" + jQuery.trim(localStorage.uid) + "/tasks/productivity";
 		return true;
 	}
 }
