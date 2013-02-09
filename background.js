@@ -234,16 +234,23 @@ var tabCheck = function(siteToCheck, callback){
 	
 //API Setup
 var habitrpgUrl = null;
-  if (!localStorage.uid || !localStorage.apiToken) {
-    alert("To use the HabitRPG extension, input your UID and API Token in the options page.");
-  } else {
-    var options = localStorage,
-      habitrpgUrl = "https://habitrpg.com/v1/users/" + jQuery.trim(options.uid) + "/tasks/productivity",
-      notificationDefaults = {
-        title:'HabitRPG', 
-        time: 3000
-      };
+var notificationDefaults = {
+	title:'HabitRPG', 
+	time: 3000
+};
+var populateGlobals = function(displayMessage) {
+	var displayMessage = typeof displayMessage != 'undefined' ? displayMessage : false;
+	if (!localStorage.uid || !localStorage.apiToken) {
+		if (displayMessage == true) {
+			alert("To use the HabitRPG extension, input your UID and API Token in the options page.");
+		}
+		return false;
+	} else {
+		habitrpgUrl = "https://habitrpg.com/v1/users/" + jQuery.trim(options.uid) + "/tasks/productivity";
+		return true;
+	}
 }
+populateGlobals(true);
 
 //Functions for parsing data to the browser action
 
@@ -304,27 +311,29 @@ chrome.contextMenus.create({
 var workStatus;
 
 chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
-	var d = new Date();
-	var h = d.getHours();
-	console.log("the hour is: " + h);
-	var url = tab.url;
-	
-	if (h >= localStorage.workStart && h <= localStorage.workEnd){
-		console.log(h + " is within work time, disallowing vice sites");
-		workStatus = 1
-        if (url !== undefined && changeinfo.status == "complete") {
-			websiteTypeCheck(tab, url, workStatus);
-			
-		}
-	}else{ 
-		workStatus = 0;
-		console.log(h + " is outside of work time, allowing vice sites");
-		if (url !== undefined && changeinfo.status == "complete") {
-			websiteTypeCheck(tab, url, workStatus);
+	if (populateGlobals(false)) {
+		console.log('HabitRPG listener firing');
+		var d = new Date();
+		var h = d.getHours();
+		console.log("the hour is: " + h);
+		var url = tab.url;
+		
+		if (h >= localStorage.workStart && h <= localStorage.workEnd){
+			console.log(h + " is within work time, disallowing vice sites");
+			workStatus = 1
+					if (url !== undefined && changeinfo.status == "complete") {
+				websiteTypeCheck(tab, url, workStatus);
+				
+			}
+		}else{ 
+			workStatus = 0;
+			console.log(h + " is outside of work time, allowing vice sites");
+			if (url !== undefined && changeinfo.status == "complete") {
+				websiteTypeCheck(tab, url, workStatus);
+			}
 		}
 	}
+	else {
+		console.log('Skipping the HabitRPG listener due to the uid and token not being set');
+	}
 });
-
-
-
-
