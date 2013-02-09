@@ -3,7 +3,7 @@
       "scripts": [ "background.js" ]
    },
    "content_scripts": [ {
-      "js": [ "vendor/jquery-1.8.0.min.js", "options.js" ],
+      "js": [ "vendor/jquery.js", "options.js", "vendor/bootstrap.min.js" ],
       "matches": [ "http://*/*", "https://*/*" ]
    } ],
    "description": "Monitors your browsing habits to divvy points to your HabitRPG character.",
