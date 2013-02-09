@@ -81,7 +81,7 @@ jQuery('document').ready(function(){
 
 	jQuery('#alwaysOn').on('click', function(e) {
 		$('#workStart').val(0);
-		$('#workEnd').val(23);
+		$('#workEnd').val(24);
 		$('#workStart').change();
 	});
 
