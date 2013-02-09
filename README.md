@@ -11,4 +11,4 @@ Please bear with me on the current bugs, I'm still stablizing HabitRPG's API, th
   - Utilise Cloud Storage
   - Popup.html API response info 
   - Take a break function
-  - Work Days added as well as hours. 
+  - Work Days added
