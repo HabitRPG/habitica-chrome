@@ -225,7 +225,7 @@ var tabCheck = function(siteToCheck, callback){
         
 		var notification = jQuery.extend(notificationDefaults, {
           icon: "/img/icon-48-" + direction + ".png", 
-          text: "["+ data.delta + effectedStats + "] " + message
+          text: "["+ data.delta.toFixed(2) + effectedStats + "] " + message
         });
         showNotification(notification); 
       });
@@ -311,13 +311,16 @@ chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
 	
 	if (h >= localStorage.workStart && h <= localStorage.workEnd){
 		console.log(h + " is within work time, disallowing vice sites");
-		workStatus = 1
+		
+		localStorage.workStatus = 1
+		workStatus = localStorage.workStatus
         if (url !== undefined && changeinfo.status == "complete") {
 			websiteTypeCheck(tab, url, workStatus);
 			
 		}
 	}else{ 
-		workStatus = 0;
+		localStorage.workStatus = 0
+		workStatus = localStorage.workStatus
 		console.log(h + " is outside of work time, allowing vice sites");
 		if (url !== undefined && changeinfo.status == "complete") {
 			websiteTypeCheck(tab, url, workStatus);
