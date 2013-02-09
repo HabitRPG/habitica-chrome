@@ -1,5 +1,6 @@
 input[type="number"] {
 	height: 28px;
+	width: 50px;
 }
 
 #hidden, .hidden {
