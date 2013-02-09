@@ -44,7 +44,7 @@ jQuery('document').ready(function(){
 	});
 
 	// Saves options to localStorage.
-	jQuery('#habitrpgForm').submit(function(e){
+	jQuery('#habitrpgForm').on('submit', function(e){
 		e.preventDefault();
 		localStorage["uid"] = $('#uid').val();
 		localStorage["apiToken"] = $('#apiToken').val();
@@ -65,11 +65,14 @@ jQuery('document').ready(function(){
 		} else {
 			localStorage["workStart"] = $('#workStart').val();
 			localStorage["workEnd"] = $('#workEnd').val();
-			$alert.append('Options Saved.');
-			$alert.addClass('alert-success');
+			$alert.addClass('alert-success').append('Options Saved.');
 		}
-		$('#messages').append($alert);
-		return false; //don't refresh page
+		$alert.slideDown('slow');
+	});
+
+	jQuery('#alwaysOn').on('click', function(e) {
+		$('#workStart').val(0);
+		$('#workEnd').val(23);
 	});
 
 });
