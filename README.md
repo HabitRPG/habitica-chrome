@@ -12,4 +12,3 @@ Please bear with me on the current bugs, I'm still stablizing HabitRPG's API, th
   - Popup.html API response info 
   - Take a break function
   - Work Days added
-  - Change alert of no UID/API info to a browserAction popup. 
