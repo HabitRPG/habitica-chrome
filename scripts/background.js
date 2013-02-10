@@ -241,7 +241,9 @@ var populateGlobals = function(displayMessage) {
 	var displayMessage = typeof displayMessage != 'undefined' ? displayMessage : false;
 	if (!localStorage.uid || !localStorage.apiToken) {
 		if (displayMessage == true) {
-			alert("To use the HabitRPG extension, input your UID and API Token in the options page.");
+			var notification = webkitNotifications.createNotification(
+			'img/icon-48-alert.png', 'HabitRPG ',  'To use the HabitRPG extension, input your UID and API Token in the options page.' );
+			notification.show();	
 		}
 		return false;
 	} else {
