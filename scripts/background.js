@@ -162,7 +162,7 @@ var websiteTypeCheck = function(tab, url, workStatus){
 			console.log("User has " + tabActive + " tabs active for website " + website);
 
 			if(tabActive > 0){
-				score(direction, directionMessage); 
+				score(direction, directionMessage, "Browsing Productivity"); 
 				console.log("Scoring for " + website + " as tabs are open & active")
 
 			} else if (tabLength > 0 ){
@@ -210,10 +210,10 @@ var tabCheck = function(siteToCheck, callback){
 }
 
 //Score Function	
-    var score = function(direction, message) {
+    var score = function(direction, message, title) {
       jQuery.ajax({
         url: habitrpgUrl + '/' + direction,
-		data: {apiToken:localStorage.apiToken},
+		data: {apiToken:localStorage.apiToken, title: title, },
         type: 'POST'
       }).done(function(data){
         console.log(data.delta);
