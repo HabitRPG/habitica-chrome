@@ -309,8 +309,6 @@ chrome.contextMenus.create({
 
 
 //Listener - checks if the current time allows the script to run, dictracted by the work hours input in options.html
-var workStatus;
-
 chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
 	if (populateGlobals(false)) {
 		console.log('HabitRPG listener firing');
@@ -321,16 +319,16 @@ chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
 
 		if (h >= localStorage.workStart && h <= localStorage.workEnd){
 			console.log(h + " is within work time, disallowing vice sites");
-			workStatus = 1
+			localStorage.workStatus = 1
 					if (url !== undefined && changeinfo.status == "complete") {
-				websiteTypeCheck(tab, url, workStatus);
+				websiteTypeCheck(tab, url, localStorage.workStatus);
 
 			}
 		}else{ 
-			workStatus = 0;
+			localStorage.workStatus = 0;
 			console.log(h + " is outside of work time, allowing vice sites");
 			if (url !== undefined && changeinfo.status == "complete") {
-				websiteTypeCheck(tab, url, workStatus);
+				websiteTypeCheck(tab, url, localStorage.workStatus);
 			}
 		}
 	}

@@ -15,7 +15,7 @@ jQuery('document').ready(function(){
 
       
   // Restore saved values
-	if (localStorage.workStatus = 1){
+	if (localStorage.workStatus == 1){
 		document.getElementById("workStatus").innerHTML = "Work Mode: ON";
 	}else{
 		document.getElementById("workStatus").innerHTML = "Work Mode: OFF";
