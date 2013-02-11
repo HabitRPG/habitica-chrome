@@ -42,6 +42,50 @@ jQuery('document').ready(function(){
 	} else {
 		$('#goodDomains').val("lifehacker.com\ncodecademy.com\nkahnacademy.com");
 	}
+	
+	if(localStorage.workMon != "undefined") {
+		$('#workMon')[0].checked = (localStorage.workMon == "true")
+	}else {
+		$('#workMon')[0].checked = true;
+	}
+	
+	if(localStorage.workTues != "undefined") {
+		$('#workTues')[0].checked = (localStorage.workTues == "true")
+	}else {
+		$('#workTues')[0].checked = true;
+	}
+	
+	if(localStorage.workWed != "undefined") {
+		$('#workWed')[0].checked = (localStorage.workWed == "true")
+	}else {
+		$('#workWed')[0].checked = true;
+	}
+	
+	if(localStorage.workThur != "undefined") {
+		$('#workThur')[0].checked = (localStorage.workThur == "true")
+	}else {
+		$('#workThur')[0].checked = true;
+	}
+	
+	if(localStorage.workFri != "undefined") {
+		$('#workFri')[0].checked = (localStorage.workFri == "true")
+	}else {
+		$('#workFri')[0].checked = true;
+	}
+	
+	if(localStorage.workSat != "undefined") {
+		$('#workSat')[0].checked = (localStorage.workSat == "true")
+	}else {
+		$('#workSat')[0].checked = false;
+	}
+	
+	if(localStorage.workSun != "undefined") {
+		$('#workSun')[0].checked = (localStorage.workSun == "true")
+	}else {
+		$('#workSun')[0].checked = false ;
+	}
+	
+	
 	}
 	updateFields();
 
@@ -82,6 +126,33 @@ jQuery('document').ready(function(){
 
 		var work1 = parseInt($('#workStart').val());
 		var work2 = parseInt($('#workEnd').val());
+		
+		var mon = $('#workMon')[0].checked;
+		var tues = $('#workTues')[0].checked;
+		var wed = $('#workWed')[0].checked;
+		var thur = $('#workThur')[0].checked;
+		var fri = $('#workFri')[0].checked;
+		var sat = $('#workSat')[0].checked;
+		var sun = $('#workSun')[0].checked;
+		
+		
+		syncStorage("workMon", mon);
+		syncStorage("workTues", tues);
+		syncStorage("workWed", wed);
+		syncStorage("workThur", thur);
+		syncStorage("workFri", fri);
+		syncStorage("workSat", sat);
+		syncStorage("workSun", sun);
+		
+		localStorage["workMon"] = mon;
+		localStorage["workTues"] = tues;
+		localStorage["workWed"] = wed;
+		localStorage["workThur"] = thur;
+		localStorage["workFri"] = fri;
+		localStorage["workSat"] = sat;
+		localStorage["workSun"] = sun;
+		
+		
 
 		$('#messages > div').each(function() {
 			$(this).fadeOut('slow', function() {
@@ -128,7 +199,29 @@ jQuery('document').ready(function(){
 	chrome.storage.sync.get("apiToken", function(result){
 	localStorage["apiToken"] = (result["apiToken"]);
 	});
-
+	
+	chrome.storage.sync.get("workMon", function(result){
+	localStorage["workMon"] = (result["workMon"]);
+	});
+	chrome.storage.sync.get("workTues", function(result){
+	localStorage["workTues"] = (result["workTues"]);
+	});
+	chrome.storage.sync.get("workWed", function(result){
+	localStorage["workWed"] = (result["workWed"]);
+	});
+	chrome.storage.sync.get("workThur", function(result){
+	localStorage["workThur"] = (result["workThur"]);
+	});
+	chrome.storage.sync.get("workFri", function(result){
+	localStorage["workFri"] = (result["workFri"]);
+	});
+	chrome.storage.sync.get("workSat", function(result){
+	localStorage["workSat"] = (result["workSat"]);
+	});
+	chrome.storage.sync.get("workSun", function(result){
+	localStorage["workSun"] = (result["workSun"]);
+	});
+	
 	chrome.storage.sync.get("workStart", function(result){
 	localStorage["workStart"] = (result["workStart"]);
 	});
