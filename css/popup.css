@@ -1,0 +1,17 @@
+body {
+	padding: 0px;
+	width:130px;
+}
+
+#workStatus{
+	margin:10px
+}
+
+.container-fluid {
+	padding: 0px;
+	width: 100%;
+}
+
+.nav-list {
+	margin: 0px;
+}

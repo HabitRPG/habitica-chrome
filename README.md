@@ -8,8 +8,7 @@ Please bear with me on the current bugs, I'm still stablizing HabitRPG's API, th
 
 ## Current To-Dos
 
-  - Activity on site check. 
-  - Options.html visual makeover
   - Utilise Cloud Storage
-  - Popup.html design & incorporate API response info 
+  - Popup.html API response info 
   - Take a break function
+  - Work Days added
