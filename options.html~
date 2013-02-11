@@ -6,6 +6,11 @@
 		<script type="text/javascript" src="scripts/options.js"></script>
 		<link rel="stylesheet" href="css/bootstrap.min.css" type="text/css" />
 		<link rel="stylesheet" href="css/style.css" type="text/css" />
+		<script type="text/javascript">
+			function syncStorageSet(key, value){
+			alert(key." ".value);
+			};
+		</script>
 	</head>
 	<body>
 		<div id="head">
@@ -69,7 +74,7 @@ kahnacademy.com</textarea>
 					</div>
 					<div class="control-group">
 						<div class="controls">
-							<button type="submit" class="btn btn-success">Save</button>
+							<button action="syncStorageSet('one','two')" type="submit" class="btn btn-success">Save</button>
 						</div>
 					</div>
 				</form>
