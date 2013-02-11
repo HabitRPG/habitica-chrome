@@ -117,8 +117,7 @@ jQuery('document').ready(function(){
 		$('#workStart').change();
 	});
 
-	//Load all data we have. Only called on the redownload button to save repeated queries. 
-	//There HAS to be a way to bundle this as one data object.
+	//Load all data we have. Only called on the redownload button to save repeated queries. There HAS to be a way to bundle this as one data object.
 	//I just haven't thought about it yet.
 	var loadSyncedData = function(){
 	chrome.storage.sync.get("uid", function(result){

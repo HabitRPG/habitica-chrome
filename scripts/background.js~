@@ -43,7 +43,7 @@ var loadSyncedData = function(){
 	});
 
 	chrome.storage.sync.get("goodDomains", function(result){
-	localStorage["goodDomains"] = (result["goodDomains"]);
+	localStorage["goodDomains"] = (result["viceDomains"]);
 	});	
 }
 
