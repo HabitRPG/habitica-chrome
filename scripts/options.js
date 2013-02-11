@@ -28,7 +28,7 @@ jQuery('document').ready(function(){
 	if(localStorage.interval != "undefined") {
 		$('#interval').val(localStorage.interval);
 	}else {
-		$('#interval').val("5");
+		$('#interval').val("1");
 	}
 
 	if(localStorage.viceDomains != "undefined") {
