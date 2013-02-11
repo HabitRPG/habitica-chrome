@@ -349,12 +349,78 @@ chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
 	if (populateGlobals(false)) {
 		console.log('HabitRPG listener firing');
 		var d = new Date();
+		var day = d.getDay();
+		
+		// Checks thecurrent day and checks against whether that day is a work day in localStorage. 
+		switch (day)
+		{
+			case 0:
+				console.log("Today it's Sunday");
+				if (localStorage.workSun == "true"){
+					localStorage.workStatus = 1
+				} else {
+					localStorage.workStatus = 0
+				}
+				
+				
+				break;
+			case 1:
+				console.log("Today it's Monday");
+				if (localStorage.workMon == "true"){
+					localStorage.workStatus = 1
+				} else {
+					localStorage.workStatus = 0
+				}
+				break;
+			case 2:
+				console.log("Today it's Tuesday");
+				if (localStorage.workTues == "true"){
+					localStorage.workStatus = 1
+				} else {
+					localStorage.workStatus = 0
+				}
+				break;
+			case 3:
+				console.log("Today it's Wednesday");
+				if (localStorage.workWed == "true"){
+					localStorage.workStatus = 1
+				} else {
+					localStorage.workStatus = 0
+				}
+				break;
+			case 4:
+				console.log("Today it's Thursday");
+				if (localStorage.workThur == "true"){
+					localStorage.workStatus = 1
+				} else {
+					localStorage.workStatus = 0
+				}
+				break;
+			case 5:
+				console.log("Today it's Friday");
+				if (localStorage.workFri == "true"){
+					localStorage.workStatus = 1
+				} else {
+					localStorage.workStatus = 0
+				}
+				break;
+			case 6:
+				console.log("Today it's Saturday");
+				if (localStorage.workSat == "true"){
+					localStorage.workStatus = 1
+				} else {
+					localStorage.workStatus = 0
+				}
+				break;
+}
+		
+		
 		var h = d.getHours();
 		console.log("the hour is: " + h);
 		var url = tab.url;
 
-		if (h >= localStorage.workStart && h <= localStorage.workEnd){
-			console.log(h + " is within work time, disallowing vice sites");
+		if (h >= localStorage.workStart && h <= localStorage.workEnd && localStorage.workStatus == 1){
+			console.log(h + " is within work time & day, disallowing vice sites");
 			localStorage.workStatus = 1
 					if (url !== undefined && changeinfo.status == "complete") {
 				websiteTypeCheck(tab, url, localStorage.workStatus);
@@ -362,7 +428,7 @@ chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
 			}
 		}else{ 
 			localStorage.workStatus = 0;
-			console.log(h + " is outside of work time, allowing vice sites");
+			console.log("time or day is outside of work hours, allowing vice sites");
 			if (url !== undefined && changeinfo.status == "complete") {
 				websiteTypeCheck(tab, url, localStorage.workStatus);
 			}
