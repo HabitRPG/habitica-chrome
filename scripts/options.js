@@ -4,44 +4,46 @@ function syncStorage(keyNameString, value){
 		chrome.storage.sync.set(dataObj);	
 }
 
-
 jQuery('document').ready(function(){
-	// Restore saved values
-	
-	//Gets value from cloud storage for UID and API Token	
-	chrome.storage.sync.get("uid", function(result){
-		$('#uid').val(result["uid"]);
-		});
-	
-	chrome.storage.sync.get("apiToken", function(result){
-		$('#apiToken').val(result["apiToken"]);
-		});
+	// Restore saved values	
+	// GET synced values first
 
-	if(localStorage.workStart) {
+	$('#uid').val(localStorage.uid);
+
+	$('#apiToken').val(localStorage.apiToken);
+	
+	var updateFields = function(){
+	if(localStorage.workStart != "undefined") {
 		$('#workStart').val(localStorage.workStart);
-	}else {
+	} else {
 		$('#workStart').val("0");
 	}
 
-	if(localStorage.workEnd) {
+	if(localStorage.workEnd != "undefined") {
 		$('#workEnd').val(localStorage.workEnd);
-	}else {
+	} else {
 		$('#workEnd').val("24");
-	}
-
-	if(localStorage.interval) {
+	}	
+	
+	if(localStorage.interval != "undefined") {
 		$('#interval').val(localStorage.interval);
 	}else {
 		$('#interval').val("5");
 	}
 
-	if(localStorage.viceDomains) {
+	if(localStorage.viceDomains != "undefined") {
 		$('#viceDomains').val(localStorage.viceDomains);
+	} else {
+		$('#viceDomains').val("reddit.com\n9gag.com\nfacebook.com");
 	}
 
-	if(localStorage.goodDomains) {
+	if(localStorage.goodDomains != "undefined") {
 		$('#goodDomains').val(localStorage.goodDomains);
+	} else {
+		$('#goodDomains').val("lifehacker.com\ncodecademy.com\nkahnacademy.com");
 	}
+	}
+	updateFields();
 
 	// Let users know about the work hours error early
 	jQuery('#workHours input').on('change', function(e) {
@@ -66,11 +68,16 @@ jQuery('document').ready(function(){
 		
 		localStorage["uid"] = uid;
 		localStorage["apiToken"] = apiToken;
-		localStorage["interval"] = $('#interval').val();
+
+		var intervalSync = $('#interval').val();
+		syncStorage("interval", intervalSync);
+		localStorage["interval"] = intervalSync;
 
 		viceStripped = $('#viceDomains').val().replace(/^\s*$[\n\r]{1,}/gm, '');
+		syncStorage("viceDomains", viceStripped);
 		localStorage["viceDomains"] = viceStripped;
 		goodStripped = $('#goodDomains').val().replace(/^\s*$[\n\r]{1,}/gm, '');
+		syncStorage("goodDomains", goodStripped);
 		localStorage["goodDomains"] = goodStripped;    
 
 		var work1 = parseInt($('#workStart').val());
@@ -88,8 +95,15 @@ jQuery('document').ready(function(){
 				.append('<h3>Work Hours Error</h3>The first number must be lower than the second');
 			$('#workHours').addClass('alert-error');
 		} else {
-			localStorage["workStart"] = $('#workStart').val();
-			localStorage["workEnd"] = $('#workEnd').val();
+			
+			var workStartSync = $('#workStart').val();
+			syncStorage("workStart", workStartSync);
+			localStorage["workStart"] = workStartSync;
+			
+			var workEndSync = $('#workEnd').val();
+			syncStorage("workEnd", workEndSync);
+			localStorage["workEnd"] = workEndSync;
+			
 			$alert.addClass('alert-success')
 				.append('Options Saved');
 		}
@@ -103,5 +117,43 @@ jQuery('document').ready(function(){
 		$('#workStart').change();
 	});
 
+	//Load all data we have. Only called on the redownload button to save repeated queries. 
+	//There HAS to be a way to bundle this as one data object.
+	//I just haven't thought about it yet.
+	var loadSyncedData = function(){
+	chrome.storage.sync.get("uid", function(result){
+	localStorage["uid"] = (result["uid"]);
+	});
+
+	chrome.storage.sync.get("apiToken", function(result){
+	localStorage["apiToken"] = (result["apiToken"]);
+	});
+
+	chrome.storage.sync.get("workStart", function(result){
+	localStorage["workStart"] = (result["workStart"]);
+	});
+	
+	chrome.storage.sync.get("workEnd", function(result){
+	localStorage["workEnd"] = (result["workEnd"]);
+	});
+	
+	chrome.storage.sync.get("interval", function(result){
+	localStorage["interval"] = (result["interval"]);
+	});
+
+	chrome.storage.sync.get("viceDomains", function(result){
+	localStorage["viceDomains"] = (result["viceDomains"]);
+	});
+
+	chrome.storage.sync.get("goodDomains", function(result){
+	localStorage["goodDomains"] = (result["goodDomains"]);
+	//Ensures that data is updated right when the last piece of data has been received.	
+	updateFields();
+	});	
+	}
+	
+	jQuery('#reDownload').on('click', function(e) {
+		loadSyncedData();
+	});
 
 });
