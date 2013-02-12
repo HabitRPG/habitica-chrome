@@ -159,6 +159,7 @@ var websiteTypeCheck = function(tab, url, workStatus){
 			newSite(domainListName, "down");
 			console.log("First time on website, starting timer");
 			browserIcon("img/icon-48-alert.png", "Vice site!", tab);
+			healthCheck("check");
 		}
 	//If not on badHost list, checks goodHost list
 	}else if(domainStatus == 1){
@@ -257,6 +258,8 @@ var tabCheck = function(siteToCheck, callback){
         if (direction==='up') {
           effectedStats = 'Exp, GP';
         }
+		
+		
         
 		var notification = jQuery.extend(notificationDefaults, {
           icon: "/img/icon-48-" + direction + ".png", 
@@ -264,10 +267,37 @@ var tabCheck = function(siteToCheck, callback){
           text: "Level: "+ data.lvl + " with " + data.hp.toFixed(0) + "Hp " + data.exp.toFixed(0) + "Exp " + data.gp.toFixed(0) + "Gp "
         });
         showNotification(notification); 
+		
+		if(direction==="down"){
+		healthCheck(data.hp); 
+		}
       });
     };
+	
+	
+var lastHPKnown;	
+//Check last known HP and warn player if under 10
+var healthCheck = function(HP){
+	var HPNotifiy = function(health){	
+	var notification = jQuery.extend(notificationDefaults, {
+          icon: "img/icon-48-alert.png", 
+		  title: "Warning: You only have " + health + " HP left!",
+          text: "Lingering on unproductive websites may get you killed, be productive or buy a health potion!"
+        });
+	showNotification(notification); 
+}	
 
+	if(HP == "check" && lastHPKnown != undefined){
+		HPNotifiy(lastHPKnown)
 
+	}else if (HP <= 10){
+		lastHPKnown = HP.toFixed(0)
+		HPNotifiy(lastHPKnown)
+	}else{
+		console.log("No known HP")
+	}
+}
+	
 //API Setup
 var habitrpgUrl = null;
 var notificationDefaults = {
