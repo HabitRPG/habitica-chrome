@@ -8,78 +8,82 @@ jQuery('document').ready(function(){
 	// Restore saved values	
 	// GET synced values first
 
-	$('#uid').val(localStorage.uid);
-
-	$('#apiToken').val(localStorage.apiToken);
-	
 	var updateFields = function(){
-	if(localStorage.workStart != "undefined") {
+	if(localStorage.apiToken != "undefined" && localStorage.apiToken != undefined) {
+		$('#apiToken').val(localStorage.apiToken);
+	}
+	
+	if(localStorage.uid != "undefined" && localStorage.uid != undefined) {
+		$('#uid').val(localStorage.uid);
+	} 
+	
+	if(localStorage.workStart != "undefined" && localStorage.workStart != undefined) {
 		$('#workStart').val(localStorage.workStart);
 	} else {
 		$('#workStart').val("0");
 	}
 
-	if(localStorage.workEnd != "undefined") {
+	if(localStorage.workEnd != "undefined" && localStorage.workEnd != undefined) {
 		$('#workEnd').val(localStorage.workEnd);
 	} else {
 		$('#workEnd').val("24");
 	}	
 	
-	if(localStorage.interval != "undefined") {
+	if(localStorage.interval != "undefined" && localStorage.interval != undefined) {
 		$('#interval').val(localStorage.interval);
 	}else {
 		$('#interval').val("5");
 	}
 
-	if(localStorage.viceDomains != "undefined") {
+	if(localStorage.viceDomains != "undefined" && localStorage.viceDomains != undefined) {
 		$('#viceDomains').val(localStorage.viceDomains);
 	} else {
 		$('#viceDomains').val("reddit.com\n9gag.com\nfacebook.com");
 	}
 
-	if(localStorage.goodDomains != "undefined") {
+	if(localStorage.goodDomains != "undefined" && localStorage.goodDomains != undefined) {
 		$('#goodDomains').val(localStorage.goodDomains);
 	} else {
 		$('#goodDomains').val("lifehacker.com\ncodecademy.com\nkhanacademy.com");
 	}
 	
-	if(localStorage.workMon != "undefined") {
+	if(localStorage.workMon != "undefined" && localStorage.workMon != undefined) {
 		$('#workMon')[0].checked = (localStorage.workMon == "true")
 	}else {
 		$('#workMon')[0].checked = true;
 	}
 	
-	if(localStorage.workTues != "undefined") {
+	if(localStorage.workTues != "undefined" && localStorage.workTues != undefined) {
 		$('#workTues')[0].checked = (localStorage.workTues == "true")
 	}else {
 		$('#workTues')[0].checked = true;
 	}
 	
-	if(localStorage.workWed != "undefined") {
+	if(localStorage.workWed != "undefined" && localStorage.workWed != undefined) {
 		$('#workWed')[0].checked = (localStorage.workWed == "true")
 	}else {
 		$('#workWed')[0].checked = true;
 	}
 	
-	if(localStorage.workThur != "undefined") {
+	if(localStorage.workThur != "undefined" && localStorage.workThur != undefined) {
 		$('#workThur')[0].checked = (localStorage.workThur == "true")
 	}else {
 		$('#workThur')[0].checked = true;
 	}
 	
-	if(localStorage.workFri != "undefined") {
+	if(localStorage.workFri != "undefined" && localStorage.workFri != undefined) {
 		$('#workFri')[0].checked = (localStorage.workFri == "true")
 	}else {
 		$('#workFri')[0].checked = true;
 	}
 	
-	if(localStorage.workSat != "undefined") {
+	if(localStorage.workSat != "undefined" && localStorage.workSat != undefined) {
 		$('#workSat')[0].checked = (localStorage.workSat == "true")
 	}else {
 		$('#workSat')[0].checked = false;
 	}
 	
-	if(localStorage.workSun != "undefined") {
+	if(localStorage.workSun != "undefined" && localStorage.workSun != undefined) {
 		$('#workSun')[0].checked = (localStorage.workSun == "true")
 	}else {
 		$('#workSun')[0].checked = false ;
