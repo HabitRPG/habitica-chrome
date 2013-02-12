@@ -282,7 +282,7 @@ var healthCheck = function(HP){
 	var notification = jQuery.extend(notificationDefaults, {
           icon: "img/icon-48-alert.png", 
 		  title: "Warning: You only have " + health + " HP left!",
-          text: "Lingering on unproductive websites may get you killed, be productive or buy a health potion!"
+          text: "Lingering on unproductive websites may get you killed, be productive or buy a health potion to avoid death!"
         });
 	showNotification(notification); 
 }	
