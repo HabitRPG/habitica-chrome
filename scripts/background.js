@@ -186,9 +186,9 @@ var websiteTypeCheck = function(tab, url, workStatus){
 
 
 		if(direction == "up"){
-		directionMessage = "Using a Productive Website";
+		directionMessage = "Using a Productive Site";
 		}else if (direction == "down"){
-		directionMessage = "Lingering on a Vice Website";
+		directionMessage = "Lingering on a Vice Site";
 		}
 
 		var timer = setInterval(function(tabActive){
@@ -260,7 +260,8 @@ var tabCheck = function(siteToCheck, callback){
         
 		var notification = jQuery.extend(notificationDefaults, {
           icon: "/img/icon-48-" + direction + ".png", 
-          text: "["+ data.delta.toFixed(2)  + effectedStats + "] " + message
+		  title: "["+ data.delta.toFixed(2)  + " " + effectedStats + "] " + message,
+          text: "Level: "+ data.lvl + " with " + data.hp.toFixed(0) + "Hp " + data.exp.toFixed(0) + "Exp " + data.gp.toFixed(0) + "Gp "
         });
         showNotification(notification); 
       });
@@ -361,8 +362,6 @@ chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
 				} else {
 					localStorage.workStatus = 0
 				}
-				
-				
 				break;
 			case 1:
 				console.log("Today it's Monday");
