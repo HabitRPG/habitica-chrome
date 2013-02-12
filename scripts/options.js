@@ -28,7 +28,7 @@ jQuery('document').ready(function(){
 	if(localStorage.interval != "undefined") {
 		$('#interval').val(localStorage.interval);
 	}else {
-		$('#interval').val("5");
+		$('#interval').val("1");
 	}
 
 	if(localStorage.viceDomains != "undefined") {
@@ -40,7 +40,7 @@ jQuery('document').ready(function(){
 	if(localStorage.goodDomains != "undefined") {
 		$('#goodDomains').val(localStorage.goodDomains);
 	} else {
-		$('#goodDomains').val("lifehacker.com\ncodecademy.com\nkahnacademy.com");
+		$('#goodDomains').val("lifehacker.com\ncodecademy.com\nkhanacademy.com");
 	}
 	
 	if(localStorage.workMon != "undefined") {
