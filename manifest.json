@@ -2,10 +2,6 @@
    "background": {
       "scripts": [ "scripts/background.js" ]
    },
-   "content_scripts": [ {
-      "js": [ "scripts/options.js", "scripts/popup.js", "scripts/jquery.js" ],
-      "matches": [ "http://*/*", "https://*/*" ]
-   } ],
    "description": "Monitors your browsing habits to divvy points to your HabitRPG character.",
    "icons": {
       "128": "img/icon-128.png",
