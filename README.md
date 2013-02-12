@@ -10,3 +10,4 @@ Please bear with me on the current bugs, I'm still stablizing HabitRPG's API, th
 
   - Popup.html API response info - Requires API Development
   - Take a break function
+  - Add maximum number of scores without page load - stop AFK user losing lots of HP/earning loads of EXP/GP
