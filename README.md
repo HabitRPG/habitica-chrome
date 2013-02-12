@@ -8,5 +8,5 @@ Please bear with me on the current bugs, I'm still stablizing HabitRPG's API, th
 
 ## Current To-Dos
 
-  - Popup.html API response info 
+  - Popup.html API response info - Requires API Development
   - Take a break function
