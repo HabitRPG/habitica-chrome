@@ -451,7 +451,7 @@ chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
 		if (h >= localStorage.workStart && h <= localStorage.workEnd && localStorage.workStatus == 1){
 			console.log(h + " is within work time & day, disallowing vice sites");
 			localStorage.workStatus = 1
-					if (url !== undefined && changeinfo.status == "complete") {
+					if (url !== undefined && changeinfo.status !== "complete") {
 				websiteTypeCheck(tab, url, localStorage.workStatus);
 
 			}
