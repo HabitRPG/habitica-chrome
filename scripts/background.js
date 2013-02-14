@@ -138,13 +138,14 @@ var websiteTypeCheck = function(tab, url, workStatus){
 		}
     };
 
-	if (domainStatus != 1 ){
+	if (domainStatus != 1 && workStatus == 1){
 	console.log("checking vice list");
 	for (i=0; i<viceDomains.length; i++){
 		if (tabAddress.indexOf(viceDomains[i]) !== -1){
 		console.log(viceDomains[i] + " returning status of vice")
 		domainStatus = 0;
 		domainListName = viceDomains[i];
+		healthCheck("check");
     };
 	}
 	}
@@ -159,7 +160,7 @@ var websiteTypeCheck = function(tab, url, workStatus){
 			newSite(domainListName, "down");
 			console.log("First time on website, starting timer");
 			browserIcon("img/icon-48-alert.png", "Vice site!", tab);
-			healthCheck("check");
+			
 		}
 	//If not on badHost list, checks goodHost list
 	}else if(domainStatus == 1){
@@ -291,8 +292,8 @@ var healthCheck = function(HP){
 		HPNotifiy(lastHPKnown)
 
 	}else if (HP <= 10){
-		lastHPKnown = HP.toFixed(0)
-		HPNotifiy(lastHPKnown)
+		lastHPKnown = parseInt(HP.toFixed(0));
+		HPNotifiy(lastHPKnown);
 	}else{
 		console.log("No known HP")
 	}
