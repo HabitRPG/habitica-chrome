@@ -449,7 +449,7 @@ chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
 		console.log("the hour is: " + h);
 		var url = tab.url;
 
-		if (h >= localStorage.workStart && h <= localStorage.workEnd && localStorage.workStatus == 1){
+		if (h >= localStorage.workStart && h < localStorage.workEnd && localStorage.workStatus == 1){
 			console.log(h + " is within work time & day, disallowing vice sites");
 			localStorage.workStatus = 1
 					if (url !== undefined && changeinfo.status !== "complete") {
