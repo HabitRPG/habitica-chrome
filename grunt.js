@@ -1,6 +1,6 @@
 module.exports = function(grunt) {
 
-	var baseFiles = ['src/defaults.js', 'src/utilies.js', 'src/activators.js', 'src/sitewatcher.js', 'src/tomatoes.js', 'src/habitrpg.js'];
+	var baseFiles = ['src/defaults.js', 'src/utilies.js', 'src/activators.js', 'src/sitewatcher.js', 'src/todos.js', 'src/tomatoes.js', 'src/habitrpg.js'];
 
 	grunt.initConfig({
 		lint: {
