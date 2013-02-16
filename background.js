@@ -5,6 +5,7 @@ var defaultOptions = {
       activatorName: 'alwayon',
       siteWatcherIsActive: 'true',
       tomatoesIsActive: 'true',
+      todosIsActive: 'true',
       viceDomains: 'reddit.com\n9gag.com\nfacebook.com',
       goodDomains: 'lifehacker.com\ncodeacadamy.com\nkhanacadamy.org',
       days: {
@@ -658,6 +659,66 @@ var SiteWatcher = (function() {
 })();
     
 
+var Todos = (function() {
+/*
+    BaseController.prototype.init = function(appBridge) {  };
+    BaseController.prototype.enable = function() {  }; // private use in setOptions
+    BaseController.prototype.disable = function() {  }; // private use in setOptions
+    BaseController.prototype.setOptions = function(params) { };
+*/
+
+    var todos = {
+
+        init: function(appBridge) {
+
+            this.appBridge = appBridge;
+        },
+
+        enable: function() {
+            this.appBridge.addListener('todos.complete', this.completeHandler);
+            this.appBridge.addListener('todos.unComplete', this.unCompleteHandler);
+            this.appBridge.addListener('todos.dueDateOver', this.dueDateOverHandler);
+        },
+
+        disbale: function() {
+            this.appBridge.removeListener('todos.complete', this.completeHandler);
+            this.appBridge.removeListener('todos.unComplete', this.unCompleteHandler);
+            this.appBridge.removeListener('todos.dueDateOver', this.dueDateOverHandler);
+        },
+
+        setOptions: function(params) {
+
+            if (params.todosIsActive) {
+                if (params.todosIsActive == 'true')
+                    this.enable();
+                else 
+                    this.disable();
+            }
+
+        },
+
+        completeHandler: function(data) {
+            todos.appBridge.trigger('controller.sendRequest', {score: 1, message: "Yupi! Just completed a task! [+1] Exp/Gold"} );
+        },
+
+        unCompleteHandler: function(data) {
+            todos.appBridge.trigger('controller.sendRequest', {score: -1, message: "I thought it was done :( [-1] HP"} );
+        },
+
+        dueDateOverHandler: function(data) {
+            todos.appBridge.trigger('controller.sendRequest', {score: -1, message: "Hurry! You are late! [-1] HP"} );  
+        }
+    };
+
+
+    return {
+        get: function() { return todos; },
+        isEnabled: function() { return todos.appBridge.hasListener('todos.complete', todos.completeHandler); },
+        init: function(appBridge) { todos.init(appBridge); },
+        setOptions: function(params) { todos.setOptions(params); }
+    };
+
+})();
 var Tomatoes = (function() {
 /*
     BaseController.prototype.init = function(appBridge) {  };
@@ -759,7 +820,7 @@ var Tomatoes = (function() {
 
     return {
         get: function() { return tomatoes; },
-        isEnabled: function() { return tomatoes.appBridge.hasListener('tomatoes.started', tomatoes.injectCode); },
+        isEnabled: function() { return tomatoes.appBridge.hasListener('tomatoes.started', tomatoes.startedFromPageHandler); },
         init: function(appBridge) { tomatoes.init(appBridge); },
         setOptions: function(params) { tomatoes.setOptions(params); }
     };
@@ -796,7 +857,8 @@ var habitRPG = (function(){
 
             this.controllers = {
                 'sitewatcher': SiteWatcher,
-                'tomatoes': Tomatoes
+                'tomatoes': Tomatoes,
+                'todos': Todos
             };
 
             for (var name in this.controllers) 

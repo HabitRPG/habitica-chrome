@@ -36,18 +36,18 @@ var Todos = (function() {
 
         },
 
-        completeHandler: function() {
-            todos.trigger('controller.sendRequest'. {score: 1, message: "Yupi! Just completed a task! [+1] Exp/Gold"})
+        completeHandler: function(data) {
+            todos.appBridge.trigger('controller.sendRequest', {score: 1, message: "Yupi! Just completed a task! [+1] Exp/Gold"} );
         },
 
-        unCompleteHandler: function() {
-            todos.trigger('controller.sendRequest'. {score: -1, message: "I thought it was done :( [-1] HP"})
+        unCompleteHandler: function(data) {
+            todos.appBridge.trigger('controller.sendRequest', {score: -1, message: "I thought it was done :( [-1] HP"} );
         },
 
-        dueDateOverHandler: function() {
-          todos.trigger('controller.sendRequest'. {score: -1, message: "Hurry! You are late! [-1] HP"})  
+        dueDateOverHandler: function(data) {
+            todos.appBridge.trigger('controller.sendRequest', {score: -1, message: "Hurry! You are late! [-1] HP"} );  
         }
-    }
+    };
 
 
     return {
