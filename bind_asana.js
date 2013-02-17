@@ -3,37 +3,22 @@
     var App = {
 
         init: function() {
+            
+            var MainTaskWatcher = new WebKitMutationObserver(function(mutations) {
 
-            var classChangeWatcher = new WebKitMutationObserver(function(mutations) {
+                ProcessMainMainTaskMutations.process(mutations);
 
-                mutations.forEach(function(mutation) {
-                    var classList = mutation.target.classList;
-                    if (classList.contains('task-row')) {
+                if (ProcessMainMainTaskMutations.hasAddedCompleted && ProcessMainMainTaskMutations.hasRemovedSimple)
+                    App.complete();
 
-                        var nCl = mutation.target.className.trim(),
-                            oCl = mutation.oldValue.trim();
-                        if ((nCl.indexOf('completed') != -1 && oCl.indexOf('completed') != -1) ||
-                            (nCl.indexOf('completed') == -1 && oCl.indexOf('completed') == -1)) 
-                                return;
+                else if (ProcessMainMainTaskMutations.hasAddedSimple && ProcessMainMainTaskMutations.hasRemovedCompleted)
+                    App.unComplete();
 
-                        if (classList.contains('completed'))
-                            App.complete();
-                        else
-                            App.unComplete();
-                    }
                 });
 
-            }),
-            watcherConfig = { attributes: true, attributeOldValue: true, attributeFilter:['class'], subtree:true };
-
-            classChangeWatcher.observe(
-                             document.querySelector('#center_pane_container #grid'), 
-                             watcherConfig
-                             );
-
-            classChangeWatcher.observe(
-                             document.querySelector('#right_pane__contents #grid'), 
-                             watcherConfig
+            MainTaskWatcher.observe(
+                             document.querySelector('#center_pane__contents #grid'), 
+                             { childList:true, subtree:true }
                              );
 
         },
@@ -46,7 +31,78 @@
             chrome.extension.sendMessage({type: "todos.unComplete"});
         }
 
+    },
+
+    ProcessMainMainTaskMutations = {
+        addedCompleted: false,
+        removedCompleted: false,
+        addedSimple: false,
+        removedSimple: false,
+
+        process: function(mutations) {
+            this.hasAddedCompleted= false;
+            this.hasRemovedCompleted= false;
+            this.hasAddedSimple= false;
+            this.hasRemovedSimple= false;
+
+            mutations.forEach(this.forEachHandle);
+        },
+
+        forEachHandle: function(mutation) {
+            if (!MainTaskMutation.init(mutation))
+                return;
+
+            if (MainTaskMutation.isAdded) {
+
+                if (MainTaskMutation.tr.classList.contains('completed'))
+                    ProcessMainMainTaskMutations.hasAddedCompleted = true;
+                else
+                    ProcessMainMainTaskMutations.hasAddedSimple = true;
+
+            } else if (MainTaskMutation.isRemoved) {
+
+                if (MainTaskMutation.tr.classList.contains('completed'))
+                    ProcessMainMainTaskMutations.hasRemovedCompleted = true;
+                else
+                    ProcessMainMainTaskMutations.hasRemovedSimple = true;
+            }
+        }
+
+    },
+
+    MainTaskMutation = {
+
+        obj: undefined,
+        tr: undefined,
+        isAdded: false,
+        isRemoved: false,
+
+        init: function(mutation) {
+            this.obj = mutation;
+
+            return this.isProcessAble();
+        },
+
+        isProcessAble: function() {
+            if (this.setState('isAdded')) return true;
+            if (this.setState('isRemoved')) return true;
+
+            return false;
+        },
+
+        setState: function(state) {
+            var nodes = state == 'isAdded' ? this.obj.addedNodes : this.obj.removedNodes;
+            this[state] = nodes.length == 1;
+            if (this[state] && nodes[0].nodeName == 'TR') {
+                this.tr = nodes[0];
+                return this.tr.classList && this.tr.classList.contains('task-row');
+            }            
+        }
+
     };
+
+
+
 
 App.init();
 

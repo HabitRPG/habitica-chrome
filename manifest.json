@@ -31,7 +31,7 @@
     {
       "matches": ["https://app.asana.com/*"],
       "js": ["bind_asana.js"],
-      "run_at": "document_end"
+      "run_at": "document_idle"
     },
     {
       "matches": ["https://workflowy.com/*"],
