@@ -669,6 +669,8 @@ var Todos = (function() {
 
     var todos = {
 
+        urlPrefix: 'tasks/todos/',
+
         init: function(appBridge) {
 
             this.appBridge = appBridge;
@@ -698,15 +700,27 @@ var Todos = (function() {
         },
 
         completeHandler: function(data) {
-            todos.appBridge.trigger('controller.sendRequest', {score: 1, message: "Yupi! Just completed a task! [+1] Exp/Gold"} );
+            todos.appBridge.trigger('controller.sendRequest', {
+                score: 1,
+                urlSuffix: todos.urlPrefix,
+                message: "Yupi! Just completed a task! [+1] Exp/Gold"
+            });
         },
 
         unCompleteHandler: function(data) {
-            todos.appBridge.trigger('controller.sendRequest', {score: -1, message: "I thought it was done :( [-1] HP"} );
+            todos.appBridge.trigger('controller.sendRequest', {
+                score: -1,
+                urlSuffix: todos.urlPrefix,
+                message: "I thought it was done :( [-1] HP"
+            });
         },
 
         dueDateOverHandler: function(data) {
-            todos.appBridge.trigger('controller.sendRequest', {score: -1, message: "Hurry! You are late! [-1] HP"} );  
+            todos.appBridge.trigger('controller.sendRequest', {
+                score: -1,
+                urlSuffix: todos.urlPrefix,
+                message: "Hurry! You are late! [-1] HP"
+            });  
         }
     };
 
@@ -788,13 +802,18 @@ var Tomatoes = (function() {
 
         stoppedFromPageHandler: function() {
             tomatoes.pomodore.stop();
-            tomatoes.appBridge.trigger('controller.sendRequest', {score:-1, message: 'You breaked the flow!! [-1] HP...'});
+            tomatoes.appBridge.trigger('controller.sendRequest', {
+                score:-1, 
+                urlSuffix: tomatoes.urlPrefix,
+                message: 'You breaked the flow!! [-1] HP...'
+                });
         },
 
         startedHandler: function(data) {
             if (data.type == 'break')
                 tomatoes.appBridge.trigger('controller.sendRequest', {
                     score:1, 
+                    urlSuffix: tomatoes.urlPrefix,
                     message: 'You made your '+(data.tomatoCount+1)+' tomato! Well done [+1] Exp/Gold!' 
                 });
         },
@@ -804,11 +823,13 @@ var Tomatoes = (function() {
             if (tomatoes.overTimeCounter % 2 == 1)
                 tomatoes.appBridge.trigger('app.notify', {
                         score:0, 
+                        urlSuffix: tomatoes.urlPrefix,
                         message: message+'! Next time you will lose HP!'
                     });
             else 
                 tomatoes.appBridge.trigger('controller.sendRequest', {
                     score:-1, 
+                    urlSuffix: tomatoes.urlPrefix,
                     message: message+' [-1] HP!!' 
                 });
 

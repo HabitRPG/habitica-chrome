@@ -67,13 +67,18 @@ var Tomatoes = (function() {
 
         stoppedFromPageHandler: function() {
             tomatoes.pomodore.stop();
-            tomatoes.appBridge.trigger('controller.sendRequest', {score:-1, message: 'You breaked the flow!! [-1] HP...'});
+            tomatoes.appBridge.trigger('controller.sendRequest', {
+                score:-1, 
+                urlSuffix: tomatoes.urlPrefix,
+                message: 'You breaked the flow!! [-1] HP...'
+                });
         },
 
         startedHandler: function(data) {
             if (data.type == 'break')
                 tomatoes.appBridge.trigger('controller.sendRequest', {
                     score:1, 
+                    urlSuffix: tomatoes.urlPrefix,
                     message: 'You made your '+(data.tomatoCount+1)+' tomato! Well done [+1] Exp/Gold!' 
                 });
         },
@@ -83,11 +88,13 @@ var Tomatoes = (function() {
             if (tomatoes.overTimeCounter % 2 == 1)
                 tomatoes.appBridge.trigger('app.notify', {
                         score:0, 
+                        urlSuffix: tomatoes.urlPrefix,
                         message: message+'! Next time you will lose HP!'
                     });
             else 
                 tomatoes.appBridge.trigger('controller.sendRequest', {
                     score:-1, 
+                    urlSuffix: tomatoes.urlPrefix,
                     message: message+' [-1] HP!!' 
                 });
 

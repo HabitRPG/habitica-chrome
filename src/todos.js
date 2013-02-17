@@ -8,6 +8,8 @@ var Todos = (function() {
 
     var todos = {
 
+        urlPrefix: 'tasks/todos/',
+
         init: function(appBridge) {
 
             this.appBridge = appBridge;
@@ -37,15 +39,27 @@ var Todos = (function() {
         },
 
         completeHandler: function(data) {
-            todos.appBridge.trigger('controller.sendRequest', {score: 1, message: "Yupi! Just completed a task! [+1] Exp/Gold"} );
+            todos.appBridge.trigger('controller.sendRequest', {
+                score: 1,
+                urlSuffix: todos.urlPrefix,
+                message: "Yupi! Just completed a task! [+1] Exp/Gold"
+            });
         },
 
         unCompleteHandler: function(data) {
-            todos.appBridge.trigger('controller.sendRequest', {score: -1, message: "I thought it was done :( [-1] HP"} );
+            todos.appBridge.trigger('controller.sendRequest', {
+                score: -1,
+                urlSuffix: todos.urlPrefix,
+                message: "I thought it was done :( [-1] HP"
+            });
         },
 
         dueDateOverHandler: function(data) {
-            todos.appBridge.trigger('controller.sendRequest', {score: -1, message: "Hurry! You are late! [-1] HP"} );  
+            todos.appBridge.trigger('controller.sendRequest', {
+                score: -1,
+                urlSuffix: todos.urlPrefix,
+                message: "Hurry! You are late! [-1] HP"
+            });  
         }
     };
 
