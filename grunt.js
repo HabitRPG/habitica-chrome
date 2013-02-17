@@ -1,11 +1,11 @@
 module.exports = function(grunt) {
 
-	var baseFiles = ['src/defaults.js', 'src/utilies.js', 'src/activators.js', 'src/sitewatcher.js', 'src/tomatoes.js', 'src/habitrpg.js'];
+	var baseFiles = ['src/defaults.js', 'src/utilies.js', 'src/activators.js', 'src/sitewatcher.js', 'src/todos.js', 'src/tomatoes.js', 'src/habitrpg.js'];
 
 	grunt.initConfig({
 		lint: {
 			test: ['test/*.js'],
-			src: ['src/*.js', 'tomatoes_bind.js']
+			src: ['src/*.js', 'bind_*.js']
 		},
 		concat: {
 			background: {
@@ -23,7 +23,7 @@ module.exports = function(grunt) {
 				tasks: ['lint', 'jasmine', 'concat:background', 'clean:test']
 			},
 			extDev: {
-				files: ['src/*.js', 'tomatoes_bind.js', 'options.html', 'background.html'],
+				files: ['src/*.js', 'bind_*.js', 'options.html', 'background.html'],
 				tasks: ['lint:src', 'concat:background', 'concat:options', 'copy:extension']
 			},
 		},
@@ -38,7 +38,7 @@ module.exports = function(grunt) {
 		copy: {
 			extension: {
 				files: {
-					'../chromExtension/': ['img/*', 'vendor/*', 'background.html', 'options.html', 'background.js', 'options.js', 'tomatoes_bind.js', 'manifest.json']
+					'../chromExtension/': ['img/*', 'vendor/*', 'background.html', 'options.html', 'background.js', 'options.js', 'bind_*.js', 'manifest.json']
 				}
 			}
 		}

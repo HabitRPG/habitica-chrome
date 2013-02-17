@@ -5,6 +5,7 @@ var defaultOptions = {
       activatorName: 'alwayon',
       siteWatcherIsActive: 'true',
       tomatoesIsActive: 'true',
+      todosIsActive: 'true',
       viceDomains: 'reddit.com\n9gag.com\nfacebook.com',
       goodDomains: 'lifehacker.com\ncodeacadamy.com\nkhanacadamy.org',
       days: {

@@ -2,7 +2,11 @@
 
    "name": "HabitRPG",
    "version": "0.6",
-   "permissions": ["storage", "tabs", "webNavigation", "notifications", "https://habitrpg.com/", "http://tomato.es/" ],
+   "permissions": [
+      "storage", "tabs", "webNavigation", "notifications", 
+      "https://habitrpg.com/", "http://tomato.es/", "https://app.asana.com/",
+      "https://workflowy.com/" 
+    ],
   
    "description": "Monitors your browsing habits to divvy points to your HabitRPG character.",
    "web_accessible_resources": [ "img/icon-48.png", "img/icon-48-up.png", "img/icon-48-down.png" ],
@@ -22,7 +26,17 @@
    "content_scripts": [
     {
       "matches": ["http://tomato.es/*"],
-      "js": ["vendor/jquery-1.8.0.min.js", "tomatoes_bind.js"]
+      "js": ["vendor/jquery-1.8.0.min.js", "bind_tomatoes.js"]
+    },
+    {
+      "matches": ["https://app.asana.com/*"],
+      "js": ["bind_asana.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://workflowy.com/*"],
+      "js": ["bind_workflowy.js"],
+      "run_at": "document_end"
     }
   ],
 

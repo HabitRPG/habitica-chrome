@@ -99,7 +99,7 @@ var Tomatoes = (function() {
 
     return {
         get: function() { return tomatoes; },
-        isEnabled: function() { return tomatoes.appBridge.hasListener('tomatoes.started', tomatoes.injectCode); },
+        isEnabled: function() { return tomatoes.appBridge.hasListener('tomatoes.started', tomatoes.startedFromPageHandler); },
         init: function(appBridge) { tomatoes.init(appBridge); },
         setOptions: function(params) { tomatoes.setOptions(params); }
     };
