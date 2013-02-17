@@ -4,22 +4,22 @@
 
         init: function() {
             
-            var MainTaskWatcher = new WebKitMutationObserver(function(mutations) {
+            var TaskWatcher = new WebKitMutationObserver(function(mutations) {
 
-                ProcessMainMainTaskMutations.process(mutations);
+                ProcessTaskMutations.process(mutations);
 
-                if (ProcessMainMainTaskMutations.hasAddedCompleted && ProcessMainMainTaskMutations.hasRemovedSimple)
+                if (ProcessTaskMutations.hasAddedCompleted && ProcessTaskMutations.hasRemovedSimple)
                     App.complete();
 
-                else if (ProcessMainMainTaskMutations.hasAddedSimple && ProcessMainMainTaskMutations.hasRemovedCompleted)
+                else if (ProcessTaskMutations.hasAddedSimple && ProcessTaskMutations.hasRemovedCompleted)
                     App.unComplete();
 
                 });
 
-            MainTaskWatcher.observe(
-                             document.querySelector('#center_pane__contents #grid'), 
-                             { childList:true, subtree:true }
-                             );
+            TaskWatcher.observe(
+                            document.querySelector('body'), 
+                            { childList: true, subtree:true }
+                            );
 
         },
 
@@ -33,7 +33,7 @@
 
     },
 
-    ProcessMainMainTaskMutations = {
+    ProcessTaskMutations = {
         addedCompleted: false,
         removedCompleted: false,
         addedSimple: false,
@@ -49,60 +49,114 @@
         },
 
         forEachHandle: function(mutation) {
-            if (!MainTaskMutation.init(mutation))
-                return;
+            
+            if (ProcessTaskMutations.setFromButton(mutation)) return; 
 
-            if (MainTaskMutation.isAdded) {
+            if (mutation.target.nodeName != 'TBODY') return;
+            if (!TaskMutation.init(mutation)) return;
 
-                if (MainTaskMutation.tr.classList.contains('completed'))
-                    ProcessMainMainTaskMutations.hasAddedCompleted = true;
+            if (TaskMutation.addedTr) {
+
+                if (TaskMutation.addedTr.classList.contains('completed'))
+                    ProcessTaskMutations.hasAddedCompleted = true;
                 else
-                    ProcessMainMainTaskMutations.hasAddedSimple = true;
+                    ProcessTaskMutations.hasAddedSimple = true;
+            } 
 
-            } else if (MainTaskMutation.isRemoved) {
+            if (TaskMutation.removedTr) {
 
-                if (MainTaskMutation.tr.classList.contains('completed'))
-                    ProcessMainMainTaskMutations.hasRemovedCompleted = true;
+                if (TaskMutation.removedTr.classList.contains('completed'))
+                    ProcessTaskMutations.hasRemovedCompleted = true;
                 else
-                    ProcessMainMainTaskMutations.hasRemovedSimple = true;
+                    ProcessTaskMutations.hasRemovedSimple = true;
             }
+           
+        },
+
+        setFromButton: function(mutation) {
+            if (DetectSubTaskStateChangeFromInsade.check(mutation)) {
+                if (DetectSubTaskStateChangeFromInsade.addedSimple) {
+                    ProcessTaskMutations.hasAddedSimple = true;
+                    ProcessTaskMutations.hasRemovedCompleted = true;
+
+                } else if (DetectSubTaskStateChangeFromInsade.addedCompleted) {
+                    ProcessTaskMutations.hasAddedCompleted = true;
+                    ProcessTaskMutations.hasRemovedSimple = true;
+                }
+
+                return true;
+            }
+            return false;
         }
 
     },
 
-    MainTaskMutation = {
+    DetectSubTaskStateChangeFromInsade = {
+
+        isChanged: false,
+
+        addedSimple: false,
+        addedCompleted: false,
+
+        check: function(mutation) {
+            this.isChanged = false;
+            this.addedSimple = false;
+            this.addedCompleted = false;
+
+            if (!document.querySelector('#right_pane__contents .ancestry')) return;
+
+            if (mutation.target.nodeName != 'SPAN') return;
+            var added = mutation.addedNodes.length == 1 ? mutation.addedNodes[0].querySelector('.complete-button') : undefined,
+                removed = mutation.removedNodes.length == 1 ? mutation.removedNodes[0].querySelector('.complete-button') : undefined;
+
+            if (!added || !removed)  return;
+
+            if (added.classList.contains('mark-incomplete') && removed.classList.contains('mark-complete')) {
+                this.addedCompleted = true;
+                this.isChanged = true;
+            } else if (added.classList.contains('mark-complete') && removed.classList.contains('mark-incomplete')) {
+                this.addedSimple = true;
+                this.isChanged = true;
+            }
+
+            return this.isChanged;
+        }
+
+    },
+
+    TaskMutation = {
 
         obj: undefined,
-        tr: undefined,
-        isAdded: false,
-        isRemoved: false,
-
+        addedTr: undefined,
+        removedTr: undefined,
+        
         init: function(mutation) {
             this.obj = mutation;
 
-            return this.isProcessAble();
+            this.addedTr = undefined;
+            this.removedTr = undefined;
+
+            return this.isProcessable();
         },
 
-        isProcessAble: function() {
-            if (this.setState('isAdded')) return true;
-            if (this.setState('isRemoved')) return true;
+        isProcessable: function() {
+            this.setState('added');
+            this.setState('removed');
+
+            if (this.addedTr || this.removedTr) 
+                return true;
 
             return false;
         },
 
         setState: function(state) {
-            var nodes = state == 'isAdded' ? this.obj.addedNodes : this.obj.removedNodes;
-            this[state] = nodes.length == 1;
-            if (this[state] && nodes[0].nodeName == 'TR') {
-                this.tr = nodes[0];
-                return this.tr.classList && this.tr.classList.contains('task-row');
+            var nodes = state == 'added' ? this.obj.addedNodes : this.obj.removedNodes;
+            if (nodes.length == 1 && nodes[0].nodeName == 'TR') {
+                this[state+'Tr'] = nodes[0].classList.contains('task-row') ? nodes[0] : undefined;
             }            
         }
 
     };
-
-
-
 
 App.init();
 
