@@ -865,6 +865,7 @@ var habitRPG = (function(){
 
         habitUrl: '',
         sourceHabitUrl: "https://habitrpg.com/users/{UID}/",
+        apiToken: '',
 
         appBridge: undefined,
 
@@ -894,6 +895,9 @@ var habitRPG = (function(){
                 habitrpg.habitUrl = habitrpg.sourceHabitUrl.replace('{UID}', habitrpg.uid);
             }
 
+            if (params.apiToken) 
+                habitrpg.apiToken = params.apiToken;
+
             params.isSandBox = habitrpg.isSandBox;
 
             for (var co in habitrpg.controllers) 
@@ -903,7 +907,7 @@ var habitRPG = (function(){
 
         send: function(data) {
 
-            if (!habitrpg.uid) return;
+            if (!habitrpg.uid || habitrpg.apiToken) return;
 
             if (habitrpg.isSandBox) {
                 habitrpg.appBridge.trigger('app.notify', data);
@@ -912,6 +916,7 @@ var habitRPG = (function(){
                 
                 $.ajax({
                     type: 'POST',
+                    data: { apiToken: habitrpg.apiToken },
                     url: habitrpg.habitUrl + data.urlSuffix
                     
                 }).done(function(){

@@ -24,9 +24,12 @@ jQuery('document').ready(function(){
 
         init: function() {
           $('#habitrpgForm').submit(Options.save);
-          $('#uid').bind('change', EventHandlers.setEmptyUIDState());
-          $('#activatorName').bind('change', EventHandlers.changeActivatorOptions());
+          $('#uid').bind('change', EventHandlers.setEmptyUIDState);
+          $('#apiToken').bind('change', EventHandlers.setEmptyUIDState);
+          $('#activatorName').bind('change', EventHandlers.changeActivatorOptions);
 
+          EventHandlers.setEmptyUIDState();
+          EventHandlers.changeActivatorOptions();
         },
 
         save: function() {
@@ -61,14 +64,15 @@ jQuery('document').ready(function(){
     EventHandlers = {
 
       setEmptyUIDState: function() {
-        var input = $('#uid'),
-          message = $('#EmptyUID'),
-          fn = function() {
-          if (input.val())
-            message.removeClass('bad');
-          else
-            message.addClass('bad');
-          };
+        var uid = $('#uid'),
+            apiToken = $('#apiToken'),
+            message = $('#EmptyUID'),
+            fn = function() {
+              if (uid.val() && apiToken.val())
+                message.removeClass('bad');
+              else
+                message.addClass('bad');
+            };
         
         fn();
         EventHandlers.setEmptyUIDState = fn;
@@ -85,7 +89,7 @@ jQuery('document').ready(function(){
             };
 
         fn();
-        EventHandlers.setEmptyUIDState = fn;
+        EventHandlers.changeActivatorOptions = fn;
 
         return fn;
       }

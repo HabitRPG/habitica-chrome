@@ -19,11 +19,12 @@
 <body>
   <div class="state" id="status">Options Saved.</div>
   <form id="habitrpgForm">
-    <div id="EmptyUID" class="state">If the UserId is field empty, this extension does not work</div>
+    <div id="EmptyUID" class="state">If the UserId or API token is field empty, this extension does not work</div>
     <label for="uid">HabitRPG UserId:</label><input id="uid" type="text"/></br>
+    <label for="apiToken">HabitRPG API Token:</label><input id="apiToken" type="text"/></br> 
 
   <div class="section">
-    <h4>Host watcher</h4>
+    <h2>Host watcher</h2>
     <p><label for="siteWatcherIsActive">Enabled</label><input id="siteWatcherIsActive" type="checkbox" /></p>
     <p><label for="sendInterval">Send to HabitRPG interval:</label><input type="number" id="sendInterval" value="25" min="5" /> minute <br /></p>
     <label for="activatorName">How would you like to control the extension:</label>
@@ -57,15 +58,20 @@ khanacadamy.org</textarea></p>
   </div>
 
   <div class="section">
-    <h4><a href="http://tomato.es">Tomatoes</a> linkage</h4>
+    <h2><a href="http://tomato.es" target="_blank">Tomatoes</a> linkage</h2>
     <p><label for="tomatoesIsActive">Enabled</label><input id="tomatoesIsActive" type="checkbox" /></p>
         
   </div>
 
   <div class="section">
-    <h4>Todo apps linkage</h4>
+    <h2>Todo apps linkage</h2>
     <p><label for="todosIsActive">Enabled</label><input id="todosIsActive" type="checkbox" /></p>
-        
+    <h3>Supported Todo sites</h3>
+    <ul>
+      <li><a href="http://asana.com" target="_blank">Asana</a></li>
+      <li><a href="http://worklowy.com" target="_blank">Workflowy</a></li>
+      <li><a href="https://mail.google.com/mail/tasks/" target="_blank">Google Tasks</a></li>
+    </ul>
   </div>
   
   <p><button type="submit">Save</button></p>
