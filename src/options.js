@@ -1,9 +1,7 @@
 jQuery('document').ready(function(){
-    
-  //var storage = chrome.storage.managed;
-  var storage = chrome.storage.local;
-  
-  var Options= {
+  var storage;
+
+  Options= {
         restore: function(params) {
       
           for (var name in params) {
@@ -18,7 +16,7 @@ jQuery('document').ready(function(){
               el.val(params[name]);
 
           }
-          
+
           Options.init();
         },
 
@@ -137,6 +135,18 @@ jQuery('document').ready(function(){
 
   };
 
-  storage.get(defaultOptions, Options.restore);
+
+  /* -------------------- Load inital settings ---------------- */
+  
+    chrome.storage.sync.get(defaultOptions, function(data){
+        if (data && data.isCloudStorage == 'true') {
+          storage = chrome.storage.sync;
+          Options.restore(data);
+
+        } else {
+          storage = chrome.storage.local;
+          storage.get(defaultOptions, Options.restore);
+        }
+      });
 
 });

@@ -9,8 +9,7 @@ var App = {
 	habitrpg: habitRPG,
 	invalidTransitionTypes: ['auto_subframe', 'form_submit'],
 
-  //storage: chrome.storage.managed,
-	storage: chrome.storage.local,
+	storage: undefined,
 
 	notificationShowTime: 4000,
 
@@ -52,8 +51,16 @@ var App = {
             }
         });
 
-        this.storage.get(defaultOptions, function(data){ App.dispatcher.trigger('app.optionsChanged', data); });
+		chrome.storage.sync.get(defaultOptions, function(data){
+			if (data && data.isCloudStorage == 'true') {
+				App.storage = chrome.storage.sync;
+				App.dispatcher.trigger('app.optionsChanged', data);
 
+			} else {
+				App.storage = chrome.storage.local;
+				App.storage.get(defaultOptions, function(data){ App.dispatcher.trigger('app.optionsChanged', data); });
+			}
+		});
 	},
 
 	messageHandler: function(request, sender, sendResponse) {
