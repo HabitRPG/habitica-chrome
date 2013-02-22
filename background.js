@@ -1,6 +1,8 @@
 var defaultOptions = {
       uid:'',
+      apiToken:'',
       watchedUrl: '',
+      isCloudStorage: 'false',
       sendInterval: '25',
       activatorName: 'alwayon',
       siteWatcherIsActive: 'true',
@@ -865,6 +867,7 @@ var habitRPG = (function(){
 
         habitUrl: '',
         sourceHabitUrl: "https://habitrpg.com/users/{UID}/",
+        apiToken: '',
 
         appBridge: undefined,
 
@@ -894,6 +897,9 @@ var habitRPG = (function(){
                 habitrpg.habitUrl = habitrpg.sourceHabitUrl.replace('{UID}', habitrpg.uid);
             }
 
+            if (params.apiToken) 
+                habitrpg.apiToken = params.apiToken;
+
             params.isSandBox = habitrpg.isSandBox;
 
             for (var co in habitrpg.controllers) 
@@ -903,7 +909,7 @@ var habitRPG = (function(){
 
         send: function(data) {
 
-            if (!habitrpg.uid) return;
+            if (!habitrpg.uid || habitrpg.apiToken) return;
 
             if (habitrpg.isSandBox) {
                 habitrpg.appBridge.trigger('app.notify', data);
@@ -912,6 +918,7 @@ var habitRPG = (function(){
                 
                 $.ajax({
                     type: 'POST',
+                    data: { apiToken: habitrpg.apiToken },
                     url: habitrpg.habitUrl + data.urlSuffix
                     
                 }).done(function(){
@@ -939,8 +946,7 @@ var App = {
 	habitrpg: habitRPG,
 	invalidTransitionTypes: ['auto_subframe', 'form_submit'],
 
-  //storage: chrome.storage.managed,
-	storage: chrome.storage.local,
+	storage: undefined,
 
 	notificationShowTime: 4000,
 
@@ -982,8 +988,16 @@ var App = {
             }
         });
 
-        this.storage.get(defaultOptions, function(data){ App.dispatcher.trigger('app.optionsChanged', data); });
+		chrome.storage.sync.get(defaultOptions, function(data){
+			if (data && data.isCloudStorage == 'true') {
+				App.storage = chrome.storage.sync;
+				App.dispatcher.trigger('app.optionsChanged', data);
 
+			} else {
+				App.storage = chrome.storage.local;
+				App.storage.get(defaultOptions, function(data){ App.dispatcher.trigger('app.optionsChanged', data); });
+			}
+		});
 	},
 
 	messageHandler: function(request, sender, sendResponse) {

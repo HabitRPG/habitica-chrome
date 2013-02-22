@@ -1,6 +1,8 @@
 var defaultOptions = {
       uid:'',
+      apiToken:'',
       watchedUrl: '',
+      isCloudStorage: 'false',
       sendInterval: '25',
       activatorName: 'alwayon',
       siteWatcherIsActive: 'true',
@@ -40,11 +42,9 @@ var defaultOptions = {
         }
   };
 jQuery('document').ready(function(){
-    
-  //var storage = chrome.storage.managed;
-  var storage = chrome.storage.local;
-  
-  var Options= {
+  var storage;
+
+  Options= {
         restore: function(params) {
       
           for (var name in params) {
@@ -59,15 +59,18 @@ jQuery('document').ready(function(){
               el.val(params[name]);
 
           }
-          
+
           Options.init();
         },
 
         init: function() {
           $('#habitrpgForm').submit(Options.save);
-          $('#uid').bind('change', EventHandlers.setEmptyUIDState());
-          $('#activatorName').bind('change', EventHandlers.changeActivatorOptions());
+          $('#uid').bind('change', EventHandlers.setEmptyUIDState);
+          $('#apiToken').bind('change', EventHandlers.setEmptyUIDState);
+          $('#activatorName').bind('change', EventHandlers.changeActivatorOptions);
 
+          EventHandlers.setEmptyUIDState();
+          EventHandlers.changeActivatorOptions();
         },
 
         save: function() {
@@ -102,14 +105,15 @@ jQuery('document').ready(function(){
     EventHandlers = {
 
       setEmptyUIDState: function() {
-        var input = $('#uid'),
-          message = $('#EmptyUID'),
-          fn = function() {
-          if (input.val())
-            message.removeClass('bad');
-          else
-            message.addClass('bad');
-          };
+        var uid = $('#uid'),
+            apiToken = $('#apiToken'),
+            message = $('#EmptyUID'),
+            fn = function() {
+              if (uid.val() && apiToken.val())
+                message.removeClass('bad');
+              else
+                message.addClass('bad');
+            };
         
         fn();
         EventHandlers.setEmptyUIDState = fn;
@@ -126,7 +130,7 @@ jQuery('document').ready(function(){
             };
 
         fn();
-        EventHandlers.setEmptyUIDState = fn;
+        EventHandlers.changeActivatorOptions = fn;
 
         return fn;
       }
@@ -174,6 +178,18 @@ jQuery('document').ready(function(){
 
   };
 
-  storage.get(defaultOptions, Options.restore);
+
+  /* -------------------- Load inital settings ---------------- */
+  
+    chrome.storage.sync.get(defaultOptions, function(data){
+        if (data && data.isCloudStorage == 'true') {
+          storage = chrome.storage.sync;
+          Options.restore(data);
+
+        } else {
+          storage = chrome.storage.local;
+          storage.get(defaultOptions, Options.restore);
+        }
+      });
 
 });

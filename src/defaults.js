@@ -1,6 +1,8 @@
 var defaultOptions = {
       uid:'',
+      apiToken:'',
       watchedUrl: '',
+      isCloudStorage: 'false',
       sendInterval: '25',
       activatorName: 'alwayon',
       siteWatcherIsActive: 'true',
