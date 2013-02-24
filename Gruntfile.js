@@ -42,9 +42,9 @@ module.exports = function(grunt) {
         files: ['common/*', 'chrome/*'],
         tasks: 'chrome'
       },
-      jasmine: {
-        files: ['node_modules/grunt-contrib-jasmine/tasks/reporters/*.js'],
-        tasks: 'jasmine:core'
+      chromeLint: {
+        files: ['common/*', 'chrome/*'],
+        tasks: ['jshint:core', 'jshint:chrome']
       }
     },
 
