@@ -1,11 +1,11 @@
 {
 
    "name": "HabitRPG",
-   "version": "0.6",
+   "version": "0.7",
    "permissions": [
       "storage", "tabs", "webNavigation", "notifications", 
       "https://habitrpg.com/", "http://tomato.es/", "https://app.asana.com/",
-      "https://workflowy.com/" 
+      "https://mail.google.com/", "https://workflowy.com/" 
     ],
   
    "description": "Monitors your browsing habits to divvy points to your HabitRPG character.",
@@ -36,6 +36,11 @@
     {
       "matches": ["https://workflowy.com/*"],
       "js": ["bind_workflowy.js"],
+      "run_at": "document_end"
+    },
+    {
+      "matches": ["https://mail.google.com/*"],
+      "js": ["bind_googletask.js"],
       "run_at": "document_end"
     }
   ],
