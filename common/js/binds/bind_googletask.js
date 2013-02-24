@@ -14,6 +14,9 @@
                                 TaskListWatcher.disable();
                             else if (mutation.addedNodes[0] && mutation.addedNodes[0].querySelector('#tasksiframe'))
                                 TaskListWatcher.enable(mutation.addedNodes[0].querySelector('#tasksiframe'));
+
+                        } else if (mutation.target.className == 'nH' && mutation.addedNodes[0].id == 'tasksiframe') {
+                            TaskListWatcher.enable(mutation.addedNodes[0]);
                         }
                     });
                 });
