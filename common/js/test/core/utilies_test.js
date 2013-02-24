@@ -103,14 +103,14 @@ describe('Utilies test', function(){
 
         beforeEach(function(){
             dispatcher = new utilies.EventDispatcher();
-            pomo = new utilies.Pomodore(dispatcher);
+            pomo = new utilies.Pomodore('testPommo', dispatcher);
         });
 
         it('Work cycle', function(){
 
             expect(pomo.workCount).toBe(0);
             expect(pomo.currentPeriod.type).toBe('break');
-
+            
             pomo.start();
             expect(pomo.workCount).toBe(1);
             expect(pomo.currentPeriod.type).toBe('work');
