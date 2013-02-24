@@ -15,7 +15,7 @@ var habitRPG = (function(){
         uid: undefined,
 
         habitUrl: '',
-        sourceHabitUrl: "https://habitrpg.com/users/{UID}/",
+        sourceHabitUrl: "https://habitrpg.com/v1/users/{UID}/",
         apiToken: '',
 
         appBridge: undefined,
@@ -58,7 +58,7 @@ var habitRPG = (function(){
 
         send: function(data) {
 
-            if (!habitrpg.uid || habitrpg.apiToken) return;
+            if (!habitrpg.uid || !habitrpg.apiToken) return;
 
             if (habitrpg.isSandBox) {
                 habitrpg.appBridge.trigger('app.notify', data);

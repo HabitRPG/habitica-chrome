@@ -41,7 +41,7 @@ var Todos = (function() {
         completeHandler: function(data) {
             todos.appBridge.trigger('controller.sendRequest', {
                 score: 1,
-                urlSuffix: todos.urlPrefix,
+                urlSuffix: todos.urlPrefix+'up',
                 message: "Yupi! Just completed a task! [+1] Exp/Gold"
             });
         },
@@ -49,7 +49,7 @@ var Todos = (function() {
         unCompleteHandler: function(data) {
             todos.appBridge.trigger('controller.sendRequest', {
                 score: -1,
-                urlSuffix: todos.urlPrefix,
+                urlSuffix: todos.urlPrefix+'down',
                 message: "I thought it was done :( [-1] HP"
             });
         },
@@ -57,7 +57,7 @@ var Todos = (function() {
         dueDateOverHandler: function(data) {
             todos.appBridge.trigger('controller.sendRequest', {
                 score: -1,
-                urlSuffix: todos.urlPrefix,
+                urlSuffix: todos.urlPrefix+'down',
                 message: "Hurry! You are late! [-1] HP"
             });  
         }
