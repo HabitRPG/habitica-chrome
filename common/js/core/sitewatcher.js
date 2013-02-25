@@ -152,11 +152,13 @@ var SiteWatcher = (function() {
 
                 if (state > 0) {
                     data = {
+                        score: 1,
                         message: 'Great!'+(this.isSwapped ? ' Just relax :)' : ' Maybe started working:)')
                     };
 
                 } else if (state < 0) {
                     data = {
+                        score: -1,
                         message: "I'm watching you!"+(this.isSwapped ? "Do not work now!" :" Lets go to work!")
                     };
 
@@ -198,8 +200,7 @@ var SiteWatcher = (function() {
             
             if (watcher.score !== 0) {
                 watcher.appBridge.trigger('controller.sendRequest', {
-                    urlSuffix: watcher.urlPrefix+(watcher.score < 0 ? 'down' : 'up'), 
-                    score: watcher.score < 0 ? -1 : 1
+                    urlSuffix: watcher.urlPrefix+(watcher.score < 0 ? 'down' : 'up')
                 });
 
                 watcher.score = 0;

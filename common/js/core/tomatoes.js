@@ -71,18 +71,16 @@ var Tomatoes = (function() {
         stoppedFromPageHandler: function() {
             tomatoes.pomodore.stop();
             tomatoes.appBridge.trigger('controller.sendRequest', {
-                score:-1, 
                 urlSuffix: tomatoes.urlPrefix+'down',
-                message: 'You breaked the flow!! [-1] HP...'
+                message: 'You breaked the flow!! {score} HP...'
                 });
         },
 
         startedHandler: function(data) {
             if (data.type == 'break')
                 tomatoes.appBridge.trigger('controller.sendRequest', {
-                    score:1, 
                     urlSuffix: tomatoes.urlPrefix+'up',
-                    message: 'You made your '+(data.tomatoCount+1)+' tomato! Well done [+1] Exp/Gold!' 
+                    message: 'You made your '+(data.tomatoCount+1)+' tomato! Well done {score} Exp/Gold!' 
                 });
         },
 
@@ -97,9 +95,8 @@ var Tomatoes = (function() {
                     });
             else 
                 tomatoes.appBridge.trigger('controller.sendRequest', {
-                    score:-1, 
                     urlSuffix: tomatoes.urlPrefix+'down',
-                    message: message+' [-1] HP!!' 
+                    message: message+' {score} HP!!' 
                 });
 
 
