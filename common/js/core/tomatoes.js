@@ -16,6 +16,8 @@ var Tomatoes = (function() {
         appBridge: undefined,
         overTimeCounter: 0,
 
+        overTimePenalty:true,
+
         init: function(appBridge) {
 
             this.appBridge = appBridge;
@@ -48,6 +50,7 @@ var Tomatoes = (function() {
                     this.disable();
             }
 
+            this.overTimePenalty = params.tomatoesOverTimePenalty == 'true' ? true : false;
         },
 
         setValue: function(params, name) { 
@@ -84,6 +87,9 @@ var Tomatoes = (function() {
         },
 
         overTimeHandler: function(data) {
+
+            if (!tomatoes.overTimePenalty) return;
+            
             var message = 'You are over '+(data.type == 'work' ? 'working' : 'breaking');
             if (tomatoes.overTimeCounter % 2 == 1)
                 tomatoes.appBridge.trigger('app.notify', {

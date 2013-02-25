@@ -39,7 +39,7 @@ module.exports = function(grunt) {
         tasks: 'test_core'
       },
       chrome: {
-        files: ['common/*', 'chrome/*'],
+        files: ['common/**', 'chrome/**'],
         tasks: 'chrome'
       },
       chromeLint: {

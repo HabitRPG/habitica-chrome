@@ -28,6 +28,7 @@ var SiteWatcher = (function() {
         activators: undefined,
 
         productivityState: 0,
+        isVerbose: true,
 
         init: function(appBridge) {
 
@@ -78,6 +79,8 @@ var SiteWatcher = (function() {
                     this.disable();
             }
 
+            this.isVerbose = params.isVerboseSiteWatcher == 'true' ? true : false;
+
             for (var ac in this.activators) 
                 this.activators[ac].setOptions(params);
 
@@ -108,7 +111,7 @@ var SiteWatcher = (function() {
             
             watcher.host = host;
 
-            watcher.setProductivityState(watcher.activator.state);
+            watcher.setProductivityState(watcher.activator.state && watcher.isVerbose);
 
             if (!watcher.activator.state) return;
             
@@ -146,15 +149,20 @@ var SiteWatcher = (function() {
                 this.timestamp = new Date().getTime();
             
             if (this.productivityState !== state) {
+
                 if (state > 0) {
                     data = {
-                        score: 0,
                         message: 'Great!'+(this.isSwapped ? ' Just relax :)' : ' Maybe started working:)')
                     };
+
                 } else if (state < 0) {
                     data = {
-                        score: 0,
                         message: "I'm watching you!"+(this.isSwapped ? "Do not work now!" :" Lets go to work!")
+                    };
+
+                } else if (!state) {
+                    data = {
+                        message: 'You are entering a neutral zone!'
                     };
                 }
 
@@ -163,6 +171,7 @@ var SiteWatcher = (function() {
                 if (notify && data)
                     this.appBridge.trigger('app.notify', data);
             }
+
         },
 
         controllSendingState: function(value) {
