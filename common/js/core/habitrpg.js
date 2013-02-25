@@ -13,12 +13,17 @@ var habitRPG = (function(){
         controllers: undefined,
         
         uid: undefined,
+        apiToken: undefined,
+
+        character: undefined,
 
         habitUrl: '',
         sourceHabitUrl: "https://habitrpg.com/v1/users/{UID}/",
-        apiToken: '',
 
         appBridge: undefined,
+
+        lowHP: 20,
+        gold: 100,
 
         init: function(bridge) {
 
@@ -26,7 +31,6 @@ var habitRPG = (function(){
             
             this.appBridge.addListener('controller.sendRequest', this.send);
             this.appBridge.addListener('app.optionsChanged', this.setOptions);
-            
 
             this.controllers = {
                 'sitewatcher': SiteWatcher,
@@ -42,18 +46,27 @@ var habitRPG = (function(){
         setOptions: function(params) {
 
             if (params.uid) {
+                if (params.uid != habitrpg.uid)
+                    habitrpg.character = undefined;
+
                 habitrpg.uid = params.uid;
                 habitrpg.habitUrl = habitrpg.sourceHabitUrl.replace('{UID}', habitrpg.uid);
             }
 
-            if (params.apiToken) 
+            if (params.apiToken) {
+                if (params.apiToken != habitrpg.apiToken)
+                    habitrpg.character = undefined;
+
                 habitrpg.apiToken = params.apiToken;
+            }
 
             params.isSandBox = habitrpg.isSandBox;
 
             for (var co in habitrpg.controllers) 
                 habitrpg.controllers[co].setOptions(params);
             
+            if (!habitrpg.character)
+                habitrpg.setInitialCharacterData();
         },
 
         send: function(data) {
@@ -70,12 +83,59 @@ var habitRPG = (function(){
                     data: { apiToken: habitrpg.apiToken },
                     url: habitrpg.habitUrl + data.urlSuffix
                     
-                }).done(function(){
+                }).done(function(response){
+
+                    data.score = response.delta;
                     habitrpg.appBridge.trigger('app.notify', data);
 
+                    habitrpg.setCharacterData(response);
                 });
             }
-            
+        },
+
+        setInitialCharacterData: function() {
+
+            $.ajax({
+                type: 'POST',
+                data: { apiToken: habitrpg.apiToken },
+                url: habitrpg.habitUrl + 'tasks/extensionUsed/up'
+                
+            }).done(function(response) {
+
+                habitrpg.character = response;
+
+                habitrpg.appBridge.trigger('app.notify', {
+                    score: response.delta,
+                    message: 'Because you deserve it {score} EXP/Gold! :)'
+                });
+
+            });
+
+        },
+
+        setCharacterData: function(data) {
+            console.log(data, habitrpg.character);
+            if (data.lvl > habitrpg.character.level) {
+
+                setTimeout(function(){
+                    habitrpg.appBridge.trigger('app.notify', {
+                        score: 1,
+                        message: "Congratulations! You reached the "+data.lvl+" level!"
+                    });
+                }, 5000);
+
+            } else if (data.hp < habitrpg.character.lowHP) {
+
+                setTimeout(function(){
+                    habitrpg.appBridge.trigger('app.notify', {
+                        score: -1,
+                        message: "Your HP is too low ("+data.hp+")! Quickly do something productive!"
+                    });
+                }, 5000);
+
+            }
+
+            habitrpg.character = data;
         }
 
     };
