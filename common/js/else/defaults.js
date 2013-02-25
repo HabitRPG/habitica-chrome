@@ -7,6 +7,7 @@ var defaultOptions = {
       activatorName: 'alwayon',
       siteWatcherIsActive: 'true',
       tomatoesIsActive: 'true',
+      tomatoesOverTimePenatly: 'true',
       todosIsActive: 'true',
       isVerboseSiteWatcher: 'true',
       viceDomains: 'reddit.com\n9gag.com\nfacebook.com',
