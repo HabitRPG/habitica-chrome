@@ -17,7 +17,7 @@ module.exports = function(grunt) {
     jshint: {
       opera: ['opera/*.js'],
       safari: ['safari/*.js'],
-      chrome: ['chrome/*.js'],
+      chrome: ['chrome/*.js', 'common/js/else/*.js'],
       firefox: ['firefox/*.js'],
       core: core,
       binds: ['common/js/binds/*.js'],
@@ -43,7 +43,7 @@ module.exports = function(grunt) {
         tasks: 'chrome'
       },
       chromeLint: {
-        files: ['common/*', 'chrome/*'],
+        files: ['common/**', 'chrome/**'],
         tasks: ['jshint:core', 'jshint:chrome']
       }
     },
