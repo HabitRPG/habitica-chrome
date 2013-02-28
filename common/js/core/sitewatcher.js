@@ -39,6 +39,12 @@ var SiteWatcher = (function() {
                 this.activators[name].init(this.appBridge);
 
             this.activator = this.activators.alwaysoff;
+
+            this.appBridge.addListener('watcher.forceChange', this.spreadData);
+        },
+
+        isEnabled: function() {
+            return watcher.appBridge.hasListener('app.newUrl', watcher.checkNewUrl);
         },
 
         enable:function() {
@@ -55,6 +61,18 @@ var SiteWatcher = (function() {
             this.appBridge.removeListener('app.newUrl', this.checkNewUrl);
             this.appBridge.removeListener('watcher.swapHosts', this.swapHosts);
             this.appBridge.removeListener('watcher.activator.changed', this.controllSendingState);
+        },
+
+        spreadState: function() {
+            var isActive = watcher.isEnabled();
+            isActive = isActive ? watcher.activator.state : false;
+
+            watcher.appBridge.trigger('watcher.activator.changed', {
+                isActive: isActive,
+                score: watcher.score
+                // TODO: store the last sended time for can compute the next one
+            });
+
         },
 
         setOptions: function(params) {

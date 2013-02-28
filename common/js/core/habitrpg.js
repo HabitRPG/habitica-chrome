@@ -31,6 +31,7 @@ var habitRPG = (function(){
             
             this.appBridge.addListener('controller.sendRequest', this.send);
             this.appBridge.addListener('app.optionsChanged', this.setOptions);
+            this.appBridge.addListener('character.forceChange', this.triggerCharacterChange);
 
             this.controllers = {
                 'sitewatcher': SiteWatcher,
@@ -102,15 +103,18 @@ var habitRPG = (function(){
                 
             }).done(function(response) {
 
-                habitrpg.character = response;
-
                 habitrpg.appBridge.trigger('app.notify', {
                     score: response.delta,
                     message: 'Because you deserve it {score} EXP/Gold! :)'
                 });
 
+                habitrpg.setCharacterData(response);
             });
 
+        },
+
+        triggerCharacterChange: function() {
+            habitrpg.appBridge.trigger('character.changed', habitrpg.character);
         },
 
         setCharacterData: function(data) {
@@ -136,6 +140,7 @@ var habitRPG = (function(){
             }
 
             habitrpg.character = data;
+            habitrpg.triggerCharacterChange();
         }
 
     };

@@ -28,6 +28,7 @@ module.exports = function(grunt) {
       chrome: {
         files: {
             'builds/chrome/background.js': core.concat(['chrome/app.js']),
+            'builds/chrome/popup.js': ['chrome/popup.js', 'common/js/else/popup.js'],
             'builds/chrome/options.js': ['common/js/else/defaults.js', 'common/js/else/options.js']
           }
       }
