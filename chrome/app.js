@@ -117,26 +117,24 @@ var App = {
 		}
 	},
 
-	focusChangeHandler: function() {
-		chrome.windows.getLastFocused({populate:true}, App.windowIsFocused);
-	},
-
-	windowIsFocused: function(win) {
-
-		if (!win.focused) {
+	focusChangeHandler: function(winId) {
+		if (winId == chrome.windows.WINDOW_ID_NONE) {
 			App.hasFocus = false;
 			App.dispatcher.trigger('app.newUrl', '');
 			App.dispatcher.trigger('app.firstOpenedUrl', '');
-
 		} else {
-			App.hasFocus = true;
-			App.dispatcher.trigger('app.lastClosedUrl', '');
-			for (var i in win.tabs) {
-				var url = win.tabs[i].url;
-				if (win.tabs[i].active && App.activeUrl != url) {
-					App.dispatcher.trigger('app.newUrl', App.catchSpecURL(url));
-					break;
-				}
+			chrome.windows.get(winId, {populate:true}, App.windowIsFocused);
+		}
+	},
+
+	windowIsFocused: function(win) {
+		App.hasFocus = true;
+		App.dispatcher.trigger('app.lastClosedUrl', '');
+		for (var i in win.tabs) {
+			var url = win.tabs[i].url;
+			if (win.tabs[i].active) {
+				App.dispatcher.trigger('app.newUrl', App.catchSpecURL(url));
+				break;
 			}
 		}
 	},
