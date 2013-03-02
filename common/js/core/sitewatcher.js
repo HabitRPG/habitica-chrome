@@ -133,19 +133,20 @@ var SiteWatcher = (function() {
 
             var spentTime = watcher.getandResetSpentTime(),
                 host = watcher.getHost(url);
-            
+
             if (!watcher.activator.state) return;
             
             watcher.addScoreFromSpentTime(spentTime);
             watcher.setProductivityState(host, watcher.activator.state && watcher.isVerbose);
-                   
+                 
             watcher.host = host;
         },
         
         getandResetSpentTime: function() {
-            var spent = new Date().getTime() - this.timestamp;
+            var now = new Date().getTime();
+                spent = now - this.timestamp;
 
-            this.timestamp = new Date().getTime();
+            this.timestamp = now;
 
             return spent * 0.001 / 60;
         },
@@ -167,9 +168,6 @@ var SiteWatcher = (function() {
                 state = 1;
             else if (this.badHosts.indexOf(host) != -1)
                 state = -1;
-
-            if (!this.productivityState)
-                this.timestamp = new Date().getTime();
             
             if (this.productivityState !== state) {
 
