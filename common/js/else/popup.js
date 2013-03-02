@@ -87,6 +87,8 @@ var Popup = (function() {
                     return;
                 }
 
+                popup.sitewatcherTimeLine.parent().attr('title', data.score.toFixed(2));
+
                 // update the timeline
                 var now = new Date().getTime(), 
                     width = (data.nextSend - now) / (data.nextSend - data.lastSend),
