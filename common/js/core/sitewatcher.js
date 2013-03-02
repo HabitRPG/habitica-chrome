@@ -68,6 +68,8 @@ var SiteWatcher = (function() {
             var isActive = watcher.isEnabled();
             isActive = isActive ? watcher.activator.state : false;
 
+            watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
+
             watcher.appBridge.trigger('watcher.dataChanged', {
                 state: isActive,
                 score: watcher.score,
