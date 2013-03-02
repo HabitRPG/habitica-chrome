@@ -16,6 +16,7 @@ var SiteWatcher = (function() {
 
         isSwapped: false,
 
+        lastSendTime: new Date().getTime(),
         sendInterval: 3000,
         sendIntervalID: 0,
 
@@ -68,8 +69,10 @@ var SiteWatcher = (function() {
             isActive = isActive ? watcher.activator.state : false;
 
             watcher.appBridge.trigger('watcher.dataChanged', {
-                state: isActive
-                // TODO: store the last sended time for can compute the next one
+                state: isActive,
+                score: watcher.score,
+                lastSend: watcher.lastSendTime,
+                nextSend: watcher.lastSendTime + watcher.sendInterval
             });
 
         },
@@ -221,7 +224,8 @@ var SiteWatcher = (function() {
         triggerSendRequest: function() {
 
             watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
-            
+            watcher.lastSendTime = new Date().getTime();
+
             if (watcher.score !== 0) {
                 watcher.appBridge.trigger('controller.sendRequest', {
                     urlSuffix: watcher.urlPrefix+(watcher.score < 0 ? 'down' : 'up')
