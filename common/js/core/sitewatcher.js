@@ -11,8 +11,8 @@ var SiteWatcher = (function() {
 
         urlPrefix: 'tasks/productivity/',
 
-        goodTimeMultiplier: 0.05,
-        badTimeMultiplier: 0.1,
+        goodTimeMultiplier: 0.25,
+        badTimeMultiplier: 0.5,
 
         isSwapped: false,
 
@@ -122,19 +122,16 @@ var SiteWatcher = (function() {
         getHost: function(url) { return url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1'); },
 
         checkNewUrl: function(url) {
-            
-            var host = watcher.getHost(url);
-            
-            if (host == watcher.host) return;
-            
-            watcher.host = host;
 
-            watcher.setProductivityState(watcher.activator.state && watcher.isVerbose);
-
+            var spentTime = watcher.getandResetSpentTime(),
+                host = watcher.getHost(url);
+            
             if (!watcher.activator.state) return;
             
-            watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
-            
+            watcher.addScoreFromSpentTime(spentTime);
+            watcher.setProductivityState(host, watcher.activator.state && watcher.isVerbose);
+                   
+            watcher.host = host;
         },
         
         getandResetSpentTime: function() {
@@ -156,11 +153,11 @@ var SiteWatcher = (function() {
             this.score += score;
         },
         
-        setProductivityState: function(notify) {
+        setProductivityState: function(host, notify) {
             var state = 0, data;
-            if (this.goodHosts.indexOf(this.host) != -1)
+            if (this.goodHosts.indexOf(host) != -1)
                 state = 1;
-            else if (this.badHosts.indexOf(this.host) != -1)
+            else if (this.badHosts.indexOf(host) != -1)
                 state = -1;
 
             if (!this.productivityState)
