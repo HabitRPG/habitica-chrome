@@ -17,6 +17,7 @@ var App = {
 
 	init: function() {
 
+		this.dispatcher.addListener('app.changeIcon', this.changeIcon);
 		this.dispatcher.addListener('app.notify', this.showNotification);
 		this.dispatcher.addListener('app.isOpenedUrl', this.isOpenedUrlHandler);
 		this.dispatcher.addListener('app.newUrl', function(url){App.activeUrl = url; });
@@ -155,6 +156,10 @@ var App = {
 
 		App.dispatcher.trigger('app.optionsChanged', obj);
 		
+	},
+
+	changeIcon: function(data) {
+		chrome.browserAction.setIcon({path: 'img/icon-48'+data+'.png'});
 	},
 
 	showNotification: function(data) {

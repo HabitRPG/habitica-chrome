@@ -63,15 +63,22 @@ var SiteWatcher = (function() {
             this.appBridge.removeListener('watcher.activator.changed', this.controllSendingState);
         },
 
-        spreadState: function() {
+        spreadData: function() {
             var isActive = watcher.isEnabled();
             isActive = isActive ? watcher.activator.state : false;
 
-            watcher.appBridge.trigger('watcher.activator.changed', {
-                isActive: isActive,
-                score: watcher.score
+            watcher.appBridge.trigger('watcher.dataChanged', {
+                state: isActive
                 // TODO: store the last sended time for can compute the next one
             });
+
+        },
+
+        triggerBrowserActionIconChange: function() {
+
+            if (watcher.score > 0) watcher.appBridge.trigger('app.changeIcon', '-up');
+            else if (watcher.score < 0) watcher.appBridge.trigger('app.changeIcon', '-down');
+            else watcher.appBridge.trigger('app.changeIcon', '');
 
         },
 
@@ -151,6 +158,8 @@ var SiteWatcher = (function() {
                 score = (spentTime * this.badTimeMultiplier) * -1;
 
             this.score += score;
+            this.triggerBrowserActionIconChange();
+
         },
         
         setProductivityState: function(host, notify) {
@@ -219,16 +228,17 @@ var SiteWatcher = (function() {
                 });
 
                 watcher.score = 0;
+                watcher.triggerBrowserActionIconChange();
             }
         },
 
         turnOnTheSender: function() {
-            this.turnOffTheSender();
-            this.sendIntervalID = setInterval(this.triggerSendRequest, this.sendInterval);
+            watcher.turnOffTheSender();
+            watcher.sendIntervalID = setInterval(watcher.triggerSendRequest, watcher.sendInterval);
         },
 
         turnOffTheSender: function() {
-            this.sendIntervalID = clearInterval(this.sendIntervalID);
+            watcher.sendIntervalID = clearInterval(watcher.sendIntervalID);
         },
 
         swapHosts: function(isSwapped) {

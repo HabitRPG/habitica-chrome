@@ -3,23 +3,23 @@ var Popup = (function() {
 
     var popup = {
             bridge: undefined,
-            browser: undefined,
-            siteWatcherTimeLine: undefined,
-            siteWatcher: undefined,
+            sitewatcherTimeLine: undefined,
+            sitewatcher: undefined,
             charStats: undefined,
 
-            init: function(appBridge, browser){
+            sitewatcherState: undefined,
 
-                this.browser = browser;
+            init: function(appBridge){
+
                 this.bridge = appBridge;
 
-                this.siteWatcher = $('#sitewatcher');
+                this.sitewatcher = $('#sitewatcher');
                 this.charStats = $('#characterStats');
 
-                this.siteWatcherTimeLine = timeline.init('#sitewatcher .time');
+                this.sitewatcherTimeLine = timeline.init('#sitewatcher .time');
 
                 this.bridge.addListener('character.changed', this.updateCharacter);
-                this.bridge.addListener('watcher.dataChanged', this.siteWatcherDataChanged);
+                this.bridge.addListener('watcher.dataChanged', this.sitewatcherDataChanged);
     
                 this.getCharacterData();
                 this.getSitewatcherData();
@@ -29,7 +29,7 @@ var Popup = (function() {
                 this.bridge.trigger('character.forceChange');
             },
 
-            getSitewatcherState: function() {
+            getSitewatcherData: function() {
                 this.bridge.trigger('watcher.forceChange');
             },        
 
@@ -39,15 +39,14 @@ var Popup = (function() {
                 }
             },
 
-            siteWatcherDataChanged: function(data) {
-                popup.sitewatcher.find('.state .value').text(data.state ? 'active' : 'inactive');
-                popup.sitewatcher.find('.score .value').text(data.score.toFixed(4));
+            sitewatcherDataChanged: function(data) {
 
-                popup.timeline.set(data.nextSend);
+                if (data.state !== undefined)
+                    popup.sitewatcher.find('.state .value').text(data.state ? 'active' : 'inactive');
 
-                if (data.score < 0) popup.browser.changeIcon('down');
-                else if (data.score > 0) popup.browser.changeIcon('up');
-                else popup.browser.changeIcon('');
+                if (data.nextSend !== undefined)
+                    popup.timeline.set(data.nextSend);
+
             }
 
         },
@@ -60,7 +59,7 @@ var Popup = (function() {
 
             value: 0,
 
-            ini: function(selector) {
+            init: function(selector) {
                 this.view = $(selector);
 
                 return this;
@@ -68,7 +67,6 @@ var Popup = (function() {
 
             set: function(goalInterval) {
                 if (goalInterval == this.goalInterval) return;
-
 
             }
 
@@ -79,4 +77,4 @@ var Popup = (function() {
 })();
 
 
-jQuery('document').ready(function(){ Popup.init(appBridge, browser); });
+jQuery('document').ready(function(){ Popup.init(appBridge); });
