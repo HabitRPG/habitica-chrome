@@ -48,8 +48,17 @@ var Popup = (function() {
 
                 this.bridge.addListener('character.changed', this.updateCharacter);
                 this.bridge.addListener('watcher.dataChanged', this.sitewatcherDataChanged);
-    
+                
                 this.getBackgroundData();
+
+                $('#Sitewatcher .state .value').on('click', function(){
+                    if (popup.sitewatcherState) {
+                        saveSiteWatcherState('false');
+                    } else {
+                        saveSiteWatcherState('true');
+                    }
+                    popup.sitewatcherState = !popup.sitewatcherState;
+                });
 
                 setInterval(
                     function(){
@@ -70,8 +79,14 @@ var Popup = (function() {
             },
 
             sitewatcherDataChanged: function(data) {
+                popup.sitewatcherState = data.state;
                 popup.sitewatcher.find('.state .value').text(data.state ? 'active' : 'inactive');
                 
+                if (!data.state) {
+                    popup.sitewatcherTimeLine.width(0);
+                    return;
+                }
+
                 // update the timeline
                 var now = new Date().getTime(), 
                     width = (data.nextSend - now) / (data.nextSend - data.lastSend),
