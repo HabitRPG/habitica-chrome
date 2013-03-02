@@ -11,11 +11,12 @@ var SiteWatcher = (function() {
 
         urlPrefix: 'tasks/productivity/',
 
-        goodTimeMultiplier: 0.05,
-        badTimeMultiplier: 0.1,
+        goodTimeMultiplier: 0.25,
+        badTimeMultiplier: 0.5,
 
         isSwapped: false,
 
+        lastSendTime: new Date().getTime(),
         sendInterval: 3000,
         sendIntervalID: 0,
 
@@ -34,11 +35,17 @@ var SiteWatcher = (function() {
 
             this.appBridge = appBridge;
             this.activators = Activators;
-
+            
             for (var name in this.activators) 
                 this.activators[name].init(this.appBridge);
 
             this.activator = this.activators.alwaysoff;
+
+            this.appBridge.addListener('watcher.forceChange', this.spreadData);
+        },
+
+        isEnabled: function() {
+            return watcher.appBridge.hasListener('app.newUrl', watcher.checkNewUrl);
         },
 
         enable:function() {
@@ -55,6 +62,25 @@ var SiteWatcher = (function() {
             this.appBridge.removeListener('app.newUrl', this.checkNewUrl);
             this.appBridge.removeListener('watcher.swapHosts', this.swapHosts);
             this.appBridge.removeListener('watcher.activator.changed', this.controllSendingState);
+        },
+
+        spreadData: function() {
+            var isActive = watcher.isEnabled();
+            isActive = isActive ? watcher.activator.state : false;
+
+            watcher.appBridge.trigger('watcher.dataChanged', {
+                state: isActive,
+                score: watcher.score,
+                lastSend: watcher.lastSendTime,
+                nextSend: watcher.lastSendTime + watcher.sendInterval
+            });
+
+        },
+
+        triggerBrowserActionIconChange: function() {
+            if (watcher.productivityState > 0) watcher.appBridge.trigger('app.changeIcon', '-up');
+            else if (watcher.productivityState < 0) watcher.appBridge.trigger('app.changeIcon', '-down');
+            else watcher.appBridge.trigger('app.changeIcon', '');
         },
 
         setOptions: function(params) {
@@ -104,25 +130,23 @@ var SiteWatcher = (function() {
         getHost: function(url) { return url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1'); },
 
         checkNewUrl: function(url) {
-            
-            var host = watcher.getHost(url);
-            
-            if (host == watcher.host) return;
-            
-            watcher.host = host;
 
-            watcher.setProductivityState(watcher.activator.state && watcher.isVerbose);
+            var spentTime = watcher.getandResetSpentTime(),
+                host = watcher.getHost(url);
 
             if (!watcher.activator.state) return;
             
-            watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
-            
+            watcher.addScoreFromSpentTime(spentTime);
+            watcher.setProductivityState(host, watcher.activator.state && watcher.isVerbose);
+                 
+            watcher.host = host;
         },
         
         getandResetSpentTime: function() {
-            var spent = new Date().getTime() - this.timestamp;
+            var now = new Date().getTime();
+                spent = now - this.timestamp;
 
-            this.timestamp = new Date().getTime();
+            this.timestamp = now;
 
             return spent * 0.001 / 60;
         },
@@ -138,15 +162,12 @@ var SiteWatcher = (function() {
             this.score += score;
         },
         
-        setProductivityState: function(notify) {
+        setProductivityState: function(host, notify) {
             var state = 0, data;
-            if (this.goodHosts.indexOf(this.host) != -1)
+            if (this.goodHosts.indexOf(host) != -1)
                 state = 1;
-            else if (this.badHosts.indexOf(this.host) != -1)
+            else if (this.badHosts.indexOf(host) != -1)
                 state = -1;
-
-            if (!this.productivityState)
-                this.timestamp = new Date().getTime();
             
             if (this.productivityState !== state) {
 
@@ -172,6 +193,8 @@ var SiteWatcher = (function() {
 
                 if (notify && data)
                     this.appBridge.trigger('app.notify', data);
+
+                this.triggerBrowserActionIconChange();
             }
 
         },
@@ -197,7 +220,8 @@ var SiteWatcher = (function() {
         triggerSendRequest: function() {
 
             watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
-            
+            watcher.lastSendTime = new Date().getTime();
+
             if (watcher.score !== 0) {
                 watcher.appBridge.trigger('controller.sendRequest', {
                     urlSuffix: watcher.urlPrefix+(watcher.score < 0 ? 'down' : 'up')
@@ -208,12 +232,12 @@ var SiteWatcher = (function() {
         },
 
         turnOnTheSender: function() {
-            this.turnOffTheSender();
-            this.sendIntervalID = setInterval(this.triggerSendRequest, this.sendInterval);
+            watcher.turnOffTheSender();
+            watcher.sendIntervalID = setInterval(watcher.triggerSendRequest, watcher.sendInterval);
         },
 
         turnOffTheSender: function() {
-            this.sendIntervalID = clearInterval(this.sendIntervalID);
+            watcher.sendIntervalID = clearInterval(watcher.sendIntervalID);
         },
 
         swapHosts: function(isSwapped) {

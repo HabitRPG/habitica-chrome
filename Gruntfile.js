@@ -17,7 +17,7 @@ module.exports = function(grunt) {
     jshint: {
       opera: ['opera/*.js'],
       safari: ['safari/*.js'],
-      chrome: ['chrome/*.js'],
+      chrome: ['chrome/*.js', 'common/js/else/*.js'],
       firefox: ['firefox/*.js'],
       core: core,
       binds: ['common/js/binds/*.js'],
@@ -28,6 +28,7 @@ module.exports = function(grunt) {
       chrome: {
         files: {
             'builds/chrome/background.js': core.concat(['chrome/app.js']),
+            'builds/chrome/popup.js': ['chrome/popup.js', 'common/js/else/popup.js'],
             'builds/chrome/options.js': ['common/js/else/defaults.js', 'common/js/else/options.js']
           }
       }
@@ -43,7 +44,7 @@ module.exports = function(grunt) {
         tasks: 'chrome'
       },
       chromeLint: {
-        files: ['common/*', 'chrome/*'],
+        files: ['common/**', 'chrome/**'],
         tasks: ['jshint:core', 'jshint:chrome']
       }
     },
@@ -67,6 +68,7 @@ module.exports = function(grunt) {
       chrome: {
         files: [
           { src: ['common/img/*'], dest: 'builds/chrome/img/', expand: true, flatten: true },
+          { src: ['common/css/*'], dest: 'builds/chrome/css/', expand: true, flatten: true },
           { src: ['common/js/vendor/*'], dest: 'builds/chrome/vendor/', expand: true, flatten: true },
           { src: ['common/html/*', 'common/js/binds/*', 'chrome/data/*'], dest: 'builds/chrome/', expand: true, flatten: true },
         ]

@@ -22,7 +22,7 @@ var habitRPG = (function(){
 
         appBridge: undefined,
 
-        lowHP: 20,
+        lowHP: 10,
         gold: 100,
 
         init: function(bridge) {
@@ -31,6 +31,7 @@ var habitRPG = (function(){
             
             this.appBridge.addListener('controller.sendRequest', this.send);
             this.appBridge.addListener('app.optionsChanged', this.setOptions);
+            this.appBridge.addListener('character.forceChange', this.triggerCharacterChange);
 
             this.controllers = {
                 'sitewatcher': SiteWatcher,
@@ -102,20 +103,23 @@ var habitRPG = (function(){
                 
             }).done(function(response) {
 
-                habitrpg.character = response;
-
                 habitrpg.appBridge.trigger('app.notify', {
                     score: response.delta,
                     message: 'Because you deserve it {score} EXP/Gold! :)'
                 });
 
+                habitrpg.setCharacterData(response);
             });
 
         },
 
+        triggerCharacterChange: function() {
+            habitrpg.appBridge.trigger('character.changed', habitrpg.character);
+        },
+
         setCharacterData: function(data) {
-            console.log(data, habitrpg.character);
-            if (data.lvl > habitrpg.character.level) {
+
+            if (habitrpg.character && (data.lvl > habitrpg.character.lvl)) {
 
                 setTimeout(function(){
                     habitrpg.appBridge.trigger('app.notify', {
@@ -124,18 +128,19 @@ var habitRPG = (function(){
                     });
                 }, 5000);
 
-            } else if (data.hp < habitrpg.character.lowHP) {
+            } else if (data.hp < habitrpg.lowHP) {
 
                 setTimeout(function(){
                     habitrpg.appBridge.trigger('app.notify', {
                         score: -1,
-                        message: "Your HP is too low ("+data.hp+")! Quickly do something productive!"
+                        message: "Your HP is too low!("+Math.round(data.hp)+") Quickly do something productive!"
                     });
                 }, 5000);
 
             }
 
             habitrpg.character = data;
+            habitrpg.triggerCharacterChange();
         }
 
     };
