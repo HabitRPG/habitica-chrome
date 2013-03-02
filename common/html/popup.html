@@ -2,25 +2,26 @@
     <head>
         <script type="text/javascript" src="vendor/jquery-1.8.0.min.js"></script>
         <script type="text/javascript" src="popup.js"></script>
+
+        <link rel="stylesheet" type="text/css" href="css/popup.css" />
     </head>
     <body>
         <div id="Main">
-            <ul id="characterStats">
-                <li class="lvl"><span>Level:</span><span class="value"></span></li>
-                <li class="hp"><span>Health:</span><span class="value"></span></li>
-                <li class="exp"><span>Exp:</span><span class="value"></span></li>
-                <li class="gp"><span>Gold:</span><span class="value"></span></li>
-                <li>These stats only refreshed, when the extension communicate, the server so maybe inaccurate</li>
-            </ul>
-            <div id="sitewatcher">
-                <div class="state">Site watcher is <span class="value"></span></div>
-                <div class="score">Current score: <span class="value"></span></div>
-                <div class="time">Remaing time for sending:
-                    <div class="value"></div>
+            <h2>Site watcher</h2>
+            <div id="Sitewatcher">
+                <div class="state">State: <button class="value"></button></div>
+                <div class="time">Remaing time until sending:
                     <div class="bar"><div></div></div>
                 </div>
             </div>
-            <ul id="menu">
+            <h2>Your Character</h2>
+            <ul id="CharacterStats">
+                <li class="lvl"><span>Level:</span> <span class="value"></span></li>
+                <li class="hp"><span>Health:</span> <span class="value"></span></li>
+                <li class="exp"><span>Exp:</span> <span class="value"></span></li>
+                <li class="gp"><span>Gold:</span> <span class="value"></span></li>
+            </ul>
+            <ul id="Menu">
                 <li><a href="options.html" target="_blank">Options</a></li>
                 <li><a target="_blank" href="https://github.com/NeverI/habitrpg-chrome/issues">Extension Bugs</a></li>
                 <li><a href="http://www.habitrpg.com" target="_blank">HabitRPG</a></li>

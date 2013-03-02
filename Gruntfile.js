@@ -68,6 +68,7 @@ module.exports = function(grunt) {
       chrome: {
         files: [
           { src: ['common/img/*'], dest: 'builds/chrome/img/', expand: true, flatten: true },
+          { src: ['common/css/*'], dest: 'builds/chrome/css/', expand: true, flatten: true },
           { src: ['common/js/vendor/*'], dest: 'builds/chrome/vendor/', expand: true, flatten: true },
           { src: ['common/html/*', 'common/js/binds/*', 'chrome/data/*'], dest: 'builds/chrome/', expand: true, flatten: true },
         ]
