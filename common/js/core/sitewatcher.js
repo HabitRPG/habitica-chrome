@@ -35,7 +35,7 @@ var SiteWatcher = (function() {
 
             this.appBridge = appBridge;
             this.activators = Activators;
-
+            
             for (var name in this.activators) 
                 this.activators[name].init(this.appBridge);
 
@@ -78,11 +78,9 @@ var SiteWatcher = (function() {
         },
 
         triggerBrowserActionIconChange: function() {
-
-            if (watcher.score > 0) watcher.appBridge.trigger('app.changeIcon', '-up');
-            else if (watcher.score < 0) watcher.appBridge.trigger('app.changeIcon', '-down');
+            if (watcher.productivityState > 0) watcher.appBridge.trigger('app.changeIcon', '-up');
+            else if (watcher.productivityState < 0) watcher.appBridge.trigger('app.changeIcon', '-down');
             else watcher.appBridge.trigger('app.changeIcon', '');
-
         },
 
         setOptions: function(params) {
@@ -161,8 +159,6 @@ var SiteWatcher = (function() {
                 score = (spentTime * this.badTimeMultiplier) * -1;
 
             this.score += score;
-            this.triggerBrowserActionIconChange();
-
         },
         
         setProductivityState: function(host, notify) {
@@ -199,6 +195,8 @@ var SiteWatcher = (function() {
 
                 if (notify && data)
                     this.appBridge.trigger('app.notify', data);
+
+                this.triggerBrowserActionIconChange();
             }
 
         },
@@ -232,7 +230,6 @@ var SiteWatcher = (function() {
                 });
 
                 watcher.score = 0;
-                watcher.triggerBrowserActionIconChange();
             }
         },
 
