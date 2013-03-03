@@ -6,7 +6,7 @@
             
             TaskListWatcher.init();
 
-            var DetectTaskListOpened = new WebKitMutationObserver(function(mutations) {
+            var DetectTaskListOpened = browser.getMutationObserver(function(mutations) {
 
                     mutations.forEach(function(mutation){
                         if (mutation.target.className == 'no') {
@@ -30,7 +30,7 @@
         obj: undefined,
 
         init: function(){
-            this.obj = new WebKitMutationObserver(this.handle);
+            this.obj = browser.getMutationObserver(this.handle);
         },
 
         enable: function(source) {
@@ -72,11 +72,11 @@
         },
 
         complete: function() {
-            chrome.extension.sendMessage({ type: "todos.complete" });
+            browser.sendMessage({ type: "todos.complete" });
         },
 
         unComplete: function() {
-            chrome.extension.sendMessage({type: "todos.unComplete"});
+            browser.sendMessage({type: "todos.unComplete"});
         }
     };
 

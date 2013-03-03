@@ -21,12 +21,12 @@ jQuery('document').ready(function(){
             $('body').on('click', 'input[name=commit]', function(){App.start();});
             $(window).unload(function() { if (App.isRunning) App.stop(); });
 
-            chrome.extension.sendMessage({type: "tomatoes.reset"});
+            browser.sendMessage({type: "tomatoes.reset"});
         },
 
         start: function() {
             this.isRunning = true;
-            chrome.extension.sendMessage({
+            browser.sendMessage({
                     type: "tomatoes.started", 
                     tomatoCount: parseInt($('.day .counter_value').text(), 10)
                 });
@@ -34,7 +34,7 @@ jQuery('document').ready(function(){
 
         stop: function() {
             this.isRunning = false;
-            chrome.extension.sendMessage({type: "tomatoes.stopped"});
+            browser.sendMessage({type: "tomatoes.stopped"});
         },
 
         // replace the confirm window so we know when the user stopped a period

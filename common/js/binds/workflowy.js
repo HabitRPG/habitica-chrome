@@ -4,7 +4,7 @@
 
         init: function() {
 
-            var classChangeWatcher = new WebKitMutationObserver(function(mutations) {
+            var classChangeWatcher = browser.getMutationObserver(function(mutations) {
 
                 mutations.forEach(function(mutation) {
                     var classList = mutation.target.classList;
@@ -33,11 +33,11 @@
         },
 
         complete: function() {
-            chrome.extension.sendMessage({ type: "todos.complete" });
+            browser.sendMessage({ type: "todos.complete" });
         },
 
         unComplete: function() {
-            chrome.extension.sendMessage({type: "todos.unComplete"});
+            browser.sendMessage({type: "todos.unComplete"});
         }
 
     };

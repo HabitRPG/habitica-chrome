@@ -4,7 +4,7 @@
 
         init: function() {
             
-            var TaskWatcher = new WebKitMutationObserver(function(mutations) {
+            var TaskWatcher = browser.getMutationObserver(function(mutations) {
 
                 ProcessTaskMutations.process(mutations);
 
@@ -24,11 +24,11 @@
         },
 
         complete: function() {
-            chrome.extension.sendMessage({ type: "todos.complete" });
+            browser.sendMessage({ type: "todos.complete" });
         },
 
         unComplete: function() {
-            chrome.extension.sendMessage({type: "todos.unComplete"});
+            browser.sendMessage({type: "todos.unComplete"});
         }
 
     },

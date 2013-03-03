@@ -1,7 +1,8 @@
 /*global module:false*/
 module.exports = function(grunt) {
+  var fs = require('fs');
 
-   var core = [
+  var core = [
       'common/js/else/defaults.js', 
       'common/js/core/utilies.js', 
       'common/js/core/activators.js', 
@@ -9,7 +10,7 @@ module.exports = function(grunt) {
       'common/js/core/todos.js', 
       'common/js/core/tomatoes.js', 
       'common/js/core/habitrpg.js'
-      ];
+  ];
     
   // Project configuration.
   grunt.initConfig({
@@ -26,11 +27,11 @@ module.exports = function(grunt) {
 
     concat: {
       chrome: {
-        files: {
+        files: attachBindConcats('chrome', {
             'builds/chrome/background.js': core.concat(['chrome/app.js']),
             'builds/chrome/popup.js': ['chrome/popup.js', 'common/js/else/popup.js'],
             'builds/chrome/options.js': ['common/js/else/defaults.js', 'common/js/else/options.js']
-          }
+          })
       }
     },
 
@@ -70,7 +71,7 @@ module.exports = function(grunt) {
           { src: ['common/img/*'], dest: 'builds/chrome/img/', expand: true, flatten: true },
           { src: ['common/css/*'], dest: 'builds/chrome/css/', expand: true, flatten: true },
           { src: ['common/js/vendor/*'], dest: 'builds/chrome/vendor/', expand: true, flatten: true },
-          { src: ['common/html/*', 'common/js/binds/*', 'chrome/data/*'], dest: 'builds/chrome/', expand: true, flatten: true },
+          { src: ['common/html/*', 'chrome/data/*'], dest: 'builds/chrome/', expand: true, flatten: true },
         ]
       }
     }
@@ -93,5 +94,17 @@ module.exports = function(grunt) {
   grunt.registerTask('chrome',  [
       'jshint:core', 'jshint:chrome', 'clean:chrome', 'copy:chrome', 'concat:chrome'
       ]);
+
+
+
+  function attachBindConcats(type, obj) {
+    files = fs.readdirSync('common/js/binds');
+
+    for (var i=0,len=files.length; i<len; i++) {
+      obj['builds/'+type+'/bind_'+files[i]] = [type+'/bind.js', 'common/js/binds/'+files[i]];
+    }
+
+    return obj;
+  }
 
 };
