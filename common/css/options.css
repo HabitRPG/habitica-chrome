@@ -1,0 +1,82 @@
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+h1 { text-align: center; }
+
+h2 { margin-top: 0; }
+    h2 label { font-size: 14px; font-weight: normal; }
+
+input[type=number] { width: 50px; }
+input { margin-left: 5px; margin-right: 5px; }
+.box {padding: 5px;}
+.visible { display: block !important; }
+.day { display: inline-block; margin: 5px; text-align: center; font-weight: bold}
+.day label { font-weight: normal; }
+
+.section.box { margin: 15px 0; padding: 10px; width: 530px;}
+.section.neutral { position: relative;}
+    .state { 
+        display: none; 
+        color: #fff; 
+        text-align: center; 
+        position: absolute; 
+        bottom: 0;
+        width: 96%;
+    }
+    .state.good { background: green; display: block; }
+    .state.bad { background: red; display: block; color: black;}
+    .section button[type=submit] { position: absolute; right: 15px; bottom: 25px;}
+
+    .section.neutral > label {
+        display: inline-block;
+        width: 160px;
+    }
+    .section.neutral > input {
+        width: 260px;
+    }
+
+    .floatContainer {
+        margin: 25px 0 10px;
+    }
+    
+    .floatContainer:after {
+        width: 100%;
+        display: block;
+        content: " ";
+        clear: both;
+    }
+        .left,
+        .right {
+            width: 45%;
+        }
+
+        .floatContainer textarea { 
+            max-width: 100%;
+        }
+
+#ActivatorOptions > div { display: none; }
+
+#habitrpgForm {
+    position: relative;
+    left: 50%;
+    width: 550px;
+    margin-left: -275;
+}
+
+#head {
+    background: #ddd;
+    background: -webkit-gradient(linear,0 0,0 100%,from(#e7e7e7),to(#d0d0d0));
+    background: -moz-linear-gradient(#e7e7e7,#d0d0d0);
+    background: -ms-linear-gradient(#e7e7e7,#d0d0d0);
+    background: -o-linear-gradient(#e7e7e7,#d0d0d0);
+    background: linear-gradient(#e7e7e7,#d0d0d0);
+    -webkit-box-shadow: inset 0 1px #f7f7f7,0 1px #888,0 2px #e7e7e7;
+    -moz-box-shadow: inset 0 1px #f7f7f7,0 1px #888,0 2px #e7e7e7;
+    -webkit-box-shadow: inset 0 1px #f7f7f7,0 1px #888,0 2px #e7e7e7;
+    box-shadow: inset 0 1px #f7f7f7,0 1px #888,0 2px #e7e7e7;
+    padding: 12px 16px;
+    white-space: nowrap;
+}
+

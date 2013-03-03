@@ -6,7 +6,7 @@
             
             TaskListWatcher.init();
 
-            var DetectTaskListOpened = new WebKitMutationObserver(function(mutations) {
+            var DetectTaskListOpened = browser.getMutationObserver(function(mutations) {
 
                     mutations.forEach(function(mutation){
                         if (mutation.target.className == 'no') {
@@ -30,7 +30,7 @@
         obj: undefined,
 
         init: function(){
-            this.obj = new WebKitMutationObserver(this.handle);
+            this.obj = browser.getMutationObserver(this.handle);
         },
 
         enable: function(source) {
@@ -47,28 +47,36 @@
 
         handle: function(mutations) {
             mutations.forEach(function(mutation){
+                var addedClassList, removedNodes, cl;
                 if (mutation.target.nodeName == 'TD' && mutation.target.className == 'EV') {
-                    if (!mutation.addedNodes[2] && !mutation.removedNodes[2]) return;
-                    var addedClassList = mutation.addedNodes[2].classList,
+                    if (!mutation.addedNodes[1] && !mutation.removedNodes[1]) return;
+                    if (mutation.addedNodes[2]) {
+                        addedClassList = mutation.addedNodes[2].classList;
                         removedClassList = mutation.removedNodes[2].classList;
+                        cl = 'Ez';
+                    } else {
+                        addedClassList = mutation.addedNodes[1].classList;
+                        removedClassList = mutation.removedNodes[1].classList;
+                        cl = 'EY';
+                    }
 
-                    if (!addedClassList.contains('Ez') && !removedClassList.contains('Ez')) return;
+                    if (!addedClassList.contains(cl) && !removedClassList.contains(cl)) return;
 
                     if (addedClassList.contains('DL') && !removedClassList.contains('DL'))
                         TaskListWatcher.complete();
 
-                    else if (!addedClassList.contains('DL') && removedClassList.contains('DL'))
+                    else if (!addedClassList.contains('DL') && (removedClassList.contains('DL') || !removedClassList.contains('DL')))
                         TaskListWatcher.unComplete();
                 }
             });
         },
 
         complete: function() {
-            chrome.extension.sendMessage({ type: "todos.complete" });
+            browser.sendMessage({ type: "todos.complete" });
         },
 
         unComplete: function() {
-            chrome.extension.sendMessage({type: "todos.unComplete"});
+            browser.sendMessage({type: "todos.unComplete"});
         }
     };
 

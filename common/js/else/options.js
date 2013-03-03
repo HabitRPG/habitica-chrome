@@ -25,6 +25,11 @@ jQuery('document').ready(function(){
           $('#uid').bind('change', EventHandlers.setEmptyUIDState);
           $('#apiToken').bind('change', EventHandlers.setEmptyUIDState);
           $('#activatorName').bind('change', EventHandlers.changeActivatorOptions);
+          $('#habitrpgForm').on('click', 'h2 input', EventHandlers.changeSectionStatus);
+
+          $('.section').each(function(){
+            EventHandlers.changeSectionStatus({target:$(this).find('h2 input')});
+          });
 
           EventHandlers.setEmptyUIDState();
           EventHandlers.changeActivatorOptions();
@@ -90,7 +95,19 @@ jQuery('document').ready(function(){
         EventHandlers.changeActivatorOptions = fn;
 
         return fn;
+      },
+
+      changeSectionStatus: function(e) {
+        var target = $(e.target),
+            enabled = target.is(':checked') ? true : false;
+
+        if (enabled) {
+          target.parents('.section').removeClass('disabled').addClass('enabled');
+        } else {
+          target.parents('.section').addClass('disabled').removeClass('enabled');
+        }
       }
+
     },
 
   DaySettings = {
@@ -101,13 +118,13 @@ jQuery('document').ready(function(){
       data = typeof data == 'string' ? JSON.parse(data) : data, inner = '';
       var day, dayList = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
           getNumbInput = function(id, value, isHour ) {
-            return '<input type="number" id="'+id+'" value="'+value+'" min="0" max="'+(isHour ? '23' : '59')+'" />';
+            return '<input type="number" class="box" id="'+id+'" value="'+value+'" min="0" max="'+(isHour ? '23' : '59')+'" />';
           };
 
       for (var i in dayList) {
         day = dayList[i];
         inner +='<div class="day">'+day+'<br />';
-        inner += '<label>Active:</label><input type="checkbox" id="days-'+day+'-isActive"'+(data[day].active ? 'checked=true' : '')+'/><br />';
+        inner += '<label>Active:</label><input type="checkbox" class="box" id="days-'+day+'-isActive"'+(data[day].active ? 'checked=true' : '')+'/><br />';
         inner += '<label>Start:</label>'+getNumbInput('days-'+day+'-sH', data[day].start[0], true);
         inner += ':'+getNumbInput('days-'+day+'-sM', data[day].start[1], false)+'<br />';
         inner += '<label>End: </label>'+getNumbInput('days-'+day+'-eH', data[day].end[0], true);
