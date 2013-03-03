@@ -47,17 +47,25 @@
 
         handle: function(mutations) {
             mutations.forEach(function(mutation){
+                var addedClassList, removedNodes, cl;
                 if (mutation.target.nodeName == 'TD' && mutation.target.className == 'EV') {
-                    if (!mutation.addedNodes[2] && !mutation.removedNodes[2]) return;
-                    var addedClassList = mutation.addedNodes[2].classList,
+                    if (!mutation.addedNodes[1] && !mutation.removedNodes[1]) return;
+                    if (mutation.addedNodes[2]) {
+                        addedClassList = mutation.addedNodes[2].classList;
                         removedClassList = mutation.removedNodes[2].classList;
+                        cl = 'Ez';
+                    } else {
+                        addedClassList = mutation.addedNodes[1].classList;
+                        removedClassList = mutation.removedNodes[1].classList;
+                        cl = 'EY';
+                    }
 
-                    if (!addedClassList.contains('Ez') && !removedClassList.contains('Ez')) return;
+                    if (!addedClassList.contains(cl) && !removedClassList.contains(cl)) return;
 
                     if (addedClassList.contains('DL') && !removedClassList.contains('DL'))
                         TaskListWatcher.complete();
 
-                    else if (!addedClassList.contains('DL') && removedClassList.contains('DL'))
+                    else if (!addedClassList.contains('DL') && (removedClassList.contains('DL') || !removedClassList.contains('DL')))
                         TaskListWatcher.unComplete();
                 }
             });
