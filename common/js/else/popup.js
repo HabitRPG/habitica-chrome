@@ -80,7 +80,10 @@ var Popup = (function() {
 
             sitewatcherDataChanged: function(data) {
                 popup.sitewatcherState = data.state;
-                popup.sitewatcher.find('.state .value').text(data.state ? 'active' : 'inactive');
+                var btn = popup.sitewatcher.find('.state .value').text(data.state ? 'active' : 'inactive');
+
+                if (data.state) btn.removeClass('red');
+                else btn.addClass('red');
                 
                 if (!data.state) {
                     popup.sitewatcherTimeLine.width(0);
