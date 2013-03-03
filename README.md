@@ -1,20 +1,5 @@
 # [HabitRPG](http://habitrpg.com) browser extensions
 
-### sadly the feature set differs from the official extension... for now;)
-
-### pros:
-- site watcher funcionality can turn off
-- site watcher can control per day and per hours
-- site watcher can control via a website. only detect sites when that site is opened.
-- todo page binds (asana, workflowy, google task)
-- tomato.es bind. gain exp for every pomodore and loose hp if you over working/breaking the time intervals :)
-- also can control the site watcher via tomato.es. only detect sites when you are in a pomodore flow. (on break the vice/good sites are swapped:)
-
-### cons:
-- not has a styled options
-- not has an action icon
-- does not notify on low hp
-
 ## About the development
 The main goal is keeping away the core code from the browser dependency, so it can use in multiple platform. 
 But since every browser has an own extension structure it's not an easy task...
