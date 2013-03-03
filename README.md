@@ -1,5 +1,9 @@
 # [HabitRPG](http://habitrpg.com) browser extensions
 
+Packed files:
+
+ - [chrome](http://nevisite.com/stuff/github/habitrpg/builds/habitrpg_chrome.crx)
+
 ## About the development
 The main goal is keeping away the core code from the browser dependency, so it can use in multiple platform. 
 But since every browser has an own extension structure it's not an easy task...
