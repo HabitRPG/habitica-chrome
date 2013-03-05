@@ -52,12 +52,15 @@ var Popup = (function() {
                 this.getBackgroundData();
 
                 $('#Sitewatcher .state .value').on('click', function(){
-                    if (popup.sitewatcherState) {
+                    if (popup.sitewatcherState < 0) return;
+
+                    if (popup.sitewatcherState == 1) {
                         saveSiteWatcherState('false');
+                        popup.sitewatcherState = 0;
                     } else {
                         saveSiteWatcherState('true');
+                        popup.sitewatcherState = 1;
                     }
-                    popup.sitewatcherState = !popup.sitewatcherState;
                 });
 
                 setInterval(
@@ -65,6 +68,10 @@ var Popup = (function() {
                         popup.bridge.trigger('watcher.forceChange');
 
                 }, popup.updateInterval);
+
+                setTimeout(function(){
+                    $('#Main *:focus').blur();
+                }, 100);
             },
 
             getBackgroundData: function() {
@@ -80,15 +87,19 @@ var Popup = (function() {
 
             sitewatcherDataChanged: function(data) {
                 popup.sitewatcherState = data.state;
-                var btn = popup.sitewatcher.find('.state .value').text(data.state ? 'active' : 'inactive');
 
-                if (data.state) btn.removeClass('red');
-                else btn.addClass('red');
+                var btn = popup.sitewatcher.find('.state .value');
+
+                if (data.state < 0 )  btn.attr('disabled', 'disabled');
+                else btn.removeAttr('disabled');
                 
-                if (!data.state) {
-                    popup.sitewatcherTimeLine.width(0);
+                if (data.state <= 0) {
+                    btn.text('inactive').addClass('red');
+                    popup.sitewatcherTimeLine.width(0).parent().attr('title', '');
                     return;
                 }
+
+                btn.text('active').removeClass('red');
 
                 popup.sitewatcherTimeLine.parent().attr('title', data.score.toFixed(2));
 

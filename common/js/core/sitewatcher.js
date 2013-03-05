@@ -73,10 +73,10 @@ var SiteWatcher = (function() {
         },
 
         spreadData: function() {
-            var isActive = watcher.isEnabled();
-            isActive = isActive ? watcher.activator.state : false;
-
-            watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
+            var isActive = !watcher.activator.state ? -1 : (watcher.isEnabled() ? 1 : 0);
+            
+            if (isActive == 1)
+                watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
 
             watcher.appBridge.trigger('watcher.dataChanged', {
                 state: isActive,
@@ -115,7 +115,8 @@ var SiteWatcher = (function() {
                     this.disable();
             }
 
-            this.isVerbose = params.isVerboseSiteWatcher == 'true' ? true : false;
+            if (params.isVerboseSiteWatcher)
+                this.isVerbose = params.isVerboseSiteWatcher == 'true' ? true : false;
 
             for (var ac in this.activators) 
                 this.activators[ac].setOptions(params);
@@ -131,10 +132,13 @@ var SiteWatcher = (function() {
 
         setActivator: function(name) {
             name = this.activators[name] ? name : 'alwaysoff';
-            
+
             this.activator.disable();
             this.activator = this.activators[name];
             this.activator.enable();
+
+            if (this.isEnabled() && this.activator.state)
+                this.addScoreFromSpentTime(this.getandResetSpentTime());
         },
 
         getHost: function(url) { return url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1'); },
@@ -165,6 +169,7 @@ var SiteWatcher = (function() {
         },
 
         addScoreFromSpentTime: function(spentTime) {
+
             var score = 0;
 
             if (this.productivityState > 0)
@@ -217,17 +222,24 @@ var SiteWatcher = (function() {
             if (watcher.activator.state && !value) {
                 watcher.triggerSendRequest();
                 watcher.turnOffTheSender();
+                watcher.productivityState = 0;
 
             } else if (!watcher.activator.state && value) {
                 watcher.turnOnTheSender();
+                watcher.setProductivityState(watcher.host, watcher.isVerbose);
 
             } else if (watcher.activator.state && value && !watcher.sendIntervalID) {
                 watcher.turnOnTheSender();
+                watcher.setProductivityState(watcher.host, watcher.isVerbose);
 
             } else if (!watcher.activator.state && !value && watcher.sendIntervalID) {
                 watcher.triggerSendRequest();
                 watcher.turnOffTheSender();
-            }            
+                watcher.productivityState = 0;
+
+            }
+
+            watcher.triggerBrowserActionIconChange();         
         },
 
         triggerSendRequest: function() {

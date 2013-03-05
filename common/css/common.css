@@ -56,7 +56,7 @@ ul {
     transition: background-position 0.1s linear;
 }
 
-.btn:hover, ..btn:focus {
+.btn:hover, .btn:focus {
     color: #333333;
     text-decoration: none;
     background-position: 0 -15px;
@@ -85,6 +85,14 @@ ul {
 .btn.red.disabled, 
 .btn.red[disabled] {
     background-color: #bd362f;
+}
+
+.btn.red.disabled, 
+.btn.red[disabled] {
+    background-image: none;
+    color: #450000;
+    cursor: auto;
+    box-shadow: none;
 }
 
 .btn.green {
