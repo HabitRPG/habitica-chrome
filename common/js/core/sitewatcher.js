@@ -49,9 +49,15 @@ var SiteWatcher = (function() {
         },
 
         enable:function() {
+
+            this.score = 0;
             this.appBridge.addListener('app.newUrl', this.checkNewUrl);
             this.appBridge.addListener('watcher.swapHosts', this.swapHosts);
             this.appBridge.addListener('watcher.activator.changed', this.controllSendingState);
+
+            this.lastSendTime = new Date().getTime();
+
+            this.appBridge.trigger('app.getCurrentUrl', this.checkNewUrl);
         },
 
         disable: function() {
@@ -62,6 +68,8 @@ var SiteWatcher = (function() {
             this.appBridge.removeListener('app.newUrl', this.checkNewUrl);
             this.appBridge.removeListener('watcher.swapHosts', this.swapHosts);
             this.appBridge.removeListener('watcher.activator.changed', this.controllSendingState);
+
+            this.turnOffTheSender();
         },
 
         spreadData: function() {
@@ -136,7 +144,10 @@ var SiteWatcher = (function() {
             var spentTime = watcher.getandResetSpentTime(),
                 host = watcher.getHost(url);
 
-            if (!watcher.activator.state) return;
+            if (!watcher.activator.state) {
+                watcher.host = host;
+                return;
+            }
             
             watcher.addScoreFromSpentTime(spentTime);
             watcher.setProductivityState(host, watcher.activator.state && watcher.isVerbose);

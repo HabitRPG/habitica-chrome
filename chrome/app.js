@@ -21,6 +21,7 @@ var App = {
 		this.dispatcher.addListener('app.notify', this.showNotification);
 		this.dispatcher.addListener('app.isOpenedUrl', this.isOpenedUrlHandler);
 		this.dispatcher.addListener('app.newUrl', function(url){App.activeUrl = url; });
+		this.dispatcher.addListener('app.getCurrentUrl', function(){ App.dispatcher.trigger('app.newUrl', App.activeUrl); });
 
 		if (this.appTest > 0) {
 			this.createLogger();
