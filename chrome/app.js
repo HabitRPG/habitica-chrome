@@ -32,10 +32,10 @@ var App = {
 		else 
 			App.habitrpg.init(this.dispatcher);
 
-		chrome.tabs.onCreated.addListener(this.tabCreatedHandler);
 		chrome.tabs.onUpdated.addListener(this.tabUpdatedHandler);
 		chrome.tabs.onRemoved.addListener(this.tabRemovedHandler);
 		chrome.extension.onMessage.addListener(this.messageHandler);
+		chrome.tabs.onCreated.addListener(this.navCommittedHandler);
 		chrome.tabs.onActivated.addListener(this.tabActivatedHandler);
 		chrome.webNavigation.onCommitted.addListener(this.navCommittedHandler);
 		
@@ -69,32 +69,24 @@ var App = {
 	},
 
 	navCommittedHandler: function(tab) {
-		if (!tab.id) return;
+		if (!tab.id || App.activeUrl == tab.url) return;
 
 		App.triggerFirstOpenedUrl(tab.url);
 
 		App.tabs[tab.id] = tab;
 		if (App.hasFocus && tab.active && tab.url && App.invalidTransitionTypes.indexOf(tab.transitionType) == -1) {
-			App.triggerFirstOpenedUrl(tab.url);
 			App.dispatcher.trigger('app.newUrl', App.catchSpecURL(tab.url));
 			App.activeUrl = tab.url;
 		}
 	},
 
-	tabCreatedHandler: function(tab) {
-		if (!tab.id) return;
-
-		App.triggerFirstOpenedUrl(tab.url);
-
-		App.tabs[tab.id] = tab;
-		App.tabUpdatedHandler(undefined, undefined, tab);
-	},
-
 	tabUpdatedHandler: function(id, changed, tab) {
+		
 		if (App.hasFocus && tab.active && tab.url && App.activeUrl != tab.url) {
 			App.triggerFirstOpenedUrl(tab.url);
 			App.dispatcher.trigger('app.newUrl', App.catchSpecURL(tab.url));
 			App.activeUrl = tab.url;
+			App.tabs[tab.id] = tab;
 		}
 	},
 
@@ -102,10 +94,11 @@ var App = {
 	tabRemovedHandler: function(tabId) {
 		var url = App.tabs[tabId].url;
 		delete App.tabs[tabId];
-		
-		if (!App.hasInTabs(url))
-			App.dispatcher.trigger('app.lastClosedUrl', App.catchSpecURL(url));
 
+		if (!App.hasInTabs(url)) {
+			App.dispatcher.trigger('app.lastClosedUrl', App.catchSpecURL(url));
+		}
+		
 		App.dispatcher.trigger('app.closedUrl', App.catchSpecURL(url));
 	},
 
