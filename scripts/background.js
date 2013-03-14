@@ -299,6 +299,24 @@ var healthCheck = function(HP){
 	}
 }
 	
+//Time Check h = Hour passed through
+var timeCheck = function(h)(
+if (h >= localStorage.workStart && h < localStorage.workEnd && localStorage.workStatus == 1){
+			console.log(h + " is within work time & day, disallowing vice sites");
+			localStorage.workStatus = 1
+					if (url !== undefined && changeinfo.status !== "complete") {
+				websiteTypeCheck(tab, url, localStorage.workStatus);
+
+			}
+		}else{ 
+			localStorage.workStatus = 0;
+			console.log("time or day is outside of work hours, allowing vice sites");
+			if (url !== undefined && changeinfo.status == "complete") {
+				websiteTypeCheck(tab, url, localStorage.workStatus);
+			}
+		}
+)
+	
 //API Setup
 var habitrpgUrl = null;
 var notificationDefaults = {
@@ -356,7 +374,6 @@ var optionsPageLink = function(e) {
 };
 
 //Adds the two context menu items under "HabitRPG" subheading with icons.
-
 chrome.contextMenus.create({
     "title": "Add page to Good sites",
     "contexts": ["page", "selection", "image", "link"],
@@ -382,6 +399,9 @@ chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
 		console.log('HabitRPG listener firing');
 		var d = new Date();
 		var day = d.getDay();
+		var h = d.getHours();
+		console.log("the hour is: " + h);
+		var url = tab.url;
 		
 		// Checks thecurrent day and checks against whether that day is a work day in localStorage. 
 		switch (day)
@@ -390,79 +410,74 @@ chrome.tabs.onUpdated.addListener(function(tabid, changeinfo, tab) {
 				console.log("Today it's Sunday");
 				if (localStorage.workSun == "true"){
 					localStorage.workStatus = 1
+					timeCheck(h);
 				} else {
 					localStorage.workStatus = 0
+					timeCheck(h);
 				}
 				break;
 			case 1:
 				console.log("Today it's Monday");
 				if (localStorage.workMon == "true"){
 					localStorage.workStatus = 1
+					timeCheck(h);
 				} else {
 					localStorage.workStatus = 0
+					timeCheck(h);
 				}
 				break;
 			case 2:
 				console.log("Today it's Tuesday");
 				if (localStorage.workTues == "true"){
 					localStorage.workStatus = 1
+					timeCheck(h);
 				} else {
 					localStorage.workStatus = 0
+					timeCheck(h);
 				}
 				break;
 			case 3:
 				console.log("Today it's Wednesday");
 				if (localStorage.workWed == "true"){
 					localStorage.workStatus = 1
+					timeCheck(h);
 				} else {
 					localStorage.workStatus = 0
+					timeCheck(h);
 				}
 				break;
 			case 4:
 				console.log("Today it's Thursday");
 				if (localStorage.workThur == "true"){
 					localStorage.workStatus = 1
+					timeCheck(h);
 				} else {
 					localStorage.workStatus = 0
+					timeCheck(h);
 				}
 				break;
 			case 5:
 				console.log("Today it's Friday");
 				if (localStorage.workFri == "true"){
 					localStorage.workStatus = 1
+					timeCheck(h);
 				} else {
 					localStorage.workStatus = 0
+					timeCheck(h);
 				}
 				break;
 			case 6:
 				console.log("Today it's Saturday");
 				if (localStorage.workSat == "true"){
 					localStorage.workStatus = 1
+					timeCheck(h);
 				} else {
 					localStorage.workStatus = 0
+					timeCheck(h);
 				}
 				break;
-}
+}	
 		
-		
-		var h = d.getHours();
-		console.log("the hour is: " + h);
-		var url = tab.url;
-
-		if (h >= localStorage.workStart && h < localStorage.workEnd && localStorage.workStatus == 1){
-			console.log(h + " is within work time & day, disallowing vice sites");
-			localStorage.workStatus = 1
-					if (url !== undefined && changeinfo.status !== "complete") {
-				websiteTypeCheck(tab, url, localStorage.workStatus);
-
-			}
-		}else{ 
-			localStorage.workStatus = 0;
-			console.log("time or day is outside of work hours, allowing vice sites");
-			if (url !== undefined && changeinfo.status == "complete") {
-				websiteTypeCheck(tab, url, localStorage.workStatus);
-			}
-		}
 	}
 	else {
 		console.log('Skipping the HabitRPG listener due to the uid and token not being set');
