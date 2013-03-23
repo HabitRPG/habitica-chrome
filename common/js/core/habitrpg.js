@@ -4,14 +4,14 @@ var habitRPG = (function(){
     var returnObj = {
         get: function() { return habitrpg; },
         init: function(bridge) { habitrpg.init(bridge); }
-    }, 
-  
+    },
+
     habitrpg = {
 
         isSandBox: true,
 
         controllers: undefined,
-        
+
         uid: undefined,
         apiToken: undefined,
 
@@ -39,9 +39,9 @@ var habitRPG = (function(){
                 'todos': Todos
             };
 
-            for (var name in this.controllers) 
+            for (var name in this.controllers)
                 this.controllers[name].init(this.appBridge);
-        
+
         },
 
         setOptions: function(params) {
@@ -63,10 +63,10 @@ var habitRPG = (function(){
 
             params.isSandBox = habitrpg.isSandBox;
 
-            for (var co in habitrpg.controllers) 
+            for (var co in habitrpg.controllers)
                 habitrpg.controllers[co].setOptions(params);
-            
-            if (!habitrpg.character)
+
+            if (!habitrpg.character && !habitrpg.isSandBox)
                 habitrpg.setInitialCharacterData();
         },
 
@@ -76,14 +76,14 @@ var habitRPG = (function(){
 
             if (habitrpg.isSandBox) {
                 habitrpg.appBridge.trigger('app.notify', data);
-                
+
             } else {
-                
+
                 $.ajax({
                     type: 'POST',
                     data: { apiToken: habitrpg.apiToken },
                     url: habitrpg.habitUrl + data.urlSuffix
-                    
+
                 }).done(function(response){
 
                     data.score = response.delta;
@@ -99,8 +99,8 @@ var habitRPG = (function(){
             $.ajax({
                 type: 'POST',
                 data: { apiToken: habitrpg.apiToken },
-                url: habitrpg.habitUrl + 'tasks/extensionUsed/up'
-                
+                url: habitrpg.habitUrl + 'tasks/extension/up'
+
             }).done(function(response) {
 
                 habitrpg.appBridge.trigger('app.notify', {

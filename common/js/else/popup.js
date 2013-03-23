@@ -48,7 +48,7 @@ var Popup = (function() {
 
                 this.bridge.addListener('character.changed', this.updateCharacter);
                 this.bridge.addListener('watcher.dataChanged', this.sitewatcherDataChanged);
-                
+
                 this.getBackgroundData();
 
                 $('#Sitewatcher .state .value').on('click', function(){
@@ -80,6 +80,16 @@ var Popup = (function() {
             },
 
             updateCharacter: function(data) {
+
+                if (data) {
+                    $('#NotConnected').css('display', 'none');
+                    $('#Connected').css('display', 'block');
+                } else {
+                    $('#Connected').css('display', 'none');
+                    $('#NotConnected').css('display', 'block');
+                    return;
+                }
+
                 for (var i in data) {
                     popup.charStats.find('.'+i+' .value').text(i == 'gp' ? Math.floor(data[i]) : Math.round(data[i]));
                 }
@@ -92,7 +102,7 @@ var Popup = (function() {
 
                 if (data.state < 0 )  btn.attr('disabled', 'disabled');
                 else btn.removeAttr('disabled');
-                
+
                 if (data.state <= 0) {
                     btn.text('inactive').addClass('red');
                     popup.sitewatcherTimeLine.width(0).parent().attr('title', '');
@@ -104,14 +114,14 @@ var Popup = (function() {
                 popup.sitewatcherTimeLine.parent().attr('title', data.score.toFixed(2));
 
                 // update the timeline
-                var now = new Date().getTime(), 
+                var now = new Date().getTime(),
                     width = (data.nextSend - now) / (data.nextSend - data.lastSend),
                     // the score clapped between -1 and 1 but we need a number between 0 and 120
                     // score shifted to 0 and 2 then normalized and scale up
                     mappedScore = ((data.score + 1) / 2) * 120,
-                    // converter need a 0-1 hue value 
+                    // converter need a 0-1 hue value
                     color = hsl2Hex(mappedScore/360, 0.9, 0.5);
-                
+
                 popup.sitewatcherTimeLine.css({ width:(width * 100)+'%', 'background-color': color });
 
             }

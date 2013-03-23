@@ -7,20 +7,27 @@
     </head>
     <body>
         <div id="Main">
-            <h2>Site watcher</h2>
-            <div id="Sitewatcher">
-                <div class="state">State: <button class="value btn"></button></div>
-                <div class="time">Remaining time until sending:
-                    <div class="bar box"><div></div></div>
-                </div>
+            <div id="NotConnected">
+                <h2>Something is not good.</h2>
+
+                <p>Maybe you didn't fill the User/Api token from the options<br />or<br />the server has an issue...
             </div>
-            <h2>Your Character</h2>
-            <ul id="CharacterStats">
-                <li class="lvl"><span>Level:</span> <span class="value"></span></li>
-                <li class="hp"><span>Health:</span> <span class="value"></span></li>
-                <li class="exp"><span>Exp:</span> <span class="value"></span></li>
-                <li class="gp"><span>Gold:</span> <span class="value"></span></li>
-            </ul>
+            <div id="Connected">
+                <h2>Site watcher</h2>
+                <div id="Sitewatcher">
+                    <div class="state">State: <button class="value btn"></button></div>
+                    <div class="time">Remaining time until sending:
+                        <div class="bar box"><div></div></div>
+                    </div>
+                </div>
+                <h2>Your Character</h2>
+                <ul id="CharacterStats">
+                    <li class="lvl"><span>Level:</span> <span class="value"></span></li>
+                    <li class="hp"><span>Health:</span> <span class="value"></span></li>
+                    <li class="exp"><span>Exp:</span> <span class="value"></span></li>
+                    <li class="gp"><span>Gold:</span> <span class="value"></span></li>
+                </ul>
+            </div>
             <ul id="Menu">
                 <li><a href="options.html" target="_blank">Options</a></li>
                 <li><a target="_blank" href="https://github.com/NeverI/habitrpg-chrome/issues">Extension Bugs</a></li>
