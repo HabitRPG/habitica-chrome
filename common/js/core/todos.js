@@ -8,7 +8,7 @@ var Todos = (function() {
 
     var todos = {
 
-        urlPrefix: 'tasks/todos/',
+        urlPrefix: 'todos/',
 
         init: function(appBridge) {
 
@@ -32,7 +32,7 @@ var Todos = (function() {
             if (params.todosIsActive) {
                 if (params.todosIsActive == 'true')
                     this.enable();
-                else 
+                else
                     this.disable();
             }
 
@@ -56,7 +56,7 @@ var Todos = (function() {
             todos.appBridge.trigger('controller.sendRequest', {
                 urlSuffix: todos.urlPrefix+'down',
                 message: "Hurry! You are late! {score} HP"
-            });  
+            });
         }
     };
 

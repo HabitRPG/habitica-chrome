@@ -2,7 +2,6 @@
 var habitRPG = (function(){
 
     var returnObj = {
-        get: function() { return habitrpg; },
         init: function(bridge) { habitrpg.init(bridge); }
     },
 
@@ -17,8 +16,7 @@ var habitRPG = (function(){
 
         character: undefined,
 
-        habitUrl: '',
-        sourceHabitUrl: "https://habitrpg.com/v1/users/{UID}/",
+        habitUrl: "https://habitrpg.com/api/v1/user",
 
         appBridge: undefined,
 
@@ -51,7 +49,6 @@ var habitRPG = (function(){
                     habitrpg.character = undefined;
 
                 habitrpg.uid = params.uid;
-                habitrpg.habitUrl = habitrpg.sourceHabitUrl.replace('{UID}', habitrpg.uid);
             }
 
             if (params.apiToken !== undefined) {
@@ -84,72 +81,83 @@ var habitRPG = (function(){
                 habitrpg.appBridge.trigger('app.notify', data);
 
             } else {
+                habitrpg.sendAjax({
+                    type:'POST',
+                    urlSuffix:'/tasks/' + data.urlSuffix,
+                    callback: function(response){
+                        data.score = response.delta;
+                        habitrpg.appBridge.trigger('app.notify', data);
 
-                $.ajax({
-                    type: 'POST',
-                    data: { apiToken: habitrpg.apiToken },
-                    url: habitrpg.habitUrl + data.urlSuffix
-
-                }).done(function(response){
-
-                    data.score = response.delta;
-                    habitrpg.appBridge.trigger('app.notify', data);
-
-                    habitrpg.setCharacterData(response);
+                        habitrpg.setCharacterData(response, true);
+                    }
                 });
             }
         },
 
         setInitialCharacterData: function() {
-
-            $.ajax({
-                type: 'POST',
-                data: { apiToken: habitrpg.apiToken },
-                url: habitrpg.habitUrl + 'tasks/extension/up'
-
-            }).done(function(response) {
-
-                habitrpg.appBridge.trigger('app.notify', {
-                    score: response.delta,
-                    message: 'Because you deserve it {score} EXP/Gold! :)'
-                });
-
+            habitrpg.sendAjax({ callback: function(response) {
                 habitrpg.appBridge.trigger('app.listenToChangeIcon', true);
                 habitrpg.appBridge.trigger('watcher.triggerIconChange');
 
                 habitrpg.setCharacterData(response);
+                }
             });
-
         },
 
-        triggerCharacterChange: function() {
+        triggerCharacterChange: function(fromCache) {
+            if (!fromCache)
+                habitrpg.sendAjax({ callback: habitrpg.setCharacterData });
+
             habitrpg.appBridge.trigger('character.changed', habitrpg.character);
         },
 
-        setCharacterData: function(data) {
+        setCharacterData: function(data, onlyStats) {
 
-            if (habitrpg.character && (data.lvl > habitrpg.character.lvl)) {
+            if (onlyStats) data = { stats:data };
+
+            if (habitrpg.character && (data.stats.lvl > habitrpg.character.lvl)) {
 
                 setTimeout(function(){
                     habitrpg.appBridge.trigger('app.notify', {
                         score: 1,
-                        message: "Congratulations! You reached the "+data.lvl+" level!"
+                        message: "Congratulations! You reached the "+data.stats.lvl+" level!"
                     });
                 }, 5000);
 
-            } else if (data.hp < habitrpg.lowHP) {
+            } else if (data.stats.hp < habitrpg.lowHP) {
 
                 setTimeout(function(){
                     habitrpg.appBridge.trigger('app.notify', {
                         score: -1,
-                        message: "Your HP is too low!("+Math.round(data.hp)+") Quickly do something productive!"
+                        message: "Your HP is too low!("+Math.round(data.stats.hp)+") Quickly do something productive!"
                     });
                 }, 5000);
 
             }
 
-            habitrpg.character = data;
-            habitrpg.triggerCharacterChange();
+            if (onlyStats) habitrpg.character.stats = data.stats;
+            else habitrpg.character = data;
+
+            habitrpg.triggerCharacterChange(true);
+        },
+
+        sendAjax: function(options) {
+            if (!options) options = {};
+
+            var type = options.type || 'GET',
+                headers = options.headers || {'x-api-user': habitrpg.uid, 'x-api-key': habitrpg.apiToken},
+                url = habitrpg.habitUrl + (options.urlSuffix || ''),
+                data = options.data || undefined,
+                callback = options.callback || undefined;
+
+            $.ajax({
+                type: type,
+                headers: headers,
+                data: data,
+                url: url
+            }).done(function(response) {
+                if (callback) callback(response);
+            });
         }
 
     };

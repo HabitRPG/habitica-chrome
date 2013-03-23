@@ -10,7 +10,7 @@ var Tomatoes = (function() {
 
         url: 'http://tomato.es',
 
-        urlPrefix: 'tasks/tomatoes/',
+        urlPrefix: 'tomatoes/',
         pomodore: undefined,
 
         appBridge: undefined,
@@ -25,7 +25,7 @@ var Tomatoes = (function() {
 
         },
 
-        enable:function() {            
+        enable:function() {
             this.appBridge.addListener('tomatoes.reset', this.resetHandler);
             this.appBridge.addListener('tomatoes.started', this.startedFromPageHandler);
             this.appBridge.addListener('tomatoes.stopped', this.stoppedFromPageHandler);
@@ -46,14 +46,14 @@ var Tomatoes = (function() {
             if (params.tomatoesIsActive) {
                 if (params.tomatoesIsActive == 'true')
                     this.enable();
-                else 
+                else
                     this.disable();
             }
 
             this.overTimePenalty = params.tomatoesOverTimePenalty == 'true' ? true : false;
         },
 
-        setValue: function(params, name) { 
+        setValue: function(params, name) {
             if (params[name]) this[name] = params[name];
         },
 
@@ -80,23 +80,23 @@ var Tomatoes = (function() {
             if (data.type == 'break')
                 tomatoes.appBridge.trigger('controller.sendRequest', {
                     urlSuffix: tomatoes.urlPrefix+'up',
-                    message: 'You made your '+(data.tomatoCount+1)+' tomato! Well done {score} Exp/Gold!' 
+                    message: 'You made your '+(data.tomatoCount+1)+' tomato! Well done {score} Exp/Gold!'
                 });
         },
 
         overTimeHandler: function(data) {
 
             if (!tomatoes.overTimePenalty) return;
-            
+
             var message = 'You are over '+(data.type == 'work' ? 'working' : 'breaking');
             if (tomatoes.overTimeCounter % 2 == 1)
                 tomatoes.appBridge.trigger('app.notify', {
                         message: message+'! Next time you will lose HP!'
                     });
-            else 
+            else
                 tomatoes.appBridge.trigger('controller.sendRequest', {
                     urlSuffix: tomatoes.urlPrefix+'down',
-                    message: message+' {score} HP!!' 
+                    message: message+' {score} HP!!'
                 });
 
 

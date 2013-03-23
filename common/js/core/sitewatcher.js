@@ -9,7 +9,7 @@ var SiteWatcher = (function() {
 
     var watcher = {
 
-        urlPrefix: 'tasks/productivity/',
+        urlPrefix: 'productivity/',
 
         goodTimeMultiplier: 0.25,
         badTimeMultiplier: 0.5,
@@ -291,7 +291,6 @@ var SiteWatcher = (function() {
     };
 
     return {
-        get: function() { return watcher; },
         getScore: function() { return watcher.score; },
         isEnabled: function() { return watcher.appBridge.hasListener('app.newUrl', watcher.checkNewUrl); },
         init: function(appBridge) { watcher.init(appBridge); },

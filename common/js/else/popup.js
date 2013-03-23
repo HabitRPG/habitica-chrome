@@ -90,9 +90,14 @@ var Popup = (function() {
                     return;
                 }
 
-                for (var i in data) {
-                    popup.charStats.find('.'+i+' .value').text(i == 'gp' ? Math.floor(data[i]) : Math.round(data[i]));
+                for (var i in data.stats) {
+                    popup.charStats.find('.'+i+' .value').text(i == 'gp' ? Math.floor(data.stats[i]) : Math.round(data.stats[i]));
                 }
+                var hp = popup.charStats.find('.hp .value'),
+                    exp = popup.charStats.find('.exp .value');
+
+                hp.text(hp.text() + ' / ' + data.stats.maxHealth);
+                exp.text(exp.text() + ' / ' + data.stats.toNextLevel);
             },
 
             sitewatcherDataChanged: function(data) {
