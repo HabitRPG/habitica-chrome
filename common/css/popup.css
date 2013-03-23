@@ -28,36 +28,49 @@ ul {
 }
 
 .bar,
-.time, 
+.time,
 .sitewatcher { width: 100%; }
 
     .time { margin-top: 5px;}
-        .bar { height: 20px; }
-            .bar div { height: 100%; opacity: 0.8}
+        .bar { height: 20px; position: relative;}
+            .bar div {
+                height: 100%;
+                opacity: 0.8;
+                border-radius: 2px;
+                top: 0;
+                position: absolute;
+            }
 
-#CharacterStats span {
+            .bar span {
+                position: relative;
+                z-index: 2;
+            }
+
+#CharacterStats li { margin: 5px 0;}
+
+#CharacterStats li > span {
     display: inline-block;
-    width: 40%;
+    width: 23%;
+    text-align: right;
+    padding-right: 5px;
 }
 
-#CharacterStats span:first-child { 
-    text-align: right; 
-    padding-right: 5px;
-    padding-left: 20px;
-}
-#CharacterStats span:last-child { text-align: left; }
+#CharacterStats li > div { display: inline-block; text-align: center; width: 60%;}
+    #CharacterStats .hp .bar div { background: #D64040;}
+    #CharacterStats .exp .bar div { background: #FFCF42;}
+    #CharacterStats .bar span { color: #333; top: 1px; }
 
 #Menu {
     margin-top: 20px;
 }
 
-    #Menu li { 
+    #Menu li {
         margin: 3px 0;
         width: 100%;
     }
 
-        #Menu li a { 
-            display: inline-block; 
+        #Menu li a {
+            display: inline-block;
             width: 100%;
             padding: 5px 0;
-        } 
+        }

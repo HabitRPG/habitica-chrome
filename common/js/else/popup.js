@@ -93,11 +93,11 @@ var Popup = (function() {
                 for (var i in data.stats) {
                     popup.charStats.find('.'+i+' .value').text(i == 'gp' ? Math.floor(data.stats[i]) : Math.round(data.stats[i]));
                 }
-                var hp = popup.charStats.find('.hp .value'),
-                    exp = popup.charStats.find('.exp .value');
+                var hp = popup.charStats.find('.hp .bar div'),
+                    exp = popup.charStats.find('.exp .bar div');
 
-                hp.text(hp.text() + ' / ' + data.stats.maxHealth);
-                exp.text(exp.text() + ' / ' + data.stats.toNextLevel);
+                hp.css('width', Math.round((data.stats.hp / data.stats.maxHealth) * 100)+'%');
+                exp.css('width', Math.round((data.stats.exp / data.stats.toNextLevel) * 100)+'%');
             },
 
             sitewatcherDataChanged: function(data) {
