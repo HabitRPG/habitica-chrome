@@ -8,7 +8,7 @@ var habitRPG = (function(){
 
     habitrpg = {
 
-        isSandBox: true,
+        isSandBox: false,
 
         controllers: undefined,
 
@@ -28,7 +28,7 @@ var habitRPG = (function(){
         init: function(bridge) {
 
             this.appBridge = bridge;
-            
+
             this.appBridge.addListener('controller.sendRequest', this.send);
             this.appBridge.addListener('app.optionsChanged', this.setOptions);
             this.appBridge.addListener('character.forceChange', this.triggerCharacterChange);

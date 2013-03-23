@@ -21,9 +21,9 @@ var utilies = (function(){
         var index = this.listeners[type].indexOf(fn);
 
         if (index === -1) return;
-        
+
         this.listeners[type].splice(index, 1);
-        
+
     };
     EventDispatcher.prototype.hasListener = function(type, fn) {
         if (!this.listeners[type]) return false;
@@ -33,8 +33,11 @@ var utilies = (function(){
         if (!this.listeners[type]) return;
 
         var listeners = this.listeners[type];
-        for (var i=0,len=listeners.length;i<len;i++)
-            listeners[i].apply(this.context, [data]);
+        for (var i=0,len=listeners.length;i<len;i++) {
+            if (listeners[i])
+                listeners[i].apply(this.context, [data]);
+
+        }
     };
 
 
@@ -97,7 +100,7 @@ var utilies = (function(){
     Pomodore.prototype.reset = function() {
         this.stop();
         this.workCount = 0;
-    };    
+    };
 
     Pomodore.prototype.stop = function(isSilent) {
         var wasWork = false;
@@ -107,7 +110,7 @@ var utilies = (function(){
             wasWork = true;
             this.workCount--;
             this.currentPeriod = this.periods['break'];
-        } 
+        }
 
         this.timeOutId = clearTimeout(this.timeOutId);
 
@@ -123,7 +126,7 @@ var utilies = (function(){
             this.currentPeriod.stop();
             overTime = this.currentPeriod.overTime;
         }
-        
+
         if (this.currentPeriod.type == 'break' ) {
             isWork = true;
             this.workCount++;
@@ -143,9 +146,9 @@ var utilies = (function(){
         this.timeOutId = setTimeout(this.handleOverTime, this.currentPeriod.expectedLength + this.maxOverTimeInterval);
 
         this.parentBridge.trigger(this.eventNamespace+'.started', {
-                type: this.currentPeriod.type, 
-                tomatoCount: this.workCount, 
-                lastOverTime: overTime 
+                type: this.currentPeriod.type,
+                tomatoCount: this.workCount,
+                lastOverTime: overTime
             });
     };
 
@@ -159,7 +162,7 @@ var utilies = (function(){
             self.timeOutId = setTimeout(self.handleOverTime, self.overTimeInterval);
 
             if (self.overTimeInterval > 15000)
-                self.overTimeInterval -= 5000; 
+                self.overTimeInterval -= 5000;
         };
     };
 
