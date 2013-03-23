@@ -108,6 +108,9 @@ var habitRPG = (function(){
                     message: 'Because you deserve it {score} EXP/Gold! :)'
                 });
 
+                habitrpg.appBridge.trigger('app.listenToChangeIcon', true);
+                habitrpg.appBridge.trigger('watcher.triggerIconChange');
+
                 habitrpg.setCharacterData(response);
             });
 

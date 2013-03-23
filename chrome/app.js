@@ -17,7 +17,7 @@ var App = {
 
 	init: function() {
 
-		this.dispatcher.addListener('app.changeIcon', this.changeIcon);
+		this.dispatcher.addListener('app.listenToChangeIcon', this.handleChangeIconListener);
 		this.dispatcher.addListener('app.notify', this.showNotification);
 		this.dispatcher.addListener('app.isOpenedUrl', this.isOpenedUrlHandler);
 		this.dispatcher.addListener('app.newUrl', function(url){App.activeUrl = url; });
@@ -30,7 +30,7 @@ var App = {
 		} else if (this.appTest < 0)
 			this.createLogger();
 
-		else 
+		else
 			App.habitrpg.init(this.dispatcher);
 
 		chrome.tabs.onUpdated.addListener(this.tabUpdatedHandler);
@@ -39,8 +39,8 @@ var App = {
 		chrome.tabs.onCreated.addListener(this.navCommittedHandler);
 		chrome.tabs.onActivated.addListener(this.tabActivatedHandler);
 		chrome.webNavigation.onCommitted.addListener(this.navCommittedHandler);
-		
-		chrome.windows.onFocusChanged.addListener(this.focusChangeHandler);		
+
+		chrome.windows.onFocusChanged.addListener(this.focusChangeHandler);
 		chrome.storage.onChanged.addListener(this.setHabitRPGOptionsFromChange);
 
 		chrome.windows.getAll({populate:true}, function(windows){
@@ -82,7 +82,6 @@ var App = {
 	},
 
 	tabUpdatedHandler: function(id, changed, tab) {
-		
 		if (App.hasFocus && tab.active && tab.url && App.activeUrl != tab.url) {
 			App.triggerFirstOpenedUrl(tab.url);
 			App.dispatcher.trigger('app.newUrl', App.catchSpecURL(tab.url));
@@ -99,7 +98,7 @@ var App = {
 		if (!App.hasInTabs(url)) {
 			App.dispatcher.trigger('app.lastClosedUrl', App.catchSpecURL(url));
 		}
-		
+
 		App.dispatcher.trigger('app.closedUrl', App.catchSpecURL(url));
 	},
 
@@ -134,7 +133,6 @@ var App = {
 	},
 
 	catchSpecURL: function(url) {
-
 		if (url.indexOf('chrome-devtools') === 0)
 			url = 'chrome-devtools';
 
@@ -143,12 +141,20 @@ var App = {
 
 	setHabitRPGOptionsFromChange: function(params) {
 		var obj = {}, name;
-		for (name in params) 
+		for (name in params)
 			obj[name] = params[name].newValue;
 
 		App.dispatcher.trigger('app.optionsChanged', obj);
-		
+
 	},
+
+    handleChangeIconListener: function(bool) {
+        if (bool) {
+            App.dispatcher.addListener('app.changeIcon', App.changeIcon);
+        } else {
+            App.dispatcher.removeListener('app.changeIcon', App.changeIcon);
+        }
+    },
 
 	changeIcon: function(data) {
 		chrome.browserAction.setIcon({path: 'img/icon-48'+data+'.png'});
@@ -159,8 +165,8 @@ var App = {
 		var score = !data.score ? 0 : data.score.toFixed(3),
 			imgVersion = !data.score ? '' : (score < 0 ? '-down' : '-up'),
 			notification = webkitNotifications.createNotification(
-			"/img/icon-48" + imgVersion + ".png", 
-			'HabitRPG', 
+			"/img/icon-48" + imgVersion + ".png",
+			'HabitRPG',
 			data.message ? data.message.replace('{score}', score) :
 			('You '+(score < 0 ? 'lost' : 'gained')+' '+score+' '+(score < 0 ? 'HP! Lets go...' : 'Exp/Gold! Keep up!'))
 		);
@@ -196,11 +202,12 @@ var App = {
 	filterUrls: function(refUrl, tab) {
 	},
 
-	getHost: function(url) { 
-		return url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1'); 
+	getHost: function(url) {
+		return url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1');
 	},
 
 	createLogger: function() {
+        this.dispatcher.addListener('app.changeIcon', function(icon){console.log('icon: '+icon); });
 		this.dispatcher.addListener('app.newUrl', function(url) {console.log('new: '+url); });
 		this.dispatcher.addListener('app.optionsChanged', function(data){ console.log(data); });
 		this.dispatcher.addListener('app.closedUrl', function(url) { console.log('closed: '+url);});

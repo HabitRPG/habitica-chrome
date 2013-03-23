@@ -24,7 +24,7 @@ var SiteWatcher = (function() {
         timestamp: new Date().getTime(),
 
         appBridge: undefined,
-        
+
         activator: undefined,
         activators: undefined,
 
@@ -35,17 +35,18 @@ var SiteWatcher = (function() {
 
             this.appBridge = appBridge;
             this.activators = Activators;
-            
-            for (var name in this.activators) 
+
+            this.appBridge.addListener('watcher.forceChange', this.spreadData);
+            this.appBridge.addListener('watcher.triggerIconChange', this.triggerBrowserActionIconChange);
+
+            for (var name in this.activators)
                 this.activators[name].init(this.appBridge);
 
             this.activator = this.activators.alwaysoff;
-
-            this.appBridge.addListener('watcher.forceChange', this.spreadData);
         },
 
         isEnabled: function() {
-            return watcher.appBridge.hasListener('app.newUrl', watcher.checkNewUrl);
+            return this.appBridge.hasListener('app.newUrl', this.checkNewUrl);
         },
 
         enable:function() {
@@ -58,23 +59,25 @@ var SiteWatcher = (function() {
             this.lastSendTime = new Date().getTime();
 
             this.appBridge.trigger('app.getCurrentUrl', this.checkNewUrl);
+            this.triggerBrowserActionIconChange();
         },
 
         disable: function() {
-
-            this.setProductivityState();
-            this.triggerSendRequest();
 
             this.appBridge.removeListener('app.newUrl', this.checkNewUrl);
             this.appBridge.removeListener('watcher.swapHosts', this.swapHosts);
             this.appBridge.removeListener('watcher.activator.changed', this.controllSendingState);
 
+            this.setProductivityState(this.isVerbose);
+            this.triggerSendRequest();
             this.turnOffTheSender();
+
+            this.appBridge.trigger('app.changeIcon', '-inactive');
         },
 
         spreadData: function() {
             var isActive = !watcher.activator.state ? -1 : (watcher.isEnabled() ? 1 : 0);
-            
+
             if (isActive == 1)
                 watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
 
@@ -87,8 +90,10 @@ var SiteWatcher = (function() {
 
         },
 
-        triggerBrowserActionIconChange: function() {
-            if (watcher.productivityState > 0) watcher.appBridge.trigger('app.changeIcon', '-up');
+        triggerBrowserActionIconChange: function(forceCoffe) {
+            if (!watcher.isEnabled()) watcher.appBridge.trigger('app.changeIcon', '-inactive');
+            else if (!watcher.activator.state || forceCoffe) watcher.appBridge.trigger('app.changeIcon', '-coffee');
+            else if (watcher.productivityState > 0) watcher.appBridge.trigger('app.changeIcon', '-up');
             else if (watcher.productivityState < 0) watcher.appBridge.trigger('app.changeIcon', '-down');
             else watcher.appBridge.trigger('app.changeIcon', '');
         },
@@ -111,14 +116,14 @@ var SiteWatcher = (function() {
             if (params.siteWatcherIsActive) {
                 if (params.siteWatcherIsActive == 'true')
                     this.enable();
-                else 
+                else
                     this.disable();
             }
 
             if (params.isVerboseSiteWatcher)
                 this.isVerbose = params.isVerboseSiteWatcher == 'true' ? true : false;
 
-            for (var ac in this.activators) 
+            for (var ac in this.activators)
                 this.activators[ac].setOptions(params);
 
             this.setValue(params, 'activatorName');
@@ -126,16 +131,18 @@ var SiteWatcher = (function() {
 
         },
 
-        setValue: function(params, name) { 
+        setValue: function(params, name) {
             if (params[name]) this[name] = params[name];
         },
 
         setActivator: function(name) {
             name = this.activators[name] ? name : 'alwaysoff';
 
-            this.activator.disable();
-            this.activator = this.activators[name];
-            this.activator.enable();
+            if (this.activators[name] != this.activator) {
+                this.activator.disable();
+                this.activator = this.activators[name];
+                this.activator.enable();
+            }
 
             if (this.isEnabled() && this.activator.state)
                 this.addScoreFromSpentTime(this.getandResetSpentTime());
@@ -152,13 +159,13 @@ var SiteWatcher = (function() {
                 watcher.host = host;
                 return;
             }
-            
+
             watcher.addScoreFromSpentTime(spentTime);
-            watcher.setProductivityState(host, watcher.activator.state && watcher.isVerbose);
-                 
+            watcher.setProductivityState(host, watcher.activator.state && watcher.isVerbose, true);
+
             watcher.host = host;
         },
-        
+
         getandResetSpentTime: function() {
             var now = new Date().getTime();
                 spent = now - this.timestamp;
@@ -179,14 +186,14 @@ var SiteWatcher = (function() {
 
             this.score += score;
         },
-        
-        setProductivityState: function(host, notify) {
+
+        setProductivityState: function(host, notify, triggerIconChange) {
             var state = 0, data;
             if (this.goodHosts.indexOf(host) != -1)
                 state = 1;
             else if (this.badHosts.indexOf(host) != -1)
                 state = -1;
-            
+
             if (this.productivityState !== state) {
 
                 if (state > 0) {
@@ -211,10 +218,10 @@ var SiteWatcher = (function() {
 
                 if (notify && data)
                     this.appBridge.trigger('app.notify', data);
-
-                this.triggerBrowserActionIconChange();
             }
 
+            if (triggerIconChange)
+                this.triggerBrowserActionIconChange();
         },
 
         controllSendingState: function(value) {
@@ -226,11 +233,11 @@ var SiteWatcher = (function() {
 
             } else if (!watcher.activator.state && value) {
                 watcher.turnOnTheSender();
-                watcher.setProductivityState(watcher.host, watcher.isVerbose);
+                watcher.setProductivityState(watcher.host, watcher.isVerbose, false);
 
             } else if (watcher.activator.state && value && !watcher.sendIntervalID) {
                 watcher.turnOnTheSender();
-                watcher.setProductivityState(watcher.host, watcher.isVerbose);
+                watcher.setProductivityState(watcher.host, watcher.isVerbose, false);
 
             } else if (!watcher.activator.state && !value && watcher.sendIntervalID) {
                 watcher.triggerSendRequest();
@@ -239,7 +246,11 @@ var SiteWatcher = (function() {
 
             }
 
-            watcher.triggerBrowserActionIconChange();         
+            if (value)
+                watcher.triggerBrowserActionIconChange();
+            else
+                watcher.triggerBrowserActionIconChange(true);
+
         },
 
         triggerSendRequest: function() {
@@ -266,7 +277,7 @@ var SiteWatcher = (function() {
         },
 
         swapHosts: function(isSwapped) {
-            if (isSwapped) { 
+            if (isSwapped) {
                 watcher.badHosts = watcher.goodDomains.split('\n');
                 watcher.goodHosts = watcher.viceDomains.split('\n');
             } else {
@@ -289,4 +300,4 @@ var SiteWatcher = (function() {
     };
 
 })();
-    
+
