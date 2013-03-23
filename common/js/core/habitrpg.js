@@ -46,7 +46,7 @@ var habitRPG = (function(){
 
         setOptions: function(params) {
 
-            if (params.uid) {
+            if (params.uid !== undefined) {
                 if (params.uid != habitrpg.uid)
                     habitrpg.character = undefined;
 
@@ -54,7 +54,7 @@ var habitRPG = (function(){
                 habitrpg.habitUrl = habitrpg.sourceHabitUrl.replace('{UID}', habitrpg.uid);
             }
 
-            if (params.apiToken) {
+            if (params.apiToken !== undefined) {
                 if (params.apiToken != habitrpg.apiToken)
                     habitrpg.character = undefined;
 
@@ -66,8 +66,14 @@ var habitRPG = (function(){
             for (var co in habitrpg.controllers)
                 habitrpg.controllers[co].setOptions(params);
 
-            if (!habitrpg.character && !habitrpg.isSandBox)
+            if (!habitrpg.character && !habitrpg.isSandBox) {
+                habitrpg.appBridge.trigger('app.changeIcon', '-alert');
+                habitrpg.appBridge.trigger('app.listenToChangeIcon', false);
+
+                if (!habitrpg.uid || !habitrpg.apiToken) return;
+
                 habitrpg.setInitialCharacterData();
+            }
         },
 
         send: function(data) {
