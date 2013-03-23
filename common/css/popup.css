@@ -10,10 +10,14 @@ html, body {
     text-align: center;
 }
 
-h2 {
+h2,h3 {
     font-size: 20px;
     margin-bottom: 2px;
     color: black;
+}
+
+h3 {
+    font-size: 17px;
 }
 
 a {

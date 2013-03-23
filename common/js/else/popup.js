@@ -98,6 +98,20 @@ var Popup = (function() {
 
                 hp.css('width', Math.round((data.stats.hp / data.stats.maxHealth) * 100)+'%');
                 exp.css('width', Math.round((data.stats.exp / data.stats.toNextLevel) * 100)+'%');
+
+                var ucd = $('#UncompletedDailyTasks ul').empty(), task;
+                for (i in data.tasks) {
+                    task = data.tasks[i];
+                    if (task.type=='daily' && !task.completed) {
+                        ucd.append('<li>'+task.text+'</li>');
+                    }
+                }
+
+                if (ucd.children().length) {
+                    $('#UncompletedDailyTasks').css('display', 'block');
+                } else {
+                    $('#UncompletedDailyTasks').css('display', 'none');
+                }
             },
 
             sitewatcherDataChanged: function(data) {
