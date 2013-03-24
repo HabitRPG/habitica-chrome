@@ -72,7 +72,7 @@ var SiteWatcher = (function() {
             this.triggerSendRequest();
             this.turnOffTheSender();
 
-            this.appBridge.trigger('app.changeIcon', '-inactive');
+            this.appBridge.trigger('app.changeIcon', '-coffee');
         },
 
         spreadData: function() {
@@ -91,8 +91,8 @@ var SiteWatcher = (function() {
         },
 
         triggerBrowserActionIconChange: function(forceCoffe) {
-            if (!watcher.isEnabled()) watcher.appBridge.trigger('app.changeIcon', '-inactive');
-            else if (!watcher.activator.state || forceCoffe) watcher.appBridge.trigger('app.changeIcon', '-coffee');
+            if (!watcher.isEnabled()) watcher.appBridge.trigger('app.changeIcon', '-coffee');
+            else if (!watcher.activator.state || forceCoffe) watcher.appBridge.trigger('app.changeIcon', '-inactive');
             else if (watcher.productivityState > 0) watcher.appBridge.trigger('app.changeIcon', '-up');
             else if (watcher.productivityState < 0) watcher.appBridge.trigger('app.changeIcon', '-down');
             else watcher.appBridge.trigger('app.changeIcon', '');
