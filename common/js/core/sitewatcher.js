@@ -55,11 +55,11 @@ var SiteWatcher = (function() {
             this.appBridge.addListener('app.newUrl', this.checkNewUrl);
             this.appBridge.addListener('watcher.swapHosts', this.swapHosts);
             this.appBridge.addListener('watcher.activator.changed', this.controllSendingState);
+            this.appBridge.removeListener('watcher.activator.changed', this.handleActivatorStateChangeWhileDisabled);
 
             this.lastSendTime = new Date().getTime();
 
             this.appBridge.trigger('app.getCurrentUrl', this.checkNewUrl);
-            this.triggerBrowserActionIconChange();
         },
 
         disable: function() {
@@ -72,7 +72,9 @@ var SiteWatcher = (function() {
             this.triggerSendRequest();
             this.turnOffTheSender();
 
-            this.appBridge.trigger('app.changeIcon', '-coffee');
+            this.triggerBrowserActionIconChange(this.activator.state ? '-coffee' : '-inactive');
+
+            this.appBridge.addListener('watcher.activator.changed', this.handleActivatorStateChangeWhileDisabled);
         },
 
         spreadData: function() {
@@ -90,12 +92,17 @@ var SiteWatcher = (function() {
 
         },
 
-        triggerBrowserActionIconChange: function(forceCoffe) {
-            if (!watcher.isEnabled()) watcher.appBridge.trigger('app.changeIcon', '-coffee');
-            else if (!watcher.activator.state || forceCoffe) watcher.appBridge.trigger('app.changeIcon', '-inactive');
-            else if (watcher.productivityState > 0) watcher.appBridge.trigger('app.changeIcon', '-up');
-            else if (watcher.productivityState < 0) watcher.appBridge.trigger('app.changeIcon', '-down');
-            else watcher.appBridge.trigger('app.changeIcon', '');
+        triggerBrowserActionIconChange: function(type) {
+            if (type !== undefined)
+                watcher.appBridge.trigger('app.changeIcon', type);
+
+            else {
+                if (!watcher.activator.state) watcher.appBridge.trigger('app.changeIcon', '-inactive');
+                else if (!watcher.isEnabled()) watcher.appBridge.trigger('app.changeIcon', '-coffee');
+                else if (watcher.productivityState > 0) watcher.appBridge.trigger('app.changeIcon', '-up');
+                else if (watcher.productivityState < 0) watcher.appBridge.trigger('app.changeIcon', '-down');
+                else watcher.appBridge.trigger('app.changeIcon', '');
+            }
         },
 
         setOptions: function(params) {
@@ -187,7 +194,7 @@ var SiteWatcher = (function() {
             this.score += score;
         },
 
-        setProductivityState: function(host, notify, triggerIconChange) {
+        setProductivityState: function(host, notify) {
             var state = 0, data;
             if (this.goodHosts.indexOf(host) != -1)
                 state = 1;
@@ -220,8 +227,9 @@ var SiteWatcher = (function() {
                     this.appBridge.trigger('app.notify', data);
             }
 
-            if (triggerIconChange)
-                this.triggerBrowserActionIconChange();
+            if (state < 0) this.triggerBrowserActionIconChange('-down');
+            else if (state > 0) this.triggerBrowserActionIconChange('-up');
+            else this.triggerBrowserActionIconChange('');
         },
 
         controllSendingState: function(value) {
@@ -230,6 +238,7 @@ var SiteWatcher = (function() {
                 watcher.triggerSendRequest();
                 watcher.turnOffTheSender();
                 watcher.productivityState = 0;
+                watcher.triggerBrowserActionIconChange('-inactive');
 
             } else if (!watcher.activator.state && value) {
                 watcher.turnOnTheSender();
@@ -245,12 +254,17 @@ var SiteWatcher = (function() {
                 watcher.productivityState = 0;
 
             }
+        },
 
-            if (value)
-                watcher.triggerBrowserActionIconChange();
-            else
-                watcher.triggerBrowserActionIconChange(true);
+        handleActivatorStateChangeWhileDisabled: function(value)
+        {
+            if (watcher.activator.state && !value) {
+                watcher.triggerBrowserActionIconChange('-inactive');
 
+            } else if (!watcher.activator.state && value) {
+                watcher.triggerBrowserActionIconChange('-coffee');
+
+            }
         },
 
         triggerSendRequest: function() {
