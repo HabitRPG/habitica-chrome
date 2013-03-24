@@ -47,7 +47,9 @@ ul {
 
             .bar span {
                 position: relative;
+                top: 1px;
                 z-index: 2;
+                color: #333;
             }
 
 #CharacterStats li { margin: 5px 0;}
@@ -62,7 +64,6 @@ ul {
 #CharacterStats li > div { display: inline-block; text-align: center; width: 60%;}
     #CharacterStats .hp .bar div { background: #D64040;}
     #CharacterStats .exp .bar div { background: #FFCF42;}
-    #CharacterStats .bar span { color: #333; top: 1px; }
 
 #Menu {
     margin-top: 20px;

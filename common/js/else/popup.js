@@ -126,6 +126,7 @@ var Popup = (function() {
 
                 if (data.state <= 0) {
                     popup.sitewatcherTimeLine.width(0).parent().attr('title', '');
+                    popup.sitewatcherTimeLine.prev().text('');
                     return;
                 }
 
@@ -136,6 +137,7 @@ var Popup = (function() {
                 // update the timeline
                 var now = new Date().getTime(),
                     width = (data.nextSend - now) / (data.nextSend - data.lastSend),
+                    nextDate = new Date(data.nextSend - now),
                     // the score clapped between -1 and 1 but we need a number between 0 and 120
                     // score shifted to 0 and 2 then normalized and scale up
                     mappedScore = ((data.score + 1) / 2) * 120,
@@ -143,7 +145,7 @@ var Popup = (function() {
                     color = hsl2Hex(mappedScore/360, 0.9, 0.5);
 
                 popup.sitewatcherTimeLine.css({ width:(width * 100)+'%', 'background-color': color });
-
+                popup.sitewatcherTimeLine.prev().text((nextDate.getHours() > 1 ? nextDate.getHours()+':' : '')+nextDate.getMinutes()+':'+nextDate.getSeconds());
             }
 
         };
