@@ -119,16 +119,17 @@ var Popup = (function() {
 
                 var btn = popup.sitewatcher.find('.state .value');
 
-                if (data.state < 0 )  btn.attr('disabled', 'disabled');
-                else btn.removeAttr('disabled');
+                if (data.state < 0 )
+                    btn.text('Inactive').addClass('red').attr('disabled', 'disabled');
+                else
+                    btn.text('Activate').addClass('red').removeAttr('disabled');
 
                 if (data.state <= 0) {
-                    btn.text('inactive').addClass('red');
                     popup.sitewatcherTimeLine.width(0).parent().attr('title', '');
                     return;
                 }
 
-                btn.text('active').removeClass('red');
+                btn.text('Take break').removeClass('red');
 
                 popup.sitewatcherTimeLine.parent().attr('title', data.score.toFixed(2));
 
