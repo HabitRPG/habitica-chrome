@@ -1,0 +1,81 @@
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+#Main {
+    color: #555555;
+    width: 200px;
+    padding: 5px;
+    text-align: center;
+}
+
+h2,h3 {
+    font-size: 20px;
+    margin-bottom: 2px;
+    color: black;
+}
+
+h3 {
+    font-size: 17px;
+}
+
+a {
+    color: #0088cc;
+    text-decoration: none;
+}
+
+ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.bar,
+.time,
+.sitewatcher { width: 100%; }
+
+    .time { margin-top: 5px;}
+        .bar { height: 20px; position: relative;}
+            .bar div {
+                height: 100%;
+                opacity: 0.8;
+                border-radius: 2px;
+                top: 0;
+                position: absolute;
+            }
+
+            .bar span {
+                position: relative;
+                top: 1px;
+                z-index: 2;
+                color: #333;
+            }
+
+#CharacterStats li { margin: 5px 0;}
+
+#CharacterStats li > span {
+    display: inline-block;
+    width: 23%;
+    text-align: right;
+    padding-right: 5px;
+}
+
+#CharacterStats li > div { display: inline-block; text-align: center; width: 60%;}
+    #CharacterStats .hp .bar div { background: #D64040;}
+    #CharacterStats .exp .bar div { background: #FFCF42;}
+
+#Menu {
+    margin-top: 20px;
+}
+
+    #Menu li {
+        margin: 3px 0;
+        width: 100%;
+    }
+
+        #Menu li a {
+            display: inline-block;
+            width: 100%;
+            padding: 5px 0;
+        }

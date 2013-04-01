@@ -1,13 +1,41 @@
-# HabitRPG Chrome Extension
+# [HabitRPG](http://habitrpg.com) browser extensions
 
-Think Stayfocusd for [HabitRPG](http://habitrpg.com). Lose HP for visiting vice domains (procrastination websites), lingering on vice domains each 5m, etc. To use, enter your [HabitRPG user ID](https://img.skitch.com/20120829-qimntrn2qkra78wytxpujrh12a.jpg) in the options page. [Hit me up with suggestions](https://github.com/lefnire/habitrpg-chrome/issues) on what else the extension could track. I was thinking marking items complete in Pivotal Tracker, Workflowy, etc. would give you Exp, but then you wouldn't gain those points if the tickets were handled outside Chrome (phone app, etc).
+Packed files:
 
-Please bear with me on the current bugs, I'm still stablizing HabitRPG's API, then I'll come back & improve this extension. See the [roadmap here](https://workflowy.com/shared/b5eecfbd-4e76-cdcf-624e-529cd65f6ada/).
+ - [chrome](http://nevisite.com/stuff/github/habitrpg/builds/habitrpg_chrome.crx)
 
-![-1 HP for visiting Reddit.com](https://img.skitch.com/20120829-cbb1x1m4kym58pwg95akcxi31p.jpg)
+## About the development
+The main goal is keeping away the core code from the browser dependency, so it can use in multiple platform. 
+But since every browser has an own extension structure it's not an easy task...
 
-## Current To-Dos
+The tools which are help achive that holy goal:
 
-  - Popup.html API response info - Requires API Development
-  - Take a break function
-  - Add maximum number of scores without page load - stop AFK user losing lots of HP/earning loads of EXP/GP
+- small separated files
+- event based communication
+- build system which pack everything together
+
+## Development environment setup
+The build system is the [Grunt](http://gruntjs.com/) task runner. If you don't know definitely check it (life saver stuff:).
+
+- The first step is get the [nodejs](http://nodejs.org/download/) and install.
+- Secondly get the grunt-cli package `npm install -g grunt-cli`
+- And the final step is go to the root of the cloned folder and type `npm install` and it will download all necessary stuff
+
+That's is. You are ready to build some awesome feature :)
+
+## Build system commands
+All grunt command must be writen to the terminal (cmd on windows) in the root of the cloned directory.
+
+      grunt # check all javascript file for syntax error
+  
+      grunt chrome # copy and merge all necessary file to the builds/chrome folder
+  
+      grunt test_core # run the unit test on the core
+  
+      grunt watch:core # continuous watch the core and test/core folders
+                       # and run jslint and unit test on every save
+                   
+      grunt watch:chrome # continuous watch the chrome dependency folders 
+                         # and run the chrome command on every save
+                     
+If these not enough for you check the grunt file it has some others and of course fill free to expand :)

@@ -1,0 +1,15 @@
+
+.DS_Store
+*~
+*.swp
+*.db
+
+*.pem
+*.sublime*
+
+.grunt/
+builds/
+
+node_modules/
+_SpecRunner.html
+
