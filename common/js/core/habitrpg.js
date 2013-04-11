@@ -96,9 +96,6 @@ var habitRPG = (function(){
 
         setInitialCharacterData: function() {
             habitrpg.sendAjax({ callback: function(response) {
-                habitrpg.appBridge.trigger('app.listenToChangeIcon', true);
-                habitrpg.appBridge.trigger('watcher.triggerIconChange');
-
                 habitrpg.setCharacterData(response);
                 }
             });
@@ -112,6 +109,8 @@ var habitRPG = (function(){
         },
 
         setCharacterData: function(data, onlyStats) {
+            habitrpg.appBridge.trigger('app.listenToChangeIcon', true);
+            habitrpg.appBridge.trigger('watcher.triggerIconChange');
 
             if (onlyStats) data = { stats:data };
 
