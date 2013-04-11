@@ -10,7 +10,7 @@ var Activators = (function() {
     AlwaysActivator.prototype.enable = function() { this.setState(this.state); };
     AlwaysActivator.prototype.disable = function() { };
     AlwaysActivator.prototype.setOptions = function() { };
-    AlwaysActivator.prototype.setState = function(value) { 
+    AlwaysActivator.prototype.setState = function(value) {
         this.bridge.trigger('watcher.activator.changed', value);
         this.state = value;
     };
@@ -29,7 +29,7 @@ var Activators = (function() {
         this.bridge.addListener('app.firstOpenedUrl', this.handleNewUrl);
         this.bridge.addListener('app.lastClosedUrl', this.handleClosedUrl);
         this.bridge.addListener('app.isOpened', this.isOpenedHandler);
-        
+
         this.check();
     };
     PageLinkActivator.prototype.disable = function() {
@@ -58,7 +58,7 @@ var Activators = (function() {
         this.isOpenedHandler = function() {
             self.setState(true);
         };
-    };    
+    };
 
     PageLinkActivator.prototype.handleNewUrl = function() {
         var self = this;
@@ -69,9 +69,9 @@ var Activators = (function() {
                 else
                     self.setState(false);
 
-            else if (self.isWatchedUrl(url)) 
+            else if (self.isWatchedUrl(url))
                 self.setState(true);
-            
+
         };
     };
 
@@ -97,12 +97,14 @@ var Activators = (function() {
 
     DaysActivator.prototype.setOptions = function(params) {
         this.days = params.days ? params.days : this.days;
+
+        if (this.state) this.check();
     };
 
     DaysActivator.prototype.check = function(){
         var self = this;
-        this.check = function() { 
-            self.checkDate(new Date()); 
+        this.check = function() {
+            self.checkDate(new Date());
         };
     };
 
@@ -127,18 +129,18 @@ var Activators = (function() {
          // before today start time
         if (now < start) {
             this.timeoutTime = start.getTime() - now.getTime() + 100;
-            
+
         } else {
             // beyond today end time
-            if ( now > end) 
+            if ( now > end)
                 this.offsetToNextStart(now, end);
-            
+
             this.timeoutTime = end.getTime() - now.getTime() + 100;
         }
 
         return this.timeoutTime;
-        
-    };    
+
+    };
 
     DaysActivator.prototype.checkDate = function(now) {
         var today = this.days[this.getDayName(now)], t,
@@ -158,7 +160,7 @@ var Activators = (function() {
 
         else if (!today.active)
             this.offsetToNextStart(now, start);
-        
+
         clearTimeout(this.timeOutId);
         this.timeOutId = setTimeout(this.check, this.getTimeoutTime(now, start, end));
     };
@@ -173,7 +175,7 @@ var Activators = (function() {
     TomatoesActivator.prototype.init = AlwaysActivator.prototype.init;
     TomatoesActivator.prototype.setState = AlwaysActivator.prototype.setState;
     TomatoesActivator.prototype.setOptions = AlwaysActivator.prototype.setOptions;
-    TomatoesActivator.prototype.enable = function(){ 
+    TomatoesActivator.prototype.enable = function(){
         this.bridge.addListener('tomatoes.reset', this.stopHandler);
         this.bridge.addListener('tomatoes.stopped', this.stopHandler);
         this.bridge.addListener('tomatoes.pom.started', this.startHandler);
@@ -197,7 +199,7 @@ var Activators = (function() {
             self.setState(true);
         };
     };
-    
+
     /* ---------------- Return -------------------- */
 
     return {
