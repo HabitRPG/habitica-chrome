@@ -36,6 +36,7 @@ var Popup = (function() {
             sitewatcherState: undefined,
 
             updateInterval: 1000,
+            days: ['su', 'm', 't', 'w', 'th', 'f', 's'],
 
             init: function(appBridge){
 
@@ -99,11 +100,18 @@ var Popup = (function() {
                 hp.css('width', Math.round((data.stats.hp / data.stats.maxHealth) * 100)+'%');
                 exp.css('width', Math.round((data.stats.exp / data.stats.toNextLevel) * 100)+'%');
 
-                var ucd = $('#UncompletedDailyTasks ul').empty(), task;
-                for (i in data.tasks) {
-                    task = data.tasks[i];
+                popup.updateUncompletedTasks(data.tasks);
+            },
+
+            updateUncompletedTasks: function(tasks) {
+                var ucd = $('#UncompletedDailyTasks ul').empty(), task,
+                    currentDay = new Date().getDay();
+                for (var i in tasks) {
+                    task = tasks[i];
                     if (task.type=='daily' && !task.completed) {
-                        ucd.append('<li>'+task.text+'</li>');
+                        if (!task.repeat || task.repeat[popup.days[currentDay]]) {
+                            ucd.append('<li>'+task.text+'</li>');
+                        }
                     }
                 }
 
