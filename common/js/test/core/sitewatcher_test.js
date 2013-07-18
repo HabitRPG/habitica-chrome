@@ -6,7 +6,7 @@ xdescribe('SiteWatcher tests', function(){
         SiteWatcher.setOptions({
             activatorName: 'alwayon',
             viceDomains: 'reddit.com\n9gag.com\nfacebook.com',
-            goodDomains: 'lifehacker.com\ncodeacadamy.com\nkhanacadamy.org'
+            goodDomains: 'lifehacker.com\ncodecademy.com\nkhanacadamy.org'
         });
 
     it('Enabled disabled test', function(){
