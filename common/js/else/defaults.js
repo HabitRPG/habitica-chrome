@@ -11,7 +11,7 @@ var defaultOptions = {
       todosIsActive: 'true',
       isVerboseSiteWatcher: 'true',
       viceDomains: 'reddit.com\n9gag.com\nfacebook.com',
-      goodDomains: 'lifehacker.com\ncodeacadamy.com\nkhanacadamy.org',
+      goodDomains: 'lifehacker.com\ncodecademy.com\nkhanacadamy.org',
       days: {
           'Monday': { 
               active: true,
