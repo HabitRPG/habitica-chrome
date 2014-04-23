@@ -29,9 +29,8 @@ var Popup = (function() {
 
     var popup = {
             bridge: undefined,
-            sitewatcherTimeLine: undefined,
-            sitewatcher: undefined,
-            charStats: undefined,
+            site_watcher: undefined,
+            char_stats: undefined,
 
             sitewatcherState: undefined,
 
@@ -42,10 +41,8 @@ var Popup = (function() {
 
                 this.bridge = appBridge;
 
-                this.sitewatcher = $('#sitewatcher');
-                this.charStats = $('#characterStats');
-
-                this.sitewatcherTimeLine = $('#sitewatcher .time .bar div');
+                this.site_watcher = $('#site_watcher');
+                this.char_stats = $('#character_stats');
 
                 this.bridge.addListener('character.changed', this.updateCharacter);
                 this.bridge.addListener('watcher.dataChanged', this.sitewatcherDataChanged);
@@ -53,7 +50,7 @@ var Popup = (function() {
                 this.getBackgroundData();
 
                 // Update current state when button is clicked
-                $('#sitewatcher #state').on('click', function(){
+                $('#site_watcher #state').on('click', function(){
                     if (popup.sitewatcherState < 0) return;
 
                     if (popup.sitewatcherState == 1) {
@@ -93,10 +90,10 @@ var Popup = (function() {
                 }
 
                 for (var i in data.stats) {
-                    popup.charStats.find('.'+i+' .value').text(i == 'gp' ? Math.floor(data.stats[i]) : Math.round(data.stats[i]));
+                    popup.char_stats.find('.'+i+' .value').text(i == 'gp' ? Math.floor(data.stats[i]) : Math.round(data.stats[i]));
                 }
-                var hp = popup.charStats.find('.hp .bar div'),
-                    exp = popup.charStats.find('.exp .bar div');
+                var hp = popup.char_stats.find('.hp .bar div'),
+                    exp = popup.char_stats.find('.exp .bar div');
 
                 hp.css('width', Math.round((data.stats.hp / data.stats.maxHealth) * 100)+'%');
                 exp.css('width', Math.round((data.stats.exp / data.stats.toNextLevel) * 100)+'%');
@@ -127,7 +124,7 @@ var Popup = (function() {
                 popup.sitewatcherState = data.state;
 
                 // Update the button
-                var btn = popup.sitewatcher.find('#state');
+                var btn = popup.site_watcher.find('#state');
                 if (data.state < 0 ) {
                     btn.text('Inactive').addClass('btn-danger').attr('disabled', 'disabled');
                 }
@@ -139,8 +136,8 @@ var Popup = (function() {
                 }
 
                 // If there is no server, then don't do anything
-                var progress_bar = popup.sitewatcher.find('#time_bar');
-                var progress_data = popup.sitewatcher.find('#time_data');
+                var progress_bar = popup.site_watcher.find('#time_bar');
+                var progress_data = popup.site_watcher.find('#time_data');
                 if (data.state <= 0) {
                     progress_data.text("");
                     progress_bar.css({"width":"0%"});
