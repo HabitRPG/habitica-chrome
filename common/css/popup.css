@@ -1,4 +1,3 @@
-/* Popup Styles */
 html, body {
     margin: 0;
     padding: 0;
@@ -33,41 +32,28 @@ ul {
     padding: 0;
 }
 
-/* Popup Time Bar */
 .bar,
 .time,
-.sitewatcher { 
-    width: 100%; 
-}
+.sitewatcher { width: 100%; }
 
-.time { 
-    margin-top: 5px;
-}
+    .time { margin-top: 5px;}
+        .bar { height: 20px; position: relative;}
+            .bar div {
+                height: 100%;
+                opacity: 0.8;
+                border-radius: 2px;
+                top: 0;
+                position: absolute;
+            }
 
-.bar { 
-    height: 20px; 
-    position: relative;
-}
+            .bar span {
+                position: relative;
+                top: 1px;
+                z-index: 2;
+                color: #333;
+            }
 
-.bar div {
-    height: 100%;
-    opacity: 0.8;
-    border-radius: 2px;
-    top: 0;
-    position: absolute;
-}
-
-.bar span {
-    position: relative;
-    top: 1px;
-    z-index: 2;
-    color: #333;
-}
-
-/* Character Stats */
-#CharacterStats li { 
-    margin: 5px 0;
-}
+#CharacterStats li { margin: 5px 0;}
 
 #CharacterStats li > span {
     display: inline-block;
@@ -76,32 +62,21 @@ ul {
     padding-right: 5px;
 }
 
-#CharacterStats li > div { 
-    display: inline-block; 
-    text-align: center; 
-    width: 60%;
-}
+#CharacterStats li > div { display: inline-block; text-align: center; width: 60%;}
+    #CharacterStats .hp .bar div { background: #D64040;}
+    #CharacterStats .exp .bar div { background: #FFCF42;}
 
-#CharacterStats .hp .bar div { 
-    background: #D64040;
-}
-
-#CharacterStats .exp .bar div { 
-    background: #FFCF42;
-}
-
-/* Popup Menu List */
 #Menu {
     margin-top: 20px;
 }
 
-#Menu li {
-    margin: 3px 0;
-    width: 100%;
-}
+    #Menu li {
+        margin: 3px 0;
+        width: 100%;
+    }
 
-#Menu li a {
-    display: inline-block;
-    width: 100%;
-    padding: 5px 0;
-}
+        #Menu li a {
+            display: inline-block;
+            width: 100%;
+            padding: 5px 0;
+        }
