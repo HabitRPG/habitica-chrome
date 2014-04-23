@@ -171,7 +171,7 @@ var App = {
 			('You '+(score < 0 ? 'lost' : 'gained')+' '+score+' '+(score < 0 ? 'HP! Lets go...' : 'Exp/Gold! Keep up!'))
 		);
 		notification.show();
-		setTimeout(function(){notification.close();}, App.notificationShowTime);
+		setTimeout(function(){notification.cancel();}, App.notificationShowTime);
 	},
 
 	isOpenedUrlHandler: function(url) {
