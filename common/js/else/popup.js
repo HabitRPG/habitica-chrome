@@ -80,6 +80,7 @@ var Popup = (function() {
 
             updateCharacter: function(data) {
 
+                // Toggle if we have a connection with the server
                 if (data) {
                     $('#NotConnected').css('display', 'none');
                     $('#Connected').css('display', 'block');
@@ -89,14 +90,17 @@ var Popup = (function() {
                     return;
                 }
 
-                for (var i in data.stats) {
-                    popup.char_stats.find('.'+i+' .value').text(i == 'gp' ? Math.floor(data.stats[i]) : Math.round(data.stats[i]));
-                }
-                var hp = popup.char_stats.find('.hp .bar div'),
-                    exp = popup.char_stats.find('.exp .bar div');
-
-                hp.css('width', Math.round((data.stats.hp / data.stats.maxHealth) * 100)+'%');
-                exp.css('width', Math.round((data.stats.exp / data.stats.toNextLevel) * 100)+'%');
+                // Update player stats
+                // Level Bar
+                popup.char_stats.find("#char_lvl_data").text("Level: "+data.stats.lvl);
+                // HP Bar
+                popup.char_stats.find("#char_hp_data").text("Health: "+data.stats.hp+"/"+data.stats.maxHealth);
+                popup.char_stats.find("#char_hp_bar").css({'width': Math.round((data.stats.hp / data.stats.maxHealth) * 100)+'%', 'background-color': "#d9534f" });
+                // Exp Bar
+                popup.char_stats.find("#char_exp_data").text("Exp: "+data.stats.exp+"/"+data.stats.toNextLevel);
+                popup.char_stats.find("#char_exp_bar").css({'width': Math.round((data.stats.exp / data.stats.toNextLevel) * 100)+'%', 'background-color': "#f0ad4e" });
+                // Gold Coin Bar
+                popup.char_stats.find("#char_gp_data").text("Gold: "+Math.floor(data.stats.gp));
 
                 popup.updateUncompletedTasks(data.tasks);
             },
@@ -151,7 +155,7 @@ var Popup = (function() {
                 // Score shifted to 0 and 2 then normalized and scale up
                 var mappedScore = ((data.score + 1) / 2) * 120;
                 // Converter need a 0-1 hue value
-                var color = hsl2Hex(mappedScore/360, 0.9, 0.5);
+                var color = hsl2Hex(mappedScore/360, 0.7, 0.5);
                 // Update bar with new info
                 progress_data.text((nextDate.getHours() > 1 ? nextDate.getHours()+':' : '')+nextDate.getMinutes()+':'+nextDate.getSeconds());
                 progress_bar.css({ width:(width * 100)+'%', 'background-color': color });
