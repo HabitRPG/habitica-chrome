@@ -2,12 +2,44 @@
   <head>
     <!-- CSS Imports -->
     <link rel="stylesheet" type="text/css" href="css/bootstrap.min.css" />
-    <link rel="stylesheet" type="text/css" href="css/popup2.css" />
+    <link rel="stylesheet" type="text/css" href="css/popup.css" />
     <!-- Javascript Imports -->
     <script type="text/javascript" src="vendor/jquery-1.8.0.min.js"></script>
     <script type="text/javascript" src="popup.js"></script>
   </head>
   <body>
-    
+    <div class="content">
+
+      <!-- If unable to connect to the server -->
+      <div id="NotConnected">
+        <div class="alert alert-warning">
+          <strong>Warning!</strong><br />
+          Your api/uuid keys are wrong, or the server is down.
+        </div>
+      </div>
+
+      <!-- If able to connect to the server -->
+      <div id="Connected">
+
+        <div id="sitewatcher">
+          <h3>Site watcher</h3>
+          <button id="state" class="btn btn-block"></button>
+          Remaining time until sending:
+          <div class="progress">
+            <div id="time_bar" class="progress-bar"></div>
+            <span id="time_data"></span>
+          </div>
+        </div>
+
+      </div>
+
+      <ul class="nav nav-pills nav-stacked">
+        <li><a href="http://www.habitrpg.com" target="_blank">HabitRPG</a></li>
+        <li><a target="_blank" href="http://habitrpg.tumblr.com/">Blog</a></li>
+        <li><a target="_blank" href="https://github.com/HabitRPG/habitrpg-chrome/issues">Extension Bugs</a></li>
+        <li><a href="options.html" target="_blank">Options</a></li>
+      </ul>
+
+    </div>
   </body>
 </html>

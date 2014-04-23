@@ -42,17 +42,18 @@ var Popup = (function() {
 
                 this.bridge = appBridge;
 
-                this.sitewatcher = $('#Sitewatcher');
-                this.charStats = $('#CharacterStats');
+                this.sitewatcher = $('#sitewatcher');
+                this.charStats = $('#characterStats');
 
-                this.sitewatcherTimeLine = $('#Sitewatcher .time .bar div');
+                this.sitewatcherTimeLine = $('#sitewatcher .time .bar div');
 
                 this.bridge.addListener('character.changed', this.updateCharacter);
                 this.bridge.addListener('watcher.dataChanged', this.sitewatcherDataChanged);
 
                 this.getBackgroundData();
 
-                $('#Sitewatcher .state .value').on('click', function(){
+                // Update current state when button is clicked
+                $('#sitewatcher #state').on('click', function(){
                     if (popup.sitewatcherState < 0) return;
 
                     if (popup.sitewatcherState == 1) {
@@ -125,35 +126,39 @@ var Popup = (function() {
             sitewatcherDataChanged: function(data) {
                 popup.sitewatcherState = data.state;
 
-                var btn = popup.sitewatcher.find('.state .value');
-
-                if (data.state < 0 )
-                    btn.text('Inactive').addClass('red').attr('disabled', 'disabled');
-                else
-                    btn.text('Activate').addClass('red').removeAttr('disabled');
-
-                if (data.state <= 0) {
-                    popup.sitewatcherTimeLine.width(0).parent().attr('title', '');
-                    popup.sitewatcherTimeLine.prev().text('');
-                    return;
+                // Update the button
+                var btn = popup.sitewatcher.find('#state');
+                if (data.state < 0 ) {
+                    btn.text('Inactive').addClass('btn-danger').attr('disabled', 'disabled');
+                }
+                else if(data.state === 0) {
+                    btn.text('Activate').addClass('btn-danger').removeAttr('disabled');
+                }
+                else {
+                    btn.text('Take break').removeClass('btn-danger');
                 }
 
-                btn.text('Take break').removeClass('red');
-
-                popup.sitewatcherTimeLine.parent().attr('title', data.score.toFixed(2));
-
-                // update the timeline
-                var now = new Date().getTime(),
-                    width = (data.nextSend - now) / (data.nextSend - data.lastSend),
-                    nextDate = new Date(data.nextSend - now),
-                    // the score clapped between -1 and 1 but we need a number between 0 and 120
-                    // score shifted to 0 and 2 then normalized and scale up
-                    mappedScore = ((data.score + 1) / 2) * 120,
-                    // converter need a 0-1 hue value
-                    color = hsl2Hex(mappedScore/360, 0.9, 0.5);
-
-                popup.sitewatcherTimeLine.css({ width:(width * 100)+'%', 'background-color': color });
-                popup.sitewatcherTimeLine.prev().text((nextDate.getHours() > 1 ? nextDate.getHours()+':' : '')+nextDate.getMinutes()+':'+nextDate.getSeconds());
+                // If there is no server, then don't do anything
+                var progress_bar = popup.sitewatcher.find('#time_bar');
+                var progress_data = popup.sitewatcher.find('#time_data');
+                if (data.state <= 0) {
+                    progress_data.text("");
+                    progress_bar.css({"width":"0%"});
+                    return;
+                }
+                // Update the timeline, if we have a server
+                var now = new Date().getTime();
+                var width = (data.nextSend - now) / (data.nextSend - data.lastSend);
+                var nextDate = new Date(data.nextSend - now);
+                // The score clapped between -1 and 1 but we need a number between 0 and 120
+                // Score shifted to 0 and 2 then normalized and scale up
+                var mappedScore = ((data.score + 1) / 2) * 120;
+                // Converter need a 0-1 hue value
+                var color = hsl2Hex(mappedScore/360, 0.9, 0.5);
+                // Update bar with new info
+                progress_data.text((nextDate.getHours() > 1 ? nextDate.getHours()+':' : '')+nextDate.getMinutes()+':'+nextDate.getSeconds());
+                progress_bar.css({ width:(width * 100)+'%', 'background-color': color });
+            
             }
 
         };

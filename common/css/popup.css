@@ -1,0 +1,28 @@
+html, body {
+  margin: 0px;
+  padding: 0px;
+  text-align: center;
+}
+
+/* Set the width of the popup */
+.content {
+  width: 200px;
+  padding: 5px;
+}
+
+/* Override Padding for navpills menu */
+.nav>li> a {
+  padding:5px;
+}
+
+/* Progress bar, text centering */
+.progress {
+  position: relative;
+}
+
+.progress span{
+  position: absolute;
+  display: block;
+  width: 100%;
+  color: black;
+}
