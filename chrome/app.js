@@ -75,14 +75,14 @@ var App = {
 		App.triggerFirstOpenedUrl(tab.url);
 
 		App.tabs[tab.id] = tab;
-		if (App.hasFocus && tab.active && tab.url && App.invalidTransitionTypes.indexOf(tab.transitionType) == -1) {
+		if (tab.active && tab.url && App.invalidTransitionTypes.indexOf(tab.transitionType) == -1) {
 			App.dispatcher.trigger('app.newUrl', App.catchSpecURL(tab.url));
 			App.activeUrl = tab.url;
 		}
 	},
 
 	tabUpdatedHandler: function(id, changed, tab) {
-		if (App.hasFocus && tab.active && tab.url && App.activeUrl != tab.url) {
+		if (tab.active && tab.url && App.activeUrl != tab.url) {
 			App.triggerFirstOpenedUrl(tab.url);
 			App.dispatcher.trigger('app.newUrl', App.catchSpecURL(tab.url));
 			App.activeUrl = tab.url;
@@ -92,14 +92,17 @@ var App = {
 
 	// This event fired after the remove action, so we forced to store the tabs
 	tabRemovedHandler: function(tabId) {
-		var url = App.tabs[tabId].url;
-		delete App.tabs[tabId];
+		// Check if there is a tab to delete
+		if(App.tabs[tabId]){
+			var url = App.tabs[tabId].url;
+			delete App.tabs[tabId];
 
-		if (!App.hasInTabs(url)) {
-			App.dispatcher.trigger('app.lastClosedUrl', App.catchSpecURL(url));
+			if (!App.hasInTabs(url)) {
+				App.dispatcher.trigger('app.lastClosedUrl', App.catchSpecURL(url));
+			}
+
+			App.dispatcher.trigger('app.closedUrl', App.catchSpecURL(url));
 		}
-
-		App.dispatcher.trigger('app.closedUrl', App.catchSpecURL(url));
 	},
 
 	tabActivatedHandler: function(event) {
@@ -207,7 +210,7 @@ var App = {
 	},
 
 	createLogger: function() {
-        this.dispatcher.addListener('app.changeIcon', function(icon){console.log('icon: '+icon); });
+    this.dispatcher.addListener('app.changeIcon', function(icon){console.log('icon: '+icon); });
 		this.dispatcher.addListener('app.newUrl', function(url) {console.log('new: '+url); });
 		this.dispatcher.addListener('app.optionsChanged', function(data){ console.log(data); });
 		this.dispatcher.addListener('app.closedUrl', function(url) { console.log('closed: '+url);});
