@@ -133,7 +133,7 @@ var Popup = (function() {
                 }
                 // If we have todos then add the header, and insert
                 if(master_dailys !== '') {
-                    master_dailys = '<li class="list-group-item header"><strong>To-dos Tasks</strong></li>' + master_dailys;
+                    master_dailys = '<li class="list-group-item header"><strong>Daily Tasks</strong></li>' + master_dailys;
                     // Insert
                     list_dailys.html(master_dailys);
                 }
@@ -150,7 +150,7 @@ var Popup = (function() {
                 }
                 // If we have todos then add the header, and insert
                 if(master_habits !== '') {
-                    master_habits = '<li class="list-group-item header"><strong>To-dos Tasks</strong></li>' + master_habits;
+                    master_habits = '<li class="list-group-item header"><strong>Habit Tasks</strong></li>' + master_habits;
                     // Insert
                     list_habits.html(master_habits);
                 }
