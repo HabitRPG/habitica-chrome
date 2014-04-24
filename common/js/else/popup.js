@@ -116,7 +116,7 @@ var Popup = (function() {
                 }
                 // If we have todos then add the header, and insert
                 if(master_todo !== '') {
-                    master_todo = '<li class="list-group-item header"><strong>To-dos Tasks</strong></li>' + master_todo;
+                    master_todo = '<li class="list-group-item header"><strong>To-do Tasks</strong></li>' + master_todo;
                     // Insert
                     list_todo.html(master_todo);
                 }
