@@ -2,7 +2,7 @@
 
 Packed files:
 
- - [chrome](http://nevisite.com/stuff/github/habitrpg/builds/habitrpg_chrome.crx)
+ - [Chrome](https://chrome.google.com/webstore/detail/habitrpg/pidkmpibnnnhneohdgjclfdjpijggmjj?hl=en-US)
 
 ## About the development
 The main goal is keeping away the core code from the browser dependency, so it can use in multiple platform. 
