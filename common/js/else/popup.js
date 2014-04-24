@@ -31,6 +31,7 @@ var Popup = (function() {
             bridge: undefined,
             site_watcher: undefined,
             char_stats: undefined,
+            task_lists: undefined,
 
             sitewatcherState: undefined,
 
@@ -43,6 +44,7 @@ var Popup = (function() {
 
                 this.site_watcher = $('#site_watcher');
                 this.char_stats = $('#character_stats');
+                this.task_lists = $('#task_lists');
 
                 this.bridge.addListener('character.changed', this.updateCharacter);
                 this.bridge.addListener('watcher.dataChanged', this.sitewatcherDataChanged);
@@ -102,25 +104,55 @@ var Popup = (function() {
                 // Gold Coin Bar
                 popup.char_stats.find("#char_gp_data").text("Gold: "+Math.floor(data.stats.gp));
 
-                popup.updateUncompletedTasks(data.tasks);
-            },
-
-            updateUncompletedTasks: function(tasks) {
-                var ucd = $('#UncompletedDailyTasks ul').empty(), task,
-                    currentDay = new Date().getDay();
-                for (var i in tasks) {
-                    task = tasks[i];
-                    if (task.type=='daily' && !task.completed) {
-                        if (!task.repeat || task.repeat[popup.days[currentDay]]) {
-                            ucd.append('<li>'+task.text+'</li>');
-                        }
+                // Update our todo list
+                var list_todo = popup.task_lists.find('#list_todo .list-group');
+                var master_todo = '';
+                // Add the todos
+                for (var i in data.todos) {
+                    // Not null and uncomplete
+                    if(data.todos[i] && data.todos[i].completed === false) {
+                        master_todo += '<li class="list-group-item">'+data.todos[i].text+'</li>';
                     }
                 }
+                // If we have todos then add the header, and insert
+                if(master_todo !== '') {
+                    master_todo = '<li class="list-group-item header"><strong>To-dos Tasks</strong></li>' + master_todo;
+                    // Insert
+                    list_todo.html(master_todo);
+                }
 
-                if (ucd.children().length) {
-                    $('#UncompletedDailyTasks').css('display', 'block');
-                } else {
-                    $('#UncompletedDailyTasks').css('display', 'none');
+                // Update our dailys list
+                var list_dailys = popup.task_lists.find('#list_dailys .list-group');
+                var master_dailys = '';
+                // Add the dailys
+                for (var j in data.dailys) {
+                    // Not null and uncomplete
+                    if(data.dailys[j] && data.dailys[j].completed === false) {
+                        master_dailys += '<li class="list-group-item">'+data.dailys[j].text+'</li>';
+                    }
+                }
+                // If we have todos then add the header, and insert
+                if(master_dailys !== '') {
+                    master_dailys = '<li class="list-group-item header"><strong>To-dos Tasks</strong></li>' + master_dailys;
+                    // Insert
+                    list_dailys.html(master_dailys);
+                }
+
+                // Update our habits list
+                var list_habits = popup.task_lists.find('#list_habits .list-group');
+                var master_habits = '';
+                // Add the habits
+                for (var z in data.dailys) {
+                    // Not null and uncomplete
+                    if(data.habits[z] && data.habits[z].completed === false) {
+                        master_habits += '<li class="list-group-item">'+data.habits[z].text+'</li>';
+                    }
+                }
+                // If we have todos then add the header, and insert
+                if(master_habits !== '') {
+                    master_habits = '<li class="list-group-item header"><strong>To-dos Tasks</strong></li>' + master_habits;
+                    // Insert
+                    list_habits.html(master_habits);
                 }
             },
 

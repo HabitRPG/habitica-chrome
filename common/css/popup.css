@@ -6,12 +6,12 @@ html, body {
 
 /* Set the width of the popup */
 .content {
-  width: 200px;
+  width: 225px;
   padding: 5px;
 }
 
 /* Override Padding for navpills menu */
-.nav>li> a {
+.nav>li>a {
   padding:5px;
 }
 
@@ -20,9 +20,19 @@ html, body {
   position: relative;
 }
 
-.progress span{
+.progress span {
   position: absolute;
   display: block;
   width: 100%;
   color: black;
+}
+
+/* List Styles for Task Lists */
+.list-group-item {
+  padding: 5px;
+  margin:  0px;
+}
+
+.list-group-item.header {
+  background: rgba(0,0,0,0.1);
 }
