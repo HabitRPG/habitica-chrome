@@ -206,18 +206,18 @@ var SiteWatcher = (function() {
                 if (state > 0) {
                     data = {
                         score: 1,
-                        message: 'Great!'+(this.isSwapped ? ' Just relax :)' : ' Maybe started working:)')
+                        message: 'Great!'+(this.isSwapped ? ' Just relax :)' : ' Looks like you\'ve started working!')
                     };
 
                 } else if (state < 0) {
                     data = {
                         score: -1,
-                        message: "I'm watching you!"+(this.isSwapped ? "Do not work now!" :" Lets go to work!")
+                        message: "I'm watching you!"+(this.isSwapped ? " You\'re not supposed to be working!" :" Try to get back to work soon!")
                     };
 
                 } else if (!state) {
                     data = {
-                        message: 'You are entering a neutral zone!'
+                       // message: 'This site\'s a neutral zone.'
                     };
                 }
 
