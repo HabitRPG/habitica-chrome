@@ -72,7 +72,7 @@ var Tomatoes = (function() {
             tomatoes.pomodore.stop();
             tomatoes.appBridge.trigger('controller.sendRequest', {
                 urlSuffix: tomatoes.urlPrefix+'down',
-                message: 'You breaked the flow!! {score} HP...'
+                message: 'You broke the flow!! {score} HP...'
                 });
         },
 
