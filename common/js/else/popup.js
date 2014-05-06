@@ -96,10 +96,10 @@ var Popup = (function() {
                 // Level Bar
                 popup.char_stats.find("#char_lvl_data").text("Level: "+data.stats.lvl);
                 // HP Bar
-                popup.char_stats.find("#char_hp_data").text("Health: "+data.stats.hp+"/"+data.stats.maxHealth);
+                popup.char_stats.find("#char_hp_data").text("Health: "+Math.round(data.stats.hp)+"/"+Math.round(data.stats.maxHealth));
                 popup.char_stats.find("#char_hp_bar").css({'width': Math.round((data.stats.hp / data.stats.maxHealth) * 100)+'%', 'background-color': "#d9534f" });
                 // Exp Bar
-                popup.char_stats.find("#char_exp_data").text("Exp: "+data.stats.exp+"/"+data.stats.toNextLevel);
+                popup.char_stats.find("#char_exp_data").text("Exp: "+Math.round(data.stats.exp)+"/"+Math.round(data.stats.toNextLevel));
                 popup.char_stats.find("#char_exp_bar").css({'width': Math.round((data.stats.exp / data.stats.toNextLevel) * 100)+'%', 'background-color': "#f0ad4e" });
                 // Gold Coin Bar
                 popup.char_stats.find("#char_gp_data").text("Gold: "+Math.floor(data.stats.gp));
