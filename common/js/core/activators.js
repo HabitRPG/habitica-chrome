@@ -102,10 +102,8 @@ var Activators = (function() {
     };
 
     DaysActivator.prototype.check = function(){
-        var self = this;
-        this.check = function() {
-            self.checkDate(new Date());
-        };
+        // Call our check function
+        this.checkDate(new Date());
     };
 
     DaysActivator.prototype.getDayName = function(date) {
@@ -162,7 +160,13 @@ var Activators = (function() {
             this.offsetToNextStart(now, start);
 
         clearTimeout(this.timeOutId);
-        this.timeOutId = setTimeout(this.check, this.getTimeoutTime(now, start, end));
+        // Make sure we are in the same scope
+        var that = this;
+        var wrap = function(){
+            that.check();
+        };
+        // This runs in the global scope
+        this.timeOutId = setTimeout(wrap, this.getTimeoutTime(now, start, end));
     };
 
     /* ---------------- Tomatoes activator ------------ */
