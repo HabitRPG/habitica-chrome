@@ -13,3 +13,4 @@ builds/
 node_modules/
 _SpecRunner.html
 
+.idea
