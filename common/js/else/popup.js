@@ -182,14 +182,22 @@ var Popup = (function() {
                 // Update the timeline, if we have a server
                 var now = new Date().getTime();
                 var width = (data.nextSend - now) / (data.nextSend - data.lastSend);
-                var nextDate = new Date(data.nextSend - now);
+            
+                var secondsUntilUpload = (data.nextSend - now) / 1000;
+            
+                var minutes = Math.floor(secondsUntilUpload/60);
+                var seconds =  Math.floor(secondsUntilUpload % 60);
+                var paddedMinutes = String("00" + minutes).slice(-2);
+                var paddedSeconds = String("00" + seconds).slice(-2);
+            
                 // The score clapped between -1 and 1 but we need a number between 0 and 120
                 // Score shifted to 0 and 2 then normalized and scale up
                 var mappedScore = ((data.score + 1) / 2) * 120;
                 // Converter need a 0-1 hue value
                 var color = hsl2Hex(mappedScore/360, 0.7, 0.5);
                 // Update bar with new info
-                progress_data.text((nextDate.getHours() > 1 ? nextDate.getHours()+':' : '')+nextDate.getMinutes()+':'+nextDate.getSeconds());
+            
+                progress_data.text(paddedMinutes + ":" + paddedSeconds);
                 progress_bar.css({ width:(width * 100)+'%', 'background-color': color });
             
             }
