@@ -59,6 +59,8 @@ var SiteWatcher = (function() {
 
             this.lastSendTime = new Date().getTime();
 
+            this.turnOnTheSender();
+
             this.appBridge.trigger('app.getCurrentUrl', this.checkNewUrl);
         },
 
