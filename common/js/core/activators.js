@@ -98,7 +98,8 @@ var Activators = (function() {
     DaysActivator.prototype.setOptions = function(params) {
         this.days = params.days ? params.days : this.days;
 
-        if (this.state) this.check();
+        //if (this.state) Always check after options changed
+        this.check();
     };
 
     DaysActivator.prototype.check = function(){
@@ -117,7 +118,9 @@ var Activators = (function() {
     DaysActivator.prototype.offsetToNextStart = function(now, what) {
         var next = this.days[this.getNextDayName(now)];
 
-        what.setDate(what.getDate() + 1);
+        // FIXME? This won't cause any harm but it should set the date not to tomorrow
+        // but to the next avalaible date
+        what.setDate(what.getDate() + 1); 
         what.setHours( next.start[0]);
         what.setMinutes( next.start[1]);
 
