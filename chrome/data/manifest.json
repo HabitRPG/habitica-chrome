@@ -46,7 +46,12 @@
     },
     {
       "matches": ["https://mail.google.com/*"],
-      "js": ["bind_googletask.js"],
+      "js": ["bind_googletask_gmail.js"],
+      "run_at": "document_end"
+    },
+    {
+      "matches": ["https://www.google.com/calendar/*"],
+      "js": ["bind_googletask_calendar.js"],
       "run_at": "document_end"
     }
   ],
