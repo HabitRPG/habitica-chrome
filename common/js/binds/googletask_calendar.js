@@ -8,7 +8,14 @@
 
             var DetectTaskListOpened = browser.getMutationObserver(function(mutations) {
                     mutations.forEach(function(mutation){
-                        if (mutation.addedNodes[0] && mutation.target.classList.contains('sn-container')) {
+                        if (mutation.addedNodes[0] &&
+                                // When on home page
+                                (mutation.target.classList.contains('sn-container') || (
+                                    // When accessing an event page directly
+                                    mutation.target.nodeName == 'DIV' && mutation.target.childNodes[0] && 
+                                    mutation.target.childNodes[0].nodeName == 'IFRAME' &&
+                                    mutation.target.offsetParent &&
+                                    mutation.target.offsetParent.classList.contains('sn-container')))) {
                             // FIXME (maybe) For some reason it isn't avalaible immediately 
                             // the first time the documents load so we use setTimeout if undefined...
                             if (mutation.target.getElementsByTagName('iframe')[0]) {
