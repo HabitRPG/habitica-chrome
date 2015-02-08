@@ -98,8 +98,12 @@ var Activators = (function() {
     DaysActivator.prototype.setOptions = function(params) {
         this.days = params.days ? params.days : this.days;
 
-        //if (this.state) Always check after options changed
-        this.check();
+        // Always check after options changed
+        // but not if activator is not 'days'
+        // we don't check for it being days because
+        // when is days and changing just the days it wouldn't work
+        // because activatoName is not passed (just when it changes)
+        if(params.activatorName !== 'days') this.check();
     };
 
     DaysActivator.prototype.check = function(){
