@@ -4,7 +4,7 @@
    "version": "2.4",
    "permissions": [
       "storage", "tabs", "webNavigation", "notifications",
-      "https://habitrpg.com/", "http://tomato.es/", "https://app.asana.com/",
+      "https://habitrpg.com/", "https://habitica.com/", "http://tomato.es/", "https://app.asana.com/",
       "https://mail.google.com/", "https://workflowy.com/"
     ],
 
