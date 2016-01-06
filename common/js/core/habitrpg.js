@@ -16,7 +16,7 @@ var habitRPG = (function(){
 
         character: undefined,
 
-        habitUrl: "https://habitrpg.com/api/v2/user",
+        habitUrl: "https://habtica.com/api/v2/user",
 
         appBridge: undefined,
 
