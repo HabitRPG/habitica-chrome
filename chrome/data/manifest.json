@@ -1,7 +1,7 @@
 {
 
    "name": "HabitRPG",
-   "version": "2.4.1",
+   "version": "2.4.2",
    "permissions": [
       "storage", "tabs", "webNavigation", "notifications",
       "https://habitrpg.com/", "https://habitica.com/", "http://tomato.es/", "https://app.asana.com/",
@@ -31,7 +31,7 @@
 
    "content_scripts": [
     {
-      "matches": ["http://tomato.es/*"],
+      "matches": ["*://*.tomato.es/"],
       "js": ["vendor/jquery-1.8.0.min.js", "bind_tomatoes.js"]
     },
     {
