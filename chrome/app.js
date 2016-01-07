@@ -166,6 +166,10 @@ var App = {
 	showNotification: function(data) {
 
 		var score = !data.score ? 0 : data.score.toFixed(3);
+
+		if(score === 0)
+			return;
+
 		var imgVersion = !data.score ? '' : (score < 0 ? '-down' : '-up');
 
 		var notification = chrome.notifications.create('', {
