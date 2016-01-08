@@ -18,17 +18,18 @@ jQuery('document').ready(function(){
             });
 
             $('#start').on('click', function(){App.start();});
-            $('body').on('click', 'input[name=commit]', function(){App.start();});
+            $('body').on('click', 'input[name=commit]', function(){App.start(1);});
             $(window).unload(function() { if (App.isRunning) App.stop(); });
 
             browser.sendMessage({type: "tomatoes.reset"});
         },
 
-        start: function() {
+        start: function(add) {
+            add = add || 0;
             this.isRunning = true;
             browser.sendMessage({
                     type: "tomatoes.started", 
-                    tomatoCount: parseInt($('.day .counter_value').text(), 10)
+                    tomatoCount: parseInt($('.day .counter_value').text(), 10) + add
                 });
         },
 

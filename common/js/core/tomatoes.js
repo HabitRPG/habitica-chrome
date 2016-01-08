@@ -104,7 +104,7 @@ var Tomatoes = (function() {
                 tomatoes.appBridge.trigger('controller.sendRequest', {
                     urlSuffix: tomatoes.urlPrefixCombo+'up',
                     object: tomatoes.comboObj,
-                    message: 'You made your '+((data.tomatoCount+1)/4)+' C-C-C-COMBO tomato! GREAT ! You gain {score} Exp/Gold!'
+                    message: 'You made your '+((data.tomatoCount)/4)+' C-C-C-COMBO tomato! GREAT ! You gain {score} Exp/Gold!'
                 });
         },
 

@@ -127,14 +127,13 @@ var utilies = (function(){
             overTime = this.currentPeriod.overTime;
         }
 
-        if (this.currentPeriod.type == 'break' ) {
+        if (this.workCount % 4 === 0) {
+            this.currentPeriod = this.periods.bigBreak;
+
+        } else if (this.currentPeriod.type != 'work') {
             isWork = true;
             this.workCount++;
             this.currentPeriod = this.periods.work;
-
-        } else if (this.workCount % 4 === 0) {
-            this.currentPeriod = this.periods.bigBreak;
-
         } else {
             this.currentPeriod = this.periods['break'];
         }
