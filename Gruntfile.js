@@ -72,6 +72,7 @@ module.exports = function(grunt) {
           { src: ['common/css/*'], dest: 'builds/chrome/css/', expand: true, flatten: true },
           { src: ['common/js/vendor/*'], dest: 'builds/chrome/vendor/', expand: true, flatten: true },
           { src: ['common/html/*', 'chrome/data/*'], dest: 'builds/chrome/', expand: true, flatten: true },
+          { src: ['node_modules/markdown/lib/markdown.js'], dest: 'builds/chrome/vendor/', expand: true, flatten: true },
         ]
       }
     }

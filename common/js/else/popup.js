@@ -111,7 +111,7 @@ var Popup = (function() {
                 for (var i in data.todos) {
                     // Not null and uncomplete
                     if(data.todos[i] && data.todos[i].completed === false) {
-                        master_todo += '<li class="list-group-item">'+data.todos[i].text+'</li>';
+                        master_todo += '<li class="list-group-item">'+markdown.toHTML(data.todos[i].text)+'</li>';
                     }
                 }
                 // If we have todos then add the header, and insert
@@ -128,7 +128,7 @@ var Popup = (function() {
                 for (var j in data.dailys) {
                     // Not null and uncomplete
                     if(data.dailys[j] && data.dailys[j].completed === false) {
-                        master_dailys += '<li class="list-group-item">'+data.dailys[j].text+'</li>';
+                        master_dailys += '<li class="list-group-item">'+markdown.toHTML(data.dailys[j].text)+'</li>';
                     }
                 }
                 // If we have todos then add the header, and insert
@@ -145,7 +145,7 @@ var Popup = (function() {
                 for (var z in data.dailys) {
                     // Not null and uncomplete
                     if(data.habits[z] && data.habits[z].completed === false) {
-                        master_habits += '<li class="list-group-item">'+data.habits[z].text+'</li>';
+                        master_habits += '<li class="list-group-item">'+markdown.toHTML(data.habits[z].text)+'</li>';
                     }
                 }
                 // If we have todos then add the header, and insert
