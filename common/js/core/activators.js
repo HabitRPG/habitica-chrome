@@ -206,7 +206,7 @@ var Activators = (function() {
     TomatoesActivator.prototype.startHandler = function() {
         var self = this;
         this.startHandler = function(data) {
-            self.bridge.trigger('watcher.swapHosts', data.type == 'break');
+            self.bridge.trigger('watcher.swapHosts', data.type == 'break' || data.type == 'break.big');
             self.setState(true);
         };
     };
