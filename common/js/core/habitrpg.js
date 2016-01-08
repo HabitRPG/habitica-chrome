@@ -84,6 +84,7 @@ var habitRPG = (function(){
                 habitrpg.sendAjax({
                     type:'POST',
                     urlSuffix:'/tasks/' + data.urlSuffix,
+                    data: data.object || undefined,
                     callback: function(response){
                         data.score = response.delta;
                         habitrpg.appBridge.trigger('app.notify', data);

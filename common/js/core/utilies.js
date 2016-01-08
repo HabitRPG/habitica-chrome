@@ -83,7 +83,7 @@ var utilies = (function(){
         this.periods = {
             'work': new Period(25, 'work'),
             'break': new Period(5, 'break'),
-            'bigBreak': new Period(15, 'break')
+            'bigBreak': new Period(15, 'break.big')
         };
         this.currentPeriod = new Period(0, 'break');
 

@@ -157,7 +157,17 @@ var SiteWatcher = (function() {
                 this.addScoreFromSpentTime(this.getandResetSpentTime());
         },
 
-        getHost: function(url) { return url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1'); },
+        getHost: function(url) { 
+            var domain = url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1');
+            var split = domain.split('.');
+            if(split.length >= 3) {
+                if(split[split.length-2] == 'co')
+                    return split[split.length-3] + '.' + split[split.length-2] + '.' +split[split.length-1];
+
+                return split[split.length-2] + '.' +split[split.length-1];
+            }
+            return domain;
+        },
 
         checkNewUrl: function(url) {
 
