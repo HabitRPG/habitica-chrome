@@ -20,7 +20,7 @@ var Tomatoes = (function() {
         overTimePenalty:true,
         normalObj: {
             "attribute": "int",
-            "down": false,
+            "down": true,
             "up": true,
             "type": "habit",
             "text": ":tomato: (Pomodoro)",
