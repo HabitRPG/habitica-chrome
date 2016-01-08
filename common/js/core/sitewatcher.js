@@ -30,7 +30,6 @@ var SiteWatcher = (function() {
 
         productivityState: 0,
         isVerbose: true,
-	isSending: false,
 
         init: function(appBridge) {
 
@@ -81,9 +80,6 @@ var SiteWatcher = (function() {
         },
 
         spreadData: function() {
-            if(watcher.isSending) {
-                return;
-            }
             var isActive = !watcher.activator.state ? -1 : (watcher.isEnabled() ? 1 : 0);
             var spentTime = watcher.getandResetSpentTime();
             if (isActive == 1)
@@ -272,7 +268,6 @@ var SiteWatcher = (function() {
         },
 
         triggerSendRequest: function() {
-            watcher.isSending = true;
             watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
             watcher.lastSendTime = new Date().getTime();
 
@@ -282,7 +277,6 @@ var SiteWatcher = (function() {
                 });
                 watcher.score = 0;
             }
-            watcher.isSending = false;
         },
 
         turnOnTheSender: function() {
