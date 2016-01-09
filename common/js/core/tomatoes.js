@@ -11,12 +11,29 @@ var Tomatoes = (function() {
         url: 'http://tomato.es',
 
         urlPrefix: 'tomatoes/',
+        urlPrefixCombo: 'tomatoes-combo/',
         pomodore: undefined,
 
         appBridge: undefined,
         overTimeCounter: 0,
 
         overTimePenalty:true,
+        normalObj: {
+            "attribute": "int",
+            "down": true,
+            "up": true,
+            "type": "habit",
+            "text": ":tomato: (Pomodoro)",
+            "priority": 1
+        },
+        comboObj: {
+            "attribute": "int",
+            "down": false,
+            "up": true,
+            "type": "habit",
+            "text": "C-C-C-COMBO :tomato::tomato::tomato::tomato: (Pomodoro)",
+            "priority": 2
+        },
 
         init: function(appBridge) {
 
@@ -80,7 +97,14 @@ var Tomatoes = (function() {
             if (data.type == 'break')
                 tomatoes.appBridge.trigger('controller.sendRequest', {
                     urlSuffix: tomatoes.urlPrefix+'up',
+                    object: tomatoes.normalObj,
                     message: 'You made your '+(data.tomatoCount+1)+' tomato! Well done {score} Exp/Gold!'
+                });
+            else if (data.type == 'break.big')
+                tomatoes.appBridge.trigger('controller.sendRequest', {
+                    urlSuffix: tomatoes.urlPrefixCombo+'up',
+                    object: tomatoes.comboObj,
+                    message: 'You made your '+((data.tomatoCount)/4)+' C-C-C-COMBO tomato! GREAT ! You gain {score} Exp/Gold!'
                 });
         },
 
