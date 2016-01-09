@@ -19,6 +19,7 @@ var App = {
 
 		this.dispatcher.addListener('app.listenToChangeIcon', this.handleChangeIconListener);
 		this.dispatcher.addListener('app.notify', this.showNotification);
+		this.dispatcher.addListener('app.notify.newtask', this.showNewTaskNotification);
 		this.dispatcher.addListener('app.isOpenedUrl', this.isOpenedUrlHandler);
 		this.dispatcher.addListener('app.newUrl', function(url){App.activeUrl = url; });
 		this.dispatcher.addListener('app.getCurrentUrl', function(){ App.dispatcher.trigger('app.newUrl', App.activeUrl); });
@@ -161,6 +162,20 @@ var App = {
 
 	changeIcon: function(data) {
 		chrome.browserAction.setIcon({path: 'img/icon-48'+data+'.png'});
+	},
+
+	showNewTaskNotification: function(data) {
+
+		var notification = chrome.notifications.create('', {
+			type: 'basic',
+			iconUrl: '/img/icon-48.png',
+			title: 'HabitRPG',
+			message: data.type + ' ( ' + data.text + ') been created.'
+		}, function(notificationId){
+			setTimeout(function(){
+				chrome.notifications.clear(notificationId, function(){});
+			}, App.notificationShowTime);
+		});
 	},
 
 	showNotification: function(data) {

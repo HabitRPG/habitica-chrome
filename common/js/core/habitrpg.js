@@ -92,9 +92,7 @@ var habitRPG = (function(){
                             urlSuffix: '/tasks/',
                             data: data.object || undefined,
                             callback: function (response) {
-                                if (data.message) {
-                                    habitrpg.appBridge.trigger('app.notify', data);
-                                }
+                                habitrpg.appBridge.trigger('app.notify.newtask', response);
                             }
                         });
                     }
