@@ -32,7 +32,7 @@
    "content_scripts": [
     {
       "matches": ["*://*.tomato.es/"],
-      "js": ["vendor/jquery-1.8.0.min.js", "bind_tomatoes.js"]
+      "js": ["vendor/jquery-2.2.0.min.js", "bind_tomatoes.js"]
     },
     {
       "matches": ["https://app.asana.com/*"],

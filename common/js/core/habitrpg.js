@@ -90,7 +90,7 @@ var habitRPG = (function(){
                         habitrpg.sendAjax({
                             type: 'POST',
                             urlSuffix: '/tasks/',
-                            data: data.object || undefined,
+                            data: $.extend({}, data.object),
                             callback: function (response) {
                                 habitrpg.appBridge.trigger('app.notify.newtask', response);
                             }
