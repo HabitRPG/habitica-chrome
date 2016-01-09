@@ -28,6 +28,7 @@ var habitRPG = (function(){
             this.appBridge = bridge;
 
             this.appBridge.addListener('controller.sendRequest', this.send);
+            this.appBridge.addListener('controller.addTask', this.sendTask);
             this.appBridge.addListener('app.optionsChanged', this.setOptions);
             this.appBridge.addListener('character.forceChange', this.triggerCharacterChange);
 
@@ -73,8 +74,36 @@ var habitRPG = (function(){
             }
         },
 
-        send: function(data) {
+        sendTask: function (data) {
+            if (!habitrpg.uid || !habitrpg.apiToken) {
+                return;
+            }
 
+            if (habitrpg.isSandBox) {
+                habitrpg.appBridge.trigger('app.notify', data);
+
+            } else {
+                habitrpg.sendAjax({
+                    type: 'GET',
+                    urlSuffix: '/tasks/' + data.urlSuffix,
+                    callbackError: function (response) {
+                        habitrpg.sendAjax({
+                            type: 'POST',
+                            urlSuffix: '/tasks/',
+                            data: data.object || undefined,
+                            callback: function (response) {
+                                if (data.message) {
+                                    habitrpg.appBridge.trigger('app.notify', data);
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+        },
+
+        send: function(data, type) {
+            type = type || 'POST';
             if (!habitrpg.uid || !habitrpg.apiToken) return;
 
             if (habitrpg.isSandBox) {
@@ -82,7 +111,7 @@ var habitRPG = (function(){
 
             } else {
                 habitrpg.sendAjax({
-                    type:'POST',
+                    type: type,
                     urlSuffix:'/tasks/' + data.urlSuffix,
                     data: data.object || undefined,
                     callback: function(response){
@@ -148,7 +177,8 @@ var habitRPG = (function(){
                 headers = options.headers || {'x-api-user': habitrpg.uid, 'x-api-key': habitrpg.apiToken},
                 url = habitrpg.habitUrl + (options.urlSuffix || ''),
                 data = options.data || undefined,
-                callback = options.callback || undefined;
+                callback = options.callback || undefined,
+                errorCallback = options.callbackError || undefined;
 
             $.ajax({
                 type: type,
@@ -157,6 +187,8 @@ var habitRPG = (function(){
                 url: url
             }).done(function(response) {
                 if (callback) callback(response);
+            }).fail(function(error){
+                if(errorCallback) errorCallback(error);
             });
         }
 
