@@ -94,7 +94,8 @@ var Popup = (function() {
 
                 // Update player stats
                 // Level Bar
-                popup.char_stats.find("#char_lvl_data").text("Level: "+data.stats.lvl);
+                popup.char_stats.find("#char_lvl_data").text("Level: "+data.stats.lvl+ "/100");
+                popup.char_stats.find("#char_lvl_bar").css({'width': Math.round((data.stats.lvl / 100) * 100)+'%', 'background-color': "#FFFA63" });
                 // HP Bar
                 popup.char_stats.find("#char_hp_data").text("Health: "+Math.round(data.stats.hp)+"/"+Math.round(data.stats.maxHealth));
                 popup.char_stats.find("#char_hp_bar").css({'width': Math.round((data.stats.hp / data.stats.maxHealth) * 100)+'%', 'background-color': "#d9534f" });
