@@ -1,11 +1,11 @@
 
-var habitRPG = (function(){
+var habitica = (function(){
 
     var returnObj = {
-        init: function(bridge) { habitrpg.init(bridge); }
+        init: function(bridge) { habitica.init(bridge); }
     },
 
-    habitrpg = {
+    habitica = {
 
         isSandBox: false,
 
@@ -46,53 +46,53 @@ var habitRPG = (function(){
         setOptions: function(params) {
 
             if (params.uid !== undefined) {
-                if (params.uid != habitrpg.uid)
-                    habitrpg.character = undefined;
+                if (params.uid != habitica.uid)
+                    habitica.character = undefined;
 
-                habitrpg.uid = params.uid;
+                habitica.uid = params.uid;
             }
 
             if (params.apiToken !== undefined) {
-                if (params.apiToken != habitrpg.apiToken)
-                    habitrpg.character = undefined;
+                if (params.apiToken != habitica.apiToken)
+                    habitica.character = undefined;
 
-                habitrpg.apiToken = params.apiToken;
+                habitica.apiToken = params.apiToken;
             }
 
-            params.isSandBox = habitrpg.isSandBox;
+            params.isSandBox = habitica.isSandBox;
 
-            for (var co in habitrpg.controllers)
-                habitrpg.controllers[co].setOptions(params);
+            for (var co in habitica.controllers)
+                habitica.controllers[co].setOptions(params);
 
-            if (!habitrpg.character && !habitrpg.isSandBox) {
-                habitrpg.appBridge.trigger('app.changeIcon', '-alert');
-                habitrpg.appBridge.trigger('app.listenToChangeIcon', false);
+            if (!habitica.character && !habitica.isSandBox) {
+                habitica.appBridge.trigger('app.changeIcon', '-alert');
+                habitica.appBridge.trigger('app.listenToChangeIcon', false);
 
-                if (!habitrpg.uid || !habitrpg.apiToken) return;
+                if (!habitica.uid || !habitica.apiToken) return;
 
-                habitrpg.setInitialCharacterData();
+                habitica.setInitialCharacterData();
             }
         },
 
         sendTask: function (data) {
-            if (!habitrpg.uid || !habitrpg.apiToken) {
+            if (!habitica.uid || !habitica.apiToken) {
                 return;
             }
 
-            if (habitrpg.isSandBox) {
-                habitrpg.appBridge.trigger('app.notify', data);
+            if (habitica.isSandBox) {
+                habitica.appBridge.trigger('app.notify', data);
 
             } else {
-                habitrpg.sendAjax({
+                habitica.sendAjax({
                     type: 'GET',
                     urlSuffix: '/tasks/' + data.urlSuffix,
                     callbackError: function (response) {
-                        habitrpg.sendAjax({
+                        habitica.sendAjax({
                             type: 'POST',
                             urlSuffix: '/tasks/',
                             data: $.extend({}, data.object),
                             callback: function (response) {
-                                habitrpg.appBridge.trigger('app.notify.newtask', response);
+                                habitica.appBridge.trigger('app.notify.newtask', response);
                             }
                         });
                     }
@@ -102,59 +102,59 @@ var habitRPG = (function(){
 
         send: function(data, type) {
             type = type || 'POST';
-            if (!habitrpg.uid || !habitrpg.apiToken) return;
+            if (!habitica.uid || !habitica.apiToken) return;
 
-            if (habitrpg.isSandBox) {
-                habitrpg.appBridge.trigger('app.notify', data);
+            if (habitica.isSandBox) {
+                habitica.appBridge.trigger('app.notify', data);
 
             } else {
-                habitrpg.sendAjax({
+                habitica.sendAjax({
                     type: type,
                     urlSuffix:'/tasks/' + data.urlSuffix,
                     data: data.object || undefined,
                     callback: function(response){
                         data.score = response.delta;
-                        habitrpg.appBridge.trigger('app.notify', data);
+                        habitica.appBridge.trigger('app.notify', data);
 
-                        habitrpg.setCharacterData(response, true);
+                        habitica.setCharacterData(response, true);
                     }
                 });
             }
         },
 
         setInitialCharacterData: function() {
-            habitrpg.sendAjax({ callback: function(response) {
-                habitrpg.setCharacterData(response);
+            habitica.sendAjax({ callback: function(response) {
+                habitica.setCharacterData(response);
                 }
             });
         },
 
         triggerCharacterChange: function(fromCache) {
             if (!fromCache)
-                habitrpg.sendAjax({ callback: habitrpg.setCharacterData });
+                habitica.sendAjax({ callback: habitica.setCharacterData });
 
-            habitrpg.appBridge.trigger('character.changed', habitrpg.character);
+            habitica.appBridge.trigger('character.changed', habitica.character);
         },
 
         setCharacterData: function(data, onlyStats) {
-            habitrpg.appBridge.trigger('app.listenToChangeIcon', true);
-            habitrpg.appBridge.trigger('watcher.triggerIconChange');
+            habitica.appBridge.trigger('app.listenToChangeIcon', true);
+            habitica.appBridge.trigger('watcher.triggerIconChange');
 
             if (onlyStats) data = { stats:data };
 
-            if (habitrpg.character && (data.stats.lvl > habitrpg.character.lvl)) {
+            if (habitica.character && (data.stats.lvl > habitica.character.lvl)) {
 
                 setTimeout(function(){
-                    habitrpg.appBridge.trigger('app.notify', {
+                    habitica.appBridge.trigger('app.notify', {
                         score: 1,
                         message: "Congratulations! You reached the "+data.stats.lvl+" level!"
                     });
                 }, 5000);
 
-            } else if (data.stats.hp < habitrpg.lowHP) {
+            } else if (data.stats.hp < habitica.lowHP) {
 
                 setTimeout(function(){
-                    habitrpg.appBridge.trigger('app.notify', {
+                    habitica.appBridge.trigger('app.notify', {
                         score: -1,
                         message: "Your HP is too low!("+Math.round(data.stats.hp)+") Quickly do something productive!"
                     });
@@ -162,18 +162,18 @@ var habitRPG = (function(){
 
             }
 
-            if (onlyStats) habitrpg.character.stats = data.stats;
-            else habitrpg.character = data;
+            if (onlyStats) habitica.character.stats = data.stats;
+            else habitica.character = data;
 
-            habitrpg.triggerCharacterChange(true);
+            habitica.triggerCharacterChange(true);
         },
 
         sendAjax: function(options) {
             if (!options) options = {};
 
             var type = options.type || 'GET',
-                headers = options.headers || {'x-api-user': habitrpg.uid, 'x-api-key': habitrpg.apiToken},
-                url = habitrpg.habitUrl + (options.urlSuffix || ''),
+                headers = options.headers || {'x-api-user': habitica.uid, 'x-api-key': habitica.apiToken},
+                url = habitica.habitUrl + (options.urlSuffix || ''),
                 data = options.data || undefined,
                 callback = options.callback || undefined,
                 errorCallback = options.callbackError || undefined;
