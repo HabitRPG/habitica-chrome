@@ -8,7 +8,7 @@ var defaultOptions = {
       siteWatcherIsActive: 'true',
       tomatoesIsActive: 'true',
       tomatoesOverTimePenalty: 'true',
-      todosIsActive: 'true',
+      todosIsActive: 'false',
       isVerboseSiteWatcher: 'true',
       viceDomains: 'reddit.com\n9gag.com\nfacebook.com',
       goodDomains: 'lifehacker.com\ncodecademy.com\nkhanacademy.org',

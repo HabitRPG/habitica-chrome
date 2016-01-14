@@ -34,8 +34,8 @@ var habitRPG = (function(){
 
             this.controllers = {
                 'sitewatcher': SiteWatcher,
-                'tomatoes': Tomatoes,
-                'todos': Todos
+                'tomatoes': Tomatoes
+               //'todos': Todos
             };
 
             for (var name in this.controllers)
