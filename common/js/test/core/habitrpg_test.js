@@ -1,6 +1,6 @@
-describe('HabitRPG', function(){
+describe('Habitica', function(){
 
-    var habit = habitRPG;
+    var habit = habitica;
 
     it('Init', function(){
 

@@ -1,6 +1,6 @@
 {
 
-   "name": "HabitRPG",
+   "name": "Habitica",
    "version": "2.4.2",
    "permissions": [
       "storage", "tabs", "webNavigation", "notifications",
@@ -8,7 +8,7 @@
       "https://mail.google.com/", "https://workflowy.com/"
     ],
 
-   "description": "Monitors your browsing habits to divvy points to your HabitRPG character.",
+   "description": "Monitors your browsing habits to divvy points to your Habitica character.",
    "web_accessible_resources": [ "img/icon-48.png", "img/icon-48-up.png", "img/icon-48-down.png", "img/icon-48-alert.png", "img/icon-48-inactive.png" ],
    "icons": {
       "128": "img/icon-128.png",
@@ -25,7 +25,7 @@
 
    "browser_action": {
       "default_icon": "img/icon-48-alert.png",
-      "default_title": "HabitRPG",
+      "default_title": "Habitica",
       "default_popup": "popup.html"
     },
 

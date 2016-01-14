@@ -1,5 +1,5 @@
 {
-  "name": "HabitRPG_browser_extensions",
+  "name": "Habitica_browser_extensions",
   "version": "0.6.0",
   "devDependencies": {
     "grunt": "~0.4.0",
