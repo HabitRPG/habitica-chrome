@@ -1,41 +1,90 @@
 /**
  * Created by balor on 16-01-15.
  */
-jQuery('document').ready(function(){
+jQuery('document').ready(function () {
 
+    String.prototype.contains = function(it) { return this.indexOf(it) != -1; };
     var App = {
 
         isRunning: false,
+        count: 1,
+        breakSkipped: function () {
+            browser.sendMessage({type: "pomTracker.break.skipped"});
+        },
+        breakStarted: function (breakType) {
+            browser.sendMessage({
+                type: "pomTracker.break.started",
+                breakType: breakType
+            });
+        },
+        breakStopped: function (breakType) {
+            browser.sendMessage({
+                type: "pomTracker.break.stopped",
+                breakType: breakType
+            });
+        },
         //port: chrome.extension.connect(),
 
-        init: function() {
+        init: function () {
 
-
-
-            $('body').on('keydown', function(e){
-
-                if (location.pathname == '/' && !App.isRunning && e.keyCode == 32) {
-                    App.start();
+            $('div.pomodoro-timer_buttons button').on('click', function () {
+                var button = $(this);
+                if (button.html() == "START") {
+                    if (!App.isRunning) {
+                        App.start();
+                    }
+                } else if (button.html() == "STOP") {
+                    App.pomInterrupted();
+                } else if (button.html() == "SKIP") {
+                    App.breakSkipped();
                 }
             });
 
-            $('#start').on('click', function(){App.start();});
-            $('body').on('click', 'input[name=commit]', function(){App.start(1);});
-            $(window).unload(function() { if (App.isRunning) App.stop(); });
+            $("pomodoro div.pomodoro-timer_title").contentChange(function () {
+                var elem = $(this);
+                if(elem.html().contains('POMODORO')) {
+                    App.count  = parseInt(elem.html().replace(/\D/g, ''), 10);
+                }
+            });
+
+            $("pomodoro div.pomodoro-timer").classChange(function () {
+                var elem = $(this);
+                if (elem.hasClass('short') || elem.hasClass('long')) {
+                    App.pomDone();
+                    if (elem.hasClass('short')) {
+                        App.breakStarted('short');
+                    } else {
+                        App.breakStarted('long');
+                    }
+                } else if (elem.data('lastClass').contains('short')) {
+                    App.breakStopped('short');
+                } else if (elem.data('lastClass').contains('long')) {
+                    App.breakStopped('long');
+                }
+            });
+
+
+            $(window).unload(function () {
+                if (App.isRunning) App.stop();
+            });
 
         },
 
-        start: function(add) {
-            add = add || 0;
+        start: function () {
             this.isRunning = true;
+        },
+
+        stop: function () {
+            this.isRunning = false;
+            this.pomInterrupted();
+        },
+        pomDone: function () {
             browser.sendMessage({
-                type: "tomatoes.started",
-                tomatoCount: parseInt($('.day .counter_value').text(), 10) + add
+                type: "pomTracker.pomodoro.done",
+                pomodoroCount: App.count
             });
         },
-
-        stop: function() {
-            this.isRunning = false;
+        pomInterrupted: function () {
             browser.sendMessage({type: "pomTracker.pomodoro.stopped"});
         }
     };

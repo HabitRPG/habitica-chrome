@@ -88,7 +88,7 @@ var PomodoroTracker = (function() {
             } else {
                 pomTracker.appBridge.trigger('controller.sendRequest', {
                     urlSuffix: pomTracker.urlPrefix+'up',
-                    message: 'You made your '+(data.pomodoroCount+1)+' tomato! Well done {score} Exp/Gold!'
+                    message: 'You made your '+data.pomodoroCount+' tomato! Well done {score} Exp/Gold!'
                 });
             }
         },
