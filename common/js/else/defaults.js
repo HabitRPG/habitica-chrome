@@ -7,6 +7,7 @@ var defaultOptions = {
       activatorName: 'alwayon',
       siteWatcherIsActive: 'true',
       tomatoesIsActive: 'true',
+      pomTrackerIsActive: 'true',
       tomatoesOverTimePenalty: 'true',
       todosIsActive: 'false',
       isVerboseSiteWatcher: 'true',

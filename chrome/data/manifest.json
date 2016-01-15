@@ -28,30 +28,60 @@
       "default_title": "Habitica",
       "default_popup": "popup.html"
     },
-
-   "content_scripts": [
+  "content_scripts": [
     {
-      "matches": ["*://*.tomato.es/"],
-      "js": ["vendor/jquery-2.2.0.min.js", "bind_tomatoes.js"]
+      "matches": [
+        "*://pomodoro-tracker.com/*"
+      ],
+      "js": [
+        "vendor/jquery-2.2.0.min.js",
+        "vendor/jquery.onchange.plugin.js",
+        "bind_pomodoroTracker.js"
+      ]
     },
     {
-      "matches": ["https://app.asana.com/*"],
-      "js": ["bind_asana.js"],
+      "matches": [
+        "*://*.tomato.es/"
+      ],
+      "js": [
+        "vendor/jquery-2.2.0.min.js",
+        "bind_tomatoes.js"
+      ]
+    },
+    {
+      "matches": [
+        "https://app.asana.com/*"
+      ],
+      "js": [
+        "bind_asana.js"
+      ],
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://workflowy.com/*"],
-      "js": ["bind_workflowy.js"],
+      "matches": [
+        "https://workflowy.com/*"
+      ],
+      "js": [
+        "bind_workflowy.js"
+      ],
       "run_at": "document_end"
     },
     {
-      "matches": ["https://mail.google.com/*"],
-      "js": ["bind_googletask_gmail.js"],
+      "matches": [
+        "https://mail.google.com/*"
+      ],
+      "js": [
+        "bind_googletask_gmail.js"
+      ],
       "run_at": "document_end"
     },
     {
-      "matches": ["https://www.google.com/calendar/*"],
-      "js": ["bind_googletask_calendar.js"],
+      "matches": [
+        "https://www.google.com/calendar/*"
+      ],
+      "js": [
+        "bind_googletask_calendar.js"
+      ],
       "run_at": "document_end"
     }
   ],
