@@ -47,9 +47,9 @@ setInterval(function () {
         for (i in window.watchClassChange) {
             if (window.watchClassChange[i].element.data("lastClass") != window.watchClassChange[i].element.attr('class')) {
                 window.watchClassChange[i].callback.apply(window.watchClassChange[i].element);
-                window.watchClassChange[i].element.data("lastContents", window.watchClassChange[i].element.attr('class'))
+                window.watchClassChange[i].element.data("lastClass", window.watchClassChange[i].element.attr('class'))
             }
             ;
         }
     }
-}, 250);
+}, 500);
