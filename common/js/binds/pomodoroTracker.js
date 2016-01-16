@@ -1,13 +1,16 @@
 /**
  * Created by balor on 16-01-15.
  */
-jQuery('document').ready(function () {
+$(document).ready(function () {
 
-    String.prototype.contains = function(it) { return this.indexOf(it) != -1; };
+    String.prototype.contains = function (it) {
+        return this.indexOf(it) != -1;
+    };
     var App = {
 
         isRunning: false,
         count: 1,
+        lastTimerCount: "",
         breakSkipped: function () {
             browser.sendMessage({type: "pomTracker.break.skipped"});
         },
@@ -27,7 +30,7 @@ jQuery('document').ready(function () {
 
         init: function () {
 
-            $('div.pomodoro-timer_buttons button').on('click', function () {
+            $("pomodoro .pomodoro-timer_buttons button").on("click", function () {
                 var button = $(this);
                 if (button.html() == "START") {
                     if (!App.isRunning) {
@@ -40,14 +43,14 @@ jQuery('document').ready(function () {
                 }
             });
 
-            $("pomodoro div.pomodoro-timer_title").contentChange(function () {
+            $("pomodoro .pomodoro-timer_title").contentChange(function () {
                 var elem = $(this);
-                if(elem.html().contains('POMODORO')) {
-                    App.count  = parseInt(elem.html().replace(/\D/g, ''), 10);
+                if (elem.html().contains('POMODORO')) {
+                    App.count = parseInt(elem.html().replace(/\D/g, ''), 10);
                 }
             });
 
-            $("pomodoro div.pomodoro-timer").classChange(function () {
+            $("pomodoro .pomodoro-timer").classChange(function () {
                 var elem = $(this);
                 if (elem.hasClass('short') || elem.hasClass('long')) {
                     App.pomDone();
@@ -63,9 +66,17 @@ jQuery('document').ready(function () {
                 }
             });
 
+            setInterval(function(){
+                if ($("pomodoro .pomodoro-timer_buttons button").html() != 'RESUME') {
+                    App.lastTimerCount = $('pomodoro .pomodoro-timer span').html();
+                }
+            }, 1000);
 
-            $(window).unload(function () {
-                if (App.isRunning) App.stop();
+
+            $(window).on('unload',function () {
+                if (App.isRunning) {
+                    App.stop();
+                }
             });
 
         },
@@ -76,7 +87,10 @@ jQuery('document').ready(function () {
 
         stop: function () {
             this.isRunning = false;
-            this.pomInterrupted();
+            var currentCount =  $('pomodoro .pomodoro-timer span').html();
+            if(this.lastTimerCount != currentCount) {
+                this.pomInterrupted();
+            }
         },
         pomDone: function () {
             browser.sendMessage({
