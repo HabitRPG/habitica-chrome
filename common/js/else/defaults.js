@@ -4,7 +4,7 @@ var defaultOptions = {
       watchedUrl: '',
       isCloudStorage: 'false',
       sendInterval: '25',
-      activatorName: 'alwayon',
+      activatorName: 'alwayson',
       siteWatcherIsActive: 'true',
       tomatoesIsActive: 'true',
       tomatoesOverTimePenalty: 'true',
