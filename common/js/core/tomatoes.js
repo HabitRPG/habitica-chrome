@@ -11,12 +11,31 @@ var Tomatoes = (function() {
         url: 'http://tomato.es',
 
         urlPrefix: 'tomatoes/',
+        urlPrefixCombo: 'tomatoes-combo/',
         pomodore: undefined,
 
         appBridge: undefined,
         overTimeCounter: 0,
 
         overTimePenalty:true,
+        normalObj: {
+            "attribute": "int",
+            "id": "tomatoes",
+            "down": true,
+            "up": true,
+            "type": "habit",
+            "text": ":tomato: (Pomodoro)",
+            "priority": 1
+        },
+        comboObj: {
+            "attribute": "int",
+            "id": "tomatoes-combo",
+            "down": false,
+            "up": true,
+            "type": "habit",
+            "text": "C-C-C-COMBO :tomato::tomato::tomato::tomato: (Pomodoro)",
+            "priority": 2
+        },
 
         init: function(appBridge) {
 
@@ -31,6 +50,16 @@ var Tomatoes = (function() {
             this.appBridge.addListener('tomatoes.stopped', this.stoppedFromPageHandler);
             this.appBridge.addListener('tomatoes.pom.started', this.startedHandler);
             this.appBridge.addListener('tomatoes.pom.overTime', this.overTimeHandler);
+            tomatoes.appBridge.trigger('controller.addTask', {
+                urlSuffix: tomatoes.urlPrefix,
+                object: tomatoes.normalObj,
+                message: 'Task Tomatoes Added'
+            });
+            tomatoes.appBridge.trigger('controller.addTask', {
+                urlSuffix: tomatoes.urlPrefixCombo,
+                object: tomatoes.comboObj,
+                message: 'Task Tomatoes Combo Added'
+            });
         },
 
         disable: function() {
@@ -81,6 +110,11 @@ var Tomatoes = (function() {
                 tomatoes.appBridge.trigger('controller.sendRequest', {
                     urlSuffix: tomatoes.urlPrefix+'up',
                     message: 'You made your '+(data.tomatoCount+1)+' tomato! Well done {score} Exp/Gold!'
+                });
+            else if (data.type == 'break.big')
+                tomatoes.appBridge.trigger('controller.sendRequest', {
+                    urlSuffix: tomatoes.urlPrefixCombo+'up',
+                    message: 'You made your '+((data.tomatoCount)/4)+' C-C-C-COMBO tomato! GREAT ! You gain {score} Exp/Gold!'
                 });
         },
 

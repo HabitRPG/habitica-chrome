@@ -54,7 +54,7 @@ describe('Activators', function(){
             
             activator.disable();
 
-            activator.setOptions({watchedUrl: 'http://habitrpg.com'});
+            activator.setOptions({watchedUrl: 'http://habitica.com'});
             expect(activator.state).toBe(false);
 
             bridge.addListener('app.isOpenedUrl', triggerOpened);
@@ -88,13 +88,13 @@ describe('Activators', function(){
         });
 
         it ('Deactivation only if the windows not have any tab with the watched url', function() {
-            activator.setOptions({watchedUrl: 'http://habitrpg.com'});
+            activator.setOptions({watchedUrl: 'http://habitica.com'});
             bridge.addListener('app.isOpenedUrl', triggerOpened);
             activator.enable();
 
             expect(activator.state).toBe(true);
             
-            bridge.trigger('app.lastClosedUrl', 'http://habitrpg.com');
+            bridge.trigger('app.lastClosedUrl', 'http://habitica.com');
             expect(activator.state).toBe(false);
 
             activator.disable();

@@ -1,4 +1,4 @@
-# [HabitRPG](http://habitrpg.com) browser extensions
+# [Habitica](http://habitica.com) browser extensions
 
 Packed files:
 

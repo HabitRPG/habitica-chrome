@@ -81,9 +81,9 @@ var SiteWatcher = (function() {
 
         spreadData: function() {
             var isActive = !watcher.activator.state ? -1 : (watcher.isEnabled() ? 1 : 0);
-
+            var spentTime = watcher.getandResetSpentTime();
             if (isActive == 1)
-                watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
+                watcher.addScoreFromSpentTime(spentTime);
 
             watcher.appBridge.trigger('watcher.dataChanged', {
                 state: isActive,
@@ -157,7 +157,17 @@ var SiteWatcher = (function() {
                 this.addScoreFromSpentTime(this.getandResetSpentTime());
         },
 
-        getHost: function(url) { return url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1'); },
+        getHost: function(url) { 
+            var domain = url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1');
+            var split = domain.split('.');
+            if(split.length >= 3) {
+                if(split[split.length-2] == 'co')
+                    return split[split.length-3] + '.' + split[split.length-2] + '.' +split[split.length-1];
+
+                return split[split.length-2] + '.' +split[split.length-1];
+            }
+            return domain;
+        },
 
         checkNewUrl: function(url) {
 
@@ -218,9 +228,7 @@ var SiteWatcher = (function() {
                     };
 
                 } else if (!state) {
-                    data = {
-                       // message: 'This site\'s a neutral zone.'
-                    };
+                    data = null;
                 }
 
                 this.productivityState = state;
@@ -270,7 +278,6 @@ var SiteWatcher = (function() {
         },
 
         triggerSendRequest: function() {
-
             watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
             watcher.lastSendTime = new Date().getTime();
 
@@ -278,7 +285,6 @@ var SiteWatcher = (function() {
                 watcher.appBridge.trigger('controller.sendRequest', {
                     urlSuffix: watcher.urlPrefix+(watcher.score < 0 ? 'down' : 'up')
                 });
-
                 watcher.score = 0;
             }
         },

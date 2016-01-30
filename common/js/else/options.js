@@ -21,11 +21,11 @@ jQuery('document').ready(function(){
         },
 
         init: function() {
-          $('#habitrpgForm').submit(Options.save);
+          $('#habiticaForm').submit(Options.save);
           $('#uid').bind('change', EventHandlers.setEmptyUIDState);
           $('#apiToken').bind('change', EventHandlers.setEmptyUIDState);
           $('#activatorName').bind('change', EventHandlers.changeActivatorOptions);
-          $('#habitrpgForm').on('click', 'h2 input', EventHandlers.changeSectionStatus);
+          $('#habiticaForm').on('click', 'h2 input', EventHandlers.changeSectionStatus);
 
           $('.section').each(function(){
             EventHandlers.changeSectionStatus({target:$(this).find('h2 input')});

@@ -83,7 +83,7 @@ var utilies = (function(){
         this.periods = {
             'work': new Period(25, 'work'),
             'break': new Period(5, 'break'),
-            'bigBreak': new Period(15, 'break')
+            'bigBreak': new Period(15, 'break.big')
         };
         this.currentPeriod = new Period(0, 'break');
 
@@ -127,14 +127,12 @@ var utilies = (function(){
             overTime = this.currentPeriod.overTime;
         }
 
-        if (this.currentPeriod.type == 'break' ) {
+       if (this.currentPeriod.type != 'work') {
             isWork = true;
             this.workCount++;
             this.currentPeriod = this.periods.work;
-
         } else if (this.workCount % 4 === 0) {
             this.currentPeriod = this.periods.bigBreak;
-
         } else {
             this.currentPeriod = this.periods['break'];
         }

@@ -94,7 +94,8 @@ var Popup = (function() {
 
                 // Update player stats
                 // Level Bar
-                popup.char_stats.find("#char_lvl_data").text("Level: "+data.stats.lvl);
+                popup.char_stats.find("#char_lvl_data").text("Level: "+data.stats.lvl+ "/100");
+                popup.char_stats.find("#char_lvl_bar").css({'width': Math.round((data.stats.lvl / 100) * 100)+'%', 'background-color': "#FFFA63" });
                 // HP Bar
                 popup.char_stats.find("#char_hp_data").text("Health: "+Math.round(data.stats.hp)+"/"+Math.round(data.stats.maxHealth));
                 popup.char_stats.find("#char_hp_bar").css({'width': Math.round((data.stats.hp / data.stats.maxHealth) * 100)+'%', 'background-color': "#d9534f" });
@@ -111,7 +112,7 @@ var Popup = (function() {
                 for (var i in data.todos) {
                     // Not null and uncomplete
                     if(data.todos[i] && data.todos[i].completed === false) {
-                        master_todo += '<li class="list-group-item">'+data.todos[i].text+'</li>';
+                        master_todo += '<li class="list-group-item">'+markdown.toHTML(data.todos[i].text)+'</li>';
                     }
                 }
                 // If we have todos then add the header, and insert
@@ -128,7 +129,7 @@ var Popup = (function() {
                 for (var j in data.dailys) {
                     // Not null and uncomplete
                     if(data.dailys[j] && data.dailys[j].completed === false) {
-                        master_dailys += '<li class="list-group-item">'+data.dailys[j].text+'</li>';
+                        master_dailys += '<li class="list-group-item">'+markdown.toHTML(data.dailys[j].text)+'</li>';
                     }
                 }
                 // If we have todos then add the header, and insert
@@ -145,7 +146,7 @@ var Popup = (function() {
                 for (var z in data.dailys) {
                     // Not null and uncomplete
                     if(data.habits[z] && data.habits[z].completed === false) {
-                        master_habits += '<li class="list-group-item">'+data.habits[z].text+'</li>';
+                        master_habits += '<li class="list-group-item">'+markdown.toHTML(data.habits[z].text)+'</li>';
                     }
                 }
                 // If we have todos then add the header, and insert

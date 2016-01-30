@@ -1,12 +1,12 @@
 var App = {
 
-	appTest: 0, // -1 without habitrpg; +1 with habitrpg; 0 nothing logged from the app
+	appTest: 0, // -1 without habitica; +1 with habitrpg; 0 nothing logged from the app
 
 	tabs: {},
 	activeUrl: '',
 	hasFocus: true,
 
-	habitrpg: habitRPG,
+	habitica: habitica,
 	invalidTransitionTypes: ['auto_subframe', 'form_submit'],
 
 	storage: undefined,
@@ -19,19 +19,20 @@ var App = {
 
 		this.dispatcher.addListener('app.listenToChangeIcon', this.handleChangeIconListener);
 		this.dispatcher.addListener('app.notify', this.showNotification);
+		this.dispatcher.addListener('app.notify.newtask', this.showNewTaskNotification);
 		this.dispatcher.addListener('app.isOpenedUrl', this.isOpenedUrlHandler);
 		this.dispatcher.addListener('app.newUrl', function(url){App.activeUrl = url; });
 		this.dispatcher.addListener('app.getCurrentUrl', function(){ App.dispatcher.trigger('app.newUrl', App.activeUrl); });
 
 		if (this.appTest > 0) {
 			this.createLogger();
-			App.habitrpg.init(this.dispatcher);
+			App.habitica.init(this.dispatcher);
 
 		} else if (this.appTest < 0)
 			this.createLogger();
 
 		else
-			App.habitrpg.init(this.dispatcher);
+			App.habitica.init(this.dispatcher);
 
 		chrome.tabs.onUpdated.addListener(this.tabUpdatedHandler);
 		chrome.tabs.onRemoved.addListener(this.tabRemovedHandler);
@@ -41,7 +42,7 @@ var App = {
 		chrome.webNavigation.onCommitted.addListener(this.navCommittedHandler);
 
 		chrome.windows.onFocusChanged.addListener(this.focusChangeHandler);
-		chrome.storage.onChanged.addListener(this.setHabitRPGOptionsFromChange);
+		chrome.storage.onChanged.addListener(this.setHabiticaOptionsFromChange);
 
 		chrome.windows.getAll({populate:true}, function(windows){
             for (var wi in windows) {
@@ -63,6 +64,7 @@ var App = {
 				App.storage.get(defaultOptions, function(data){ App.dispatcher.trigger('app.optionsChanged', data); });
 			}
 		});
+		chrome.runtime.onInstalled.addListener(this.installedHandler);
 	},
 
 	messageHandler: function(request, sender, sendResponse) {
@@ -142,7 +144,7 @@ var App = {
 		return url;
 	},
 
-	setHabitRPGOptionsFromChange: function(params) {
+	setHabiticaOptionsFromChange: function(params) {
 		var obj = {}, name;
 		for (name in params)
 			obj[name] = params[name].newValue;
@@ -163,15 +165,33 @@ var App = {
 		chrome.browserAction.setIcon({path: 'img/icon-48'+data+'.png'});
 	},
 
+	showNewTaskNotification: function(data) {
+
+		var notification = chrome.notifications.create('', {
+			type: 'basic',
+			iconUrl: '/img/icon-48.png',
+			title: 'Habitica',
+			message: data.type + ' ( ' + data.text + ') been created.'
+		}, function(notificationId){
+			setTimeout(function(){
+				chrome.notifications.clear(notificationId, function(){});
+			}, App.notificationShowTime);
+		});
+	},
+
 	showNotification: function(data) {
 
 		var score = !data.score ? 0 : data.score.toFixed(3);
+
+		if(score === 0)
+			return;
+
 		var imgVersion = !data.score ? '' : (score < 0 ? '-down' : '-up');
 
 		var notification = chrome.notifications.create('', {
 			type: 'basic',
 			iconUrl: '/img/icon-48' + imgVersion + '.png',
-			title: 'HabitRPG',
+			title: 'Habitica',
 			message: data.message ? 
 				data.message.replace('{score}', score) :
 				('You '+(score < 0 ? 'lost' : 'gained')+' '+score+' '+(score < 0 ? 'HP! Lets go...' : 'Exp/Gold! Keep up!'))
@@ -221,6 +241,10 @@ var App = {
 		this.dispatcher.addListener('app.closedUrl', function(url) { console.log('closed: '+url);});
 		this.dispatcher.addListener('app.lastClosedUrl', function(url) {console.log('lastClosedUrl: '+url); });
 		this.dispatcher.addListener('app.firstOpenedUrl', function(url) {console.log('firstOpenedUrl: '+url); });
+	},
+
+	installedHandler: function (object) {
+		chrome.tabs.create({url: "options.html"});
 	}
 };
 

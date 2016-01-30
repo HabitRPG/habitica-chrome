@@ -9,7 +9,7 @@ module.exports = function(grunt) {
       'common/js/core/sitewatcher.js', 
       'common/js/core/todos.js', 
       'common/js/core/tomatoes.js', 
-      'common/js/core/habitrpg.js'
+      'common/js/core/habitica.js'
   ];
     
   // Project configuration.
@@ -54,7 +54,7 @@ module.exports = function(grunt) {
        core: {
         src: core,
         options: {
-          specs: ['common/js/test/core/utilies_test.js', 'common/js/test/core/activators_test.js', 'common/js/test/core/sitewatcher_test.js', 'common/js/test/core/habitrpg_test.js'],
+          specs: ['common/js/test/core/utilies_test.js', 'common/js/test/core/activators_test.js', 'common/js/test/core/sitewatcher_test.js', 'common/js/test/core/habitica_test.js'],
           timeout: 1000
         }
       }
@@ -72,6 +72,7 @@ module.exports = function(grunt) {
           { src: ['common/css/*'], dest: 'builds/chrome/css/', expand: true, flatten: true },
           { src: ['common/js/vendor/*'], dest: 'builds/chrome/vendor/', expand: true, flatten: true },
           { src: ['common/html/*', 'chrome/data/*'], dest: 'builds/chrome/', expand: true, flatten: true },
+          { src: ['node_modules/markdown/lib/markdown.js'], dest: 'builds/chrome/vendor/', expand: true, flatten: true },
         ]
       }
     }
