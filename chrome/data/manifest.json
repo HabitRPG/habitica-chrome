@@ -1,11 +1,11 @@
 {
 
    "name": "Habitica",
-   "version": "2.4.2",
+   "version": "2.4.3",
    "permissions": [
       "storage", "tabs", "webNavigation", "notifications",
       "https://habitrpg.com/", "https://habitica.com/", "http://tomato.es/", "https://app.asana.com/",
-      "https://mail.google.com/", "https://workflowy.com/"
+      "https://mail.google.com/", "https://workflowy.com/", "https://pomodoro-tracker.com",
     ],
 
    "description": "Monitors your browsing habits to divvy points to your Habitica character.",
