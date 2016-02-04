@@ -211,12 +211,52 @@ var Activators = (function() {
         };
     };
 
+    /* ---------------- Pomodoro Tracker activator ------------ */
+
+    function PomTrackerActivator(value) {
+        this.state = value;
+        this.stopHandler();
+        this.startHandler();
+    }
+    PomTrackerActivator.prototype.init = AlwaysActivator.prototype.init;
+    PomTrackerActivator.prototype.setState = AlwaysActivator.prototype.setState;
+    PomTrackerActivator.prototype.setOptions = AlwaysActivator.prototype.setOptions;
+    PomTrackerActivator.prototype.enable = function(){
+        this.bridge.addListener('pomTracker.pomodoro.done', this.stopHandler);
+        this.bridge.addListener('pomTracker.pomodoro.stopped', this.stopHandler);
+        this.bridge.addListener('pomTracker.break.stopped', this.stopHandler);
+        this.bridge.addListener('pomTracker.pomodoro.started', this.startHandler);
+        this.bridge.addListener('pomTracker.break.started', this.startHandler);
+    };
+    PomTrackerActivator.prototype.disable = function() {
+        this.bridge.removeListener('pomTracker.pomodoro.done', this.stopHandler);
+        this.bridge.removeListener('pomTracker.pomodoro.stopped', this.stopHandler);
+        this.bridge.removeListener('pomTracker.pomodoro.started', this.startHandler);
+        this.bridge.removeListener('pomTracker.break.started', this.startHandler);
+        this.bridge.removeListener('pomTracker.break.stopped', this.stopHandler);
+    };
+    PomTrackerActivator.prototype.stopHandler = function() {
+        var self = this;
+        this.stopHandler = function(data) {
+            self.bridge.trigger('watcher.swapHosts', false);
+            self.setState(false);
+        };
+    };
+    PomTrackerActivator.prototype.startHandler = function() {
+        var self = this;
+        this.startHandler = function(data) {
+            self.bridge.trigger('watcher.swapHosts', data.breakType !== undefined);
+            self.setState(true);
+        };
+    };
+
     /* ---------------- Return -------------------- */
 
     return {
         'days': new DaysActivator(),
         'webpage': new PageLinkActivator(),
         'tomatoes': new TomatoesActivator(),
+        'pomodoroTracker' : new PomTrackerActivator(),
         'alwayson': new AlwaysActivator(true),
         'alwaysoff': new AlwaysActivator(false)
         };

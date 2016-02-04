@@ -3,13 +3,14 @@ module.exports = function(grunt) {
   var fs = require('fs');
 
   var core = [
-      'common/js/else/defaults.js', 
-      'common/js/core/utilies.js', 
-      'common/js/core/activators.js', 
-      'common/js/core/sitewatcher.js', 
-      'common/js/core/todos.js', 
-      'common/js/core/tomatoes.js', 
-      'common/js/core/habitica.js'
+    'common/js/else/defaults.js',
+    'common/js/core/utilies.js',
+    'common/js/core/activators.js',
+    'common/js/core/sitewatcher.js',
+    'common/js/core/todos.js',
+    'common/js/core/tomatoes.js',
+    'common/js/core/pomodoroTracker.js',
+    'common/js/core/habitica.js'
   ];
     
   // Project configuration.

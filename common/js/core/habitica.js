@@ -34,7 +34,8 @@ var habitica = (function(){
 
             this.controllers = {
                 'sitewatcher': SiteWatcher,
-                'tomatoes': Tomatoes
+                'tomatoes': Tomatoes,
+                'pomodoroTracker' : PomodoroTracker
                //'todos': Todos
             };
 
