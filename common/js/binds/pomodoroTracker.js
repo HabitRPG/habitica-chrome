@@ -9,7 +9,6 @@ $(document).ready(function () {
     var App = {
 
         isRunning: false,
-        count: 1,
         lastTimerCount: "",
         breakSkipped: function () {
             browser.sendMessage({type: "pomTracker.break.skipped"});
@@ -49,24 +48,24 @@ $(document).ready(function () {
                     } else if (timerElem.hasClass('long')) {
                         App.breakStarted('long');
                     }
-                } else if (button.html() == "STOP") {
-                    App.pomInterrupted();
-                } else if (button.html() == "SKIP") {
-                    App.breakSkipped();
                 }
             });
 
-            $("pomodoro .pomodoro-timer_title").contentChange(function () {
-                var elem = $(this);
-                if (elem.html().contains('POMODORO')) {
-                    App.count = parseInt(elem.html().replace(/\D/g, ''), 10);
-                }
+            $(document).on('pomodoro_timer_finished', function(e,mode,num){
+               if(mode == "short" || mode == "long") {
+                   App.breakStopped(mode);
+               } else {
+                   App.pomDone(num);
+               }
+            });
+
+            $(document).on("pomodoro_timer_stopped", function(e) {
+               App.pomInterrupted();
             });
 
             $("pomodoro .pomodoro-timer").classChange(function () {
                 var elem = $(this);
                 if (elem.hasClass('short') || elem.hasClass('long')) {
-                    App.pomDone();
                     if ($("input[name='auto_start_break']").is(":checked")) {
                         if (elem.hasClass('short')) {
                             App.breakStarted('short');
@@ -77,11 +76,6 @@ $(document).ready(function () {
                 } else if (elem.hasClass('pomodoro')) {
                     if ($("input[name='auto_start_pomodoro']").is(":checked")) {
                         App.pomStarted();
-                    }
-                    if (elem.data('lastClass').contains('short')) {
-                        App.breakStopped('short');
-                    } else if (elem.data('lastClass').contains('long')) {
-                        App.breakStopped('long');
                     }
                 }
             });
@@ -112,10 +106,10 @@ $(document).ready(function () {
                 this.pomInterrupted();
             }
         },
-        pomDone: function () {
+        pomDone: function (num) {
             browser.sendMessage({
                 type: "pomTracker.pomodoro.done",
-                pomodoroCount: App.count
+                pomodoroCount: num
             });
         },
         pomInterrupted: function () {
