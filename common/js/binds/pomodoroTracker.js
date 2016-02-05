@@ -33,6 +33,7 @@ $(document).ready(function () {
         //port: chrome.extension.connect(),
 
         init: function () {
+            window.addEventListener("message", App.eventHandler, false);
 
             $("pomodoro .pomodoro-timer_buttons button").on("click", function () {
                 var button = $(this);
@@ -49,18 +50,6 @@ $(document).ready(function () {
                         App.breakStarted('long');
                     }
                 }
-            });
-
-            $(document).on('pomodoro_timer_finished', function(e,mode,num){
-               if(mode == "short" || mode == "long") {
-                   App.breakStopped(mode);
-               } else {
-                   App.pomDone(num);
-               }
-            });
-
-            $(document).on("pomodoro_timer_stopped", function(e) {
-               App.pomInterrupted();
             });
 
             $("pomodoro .pomodoro-timer").classChange(function () {
@@ -105,6 +94,7 @@ $(document).ready(function () {
             if (this.lastTimerCount != currentCount) {
                 this.pomInterrupted();
             }
+            window.removeEventListener("message", App.eventHandler);
         },
         pomDone: function (num) {
             browser.sendMessage({
@@ -114,6 +104,26 @@ $(document).ready(function () {
         },
         pomInterrupted: function () {
             browser.sendMessage({type: "pomTracker.pomodoro.stopped"});
+        },
+
+        eventHandler: function(event) {
+            // We only accept messages from ourselves
+            if (event.source != window)
+                return;
+
+            if (!event.data.type) {
+                return;
+            }
+
+            if(event.data.type == "pomodoro_timer_stopped") {
+                App.pomInterrupted();
+            } else if(event.data.type == "pomodoro_timer_finished") {
+                if(event.data.args[0] == 'pomodoro') {
+                    App.pomDone(event.data.args[1]);
+                } else {
+                    App.breakStopped(event.data.args[0]);
+                }
+            }
         }
     };
 
