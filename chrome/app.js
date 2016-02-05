@@ -64,6 +64,7 @@ var App = {
 				App.storage.get(defaultOptions, function(data){ App.dispatcher.trigger('app.optionsChanged', data); });
 			}
 		});
+		chrome.runtime.onInstalled.addListener(this.installedHandler);
 	},
 
 	messageHandler: function(request, sender, sendResponse) {
@@ -240,6 +241,10 @@ var App = {
 		this.dispatcher.addListener('app.closedUrl', function(url) { console.log('closed: '+url);});
 		this.dispatcher.addListener('app.lastClosedUrl', function(url) {console.log('lastClosedUrl: '+url); });
 		this.dispatcher.addListener('app.firstOpenedUrl', function(url) {console.log('firstOpenedUrl: '+url); });
+	},
+
+	installedHandler: function (object) {
+		chrome.tabs.create({url: "options.html"});
 	}
 };
 
