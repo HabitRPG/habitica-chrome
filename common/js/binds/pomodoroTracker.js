@@ -25,49 +25,16 @@ $(document).ready(function () {
                 breakType: breakType
             });
         },
-        pomStarted: function () {
+        pomStarted: function (num) {
             browser.sendMessage({
-                type: "pomTracker.pomodoro.started"
+                type: "pomTracker.pomodoro.started",
+                pomodoroCount: num
             });
         },
         //port: chrome.extension.connect(),
 
         init: function () {
             window.addEventListener("message", App.eventHandler, false);
-
-            $("pomodoro .pomodoro-timer_buttons button").on("click", function () {
-                var button = $(this);
-                if (button.html() == "START") {
-                    if (!App.isRunning) {
-                        App.start();
-                    }
-                    var timerElem = $("pomodoro .pomodoro-timer");
-                    if (timerElem.hasClass("pomodoro")) {
-                        App.pomStarted();
-                    } else if (timerElem.hasClass('short')) {
-                        App.breakStarted('short');
-                    } else if (timerElem.hasClass('long')) {
-                        App.breakStarted('long');
-                    }
-                }
-            });
-
-            $("pomodoro .pomodoro-timer").classChange(function () {
-                var elem = $(this);
-                if (elem.hasClass('short') || elem.hasClass('long')) {
-                    if ($("input[name='auto_start_break']").is(":checked")) {
-                        if (elem.hasClass('short')) {
-                            App.breakStarted('short');
-                        } else {
-                            App.breakStarted('long');
-                        }
-                    }
-                } else if (elem.hasClass('pomodoro')) {
-                    if ($("input[name='auto_start_pomodoro']").is(":checked")) {
-                        App.pomStarted();
-                    }
-                }
-            });
 
             setInterval(function () {
                 if ($("pomodoro .pomodoro-timer_buttons button").html() != 'RESUME') {
@@ -122,6 +89,12 @@ $(document).ready(function () {
                     App.pomDone(event.data.args[1]);
                 } else {
                     App.breakStopped(event.data.args[0]);
+                }
+            } else if(event.data.type == "pomodoro_timer_started") {
+                if(event.data.args[0] == 'pomodoro') {
+                    App.pomStarted(event.data.args[1]);
+                } else {
+                    App.breakStarted(event.data.args[0])
                 }
             }
         }
