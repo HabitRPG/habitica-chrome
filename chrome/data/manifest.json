@@ -1,7 +1,7 @@
 {
 
    "name": "Habitica",
-   "version": "2.4.4",
+   "version": "2.5.0",
    "permissions": [
       "storage", "tabs", "webNavigation", "notifications",
       "https://habitrpg.com/", "https://habitica.com/", "http://tomato.es/", "https://app.asana.com/",
