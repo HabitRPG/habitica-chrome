@@ -281,12 +281,37 @@ var SiteWatcher = (function() {
             watcher.addScoreFromSpentTime(watcher.getandResetSpentTime());
             watcher.lastSendTime = new Date().getTime();
 
-            if (watcher.score !== 0) {
-                watcher.appBridge.trigger('controller.sendRequest', {
-                    urlSuffix: watcher.urlPrefix+(watcher.score < 0 ? 'down' : 'up')
-                });
-                watcher.score = 0;
+            function sendScoreReq () {
+                if (watcher.score !== 0) {
+                    watcher.appBridge.trigger('controller.sendRequest', {
+                        urlSuffix: watcher.urlPrefix+(watcher.score < 0 ? 'score/down' : 'score/up')
+                    });
+                    watcher.score = 0;
+                }
             }
+
+            watcher.appBridge.trigger('controller.sendAjaxRequest', {
+                urlSuffix: '/tasks/' + watcher.urlPrefix,
+                type: 'GET',
+                callback: function () {
+                    sendScoreReq();
+                },
+                callbackError: function () {
+                    watcher.appBridge.trigger('controller.sendAjaxRequest', {
+                        urlSuffix: '/tasks/user',
+                        type: 'POST',
+                        data: {
+                            type: 'habit',
+                            alias: 'productivity',
+                            text: 'productivity',
+                            notes: 'This task was created by the Habitica Chrome Extension.'
+                        },
+                        callback: function () {
+                            sendScoreReq();
+                        }
+                    });
+                }
+            });
         },
 
         turnOnTheSender: function() {

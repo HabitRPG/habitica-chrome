@@ -20,7 +20,7 @@ var PomodoroTracker = (function() {
 
         normalObj: {
             "attribute": "int",
-            "id": "tomatoes",
+            "alias": "tomatoes",
             "down": true,
             "up": true,
             "type": "habit",
@@ -29,7 +29,7 @@ var PomodoroTracker = (function() {
         },
         comboObj: {
             "attribute": "int",
-            "id": "tomatoes-combo",
+            "alias": "tomatoes-combo",
             "down": false,
             "up": true,
             "type": "habit",
@@ -82,12 +82,12 @@ var PomodoroTracker = (function() {
         pomodoroDone: function(data) {
             if(data.pomodoroCount %4 === 0) {
                 pomTracker.appBridge.trigger('controller.sendRequest', {
-                    urlSuffix: pomTracker.urlPrefixCombo+'up',
+                    urlSuffix: pomTracker.urlPrefixCombo+'score/up',
                     message: 'You made your '+((data.pomodoroCount)/4)+' C-C-C-COMBO tomato! GREAT ! You gain {score} Exp/Gold!'
                 });
             } else {
                 pomTracker.appBridge.trigger('controller.sendRequest', {
-                    urlSuffix: pomTracker.urlPrefix+'up',
+                    urlSuffix: pomTracker.urlPrefix+'score/up',
                     message: 'You made your '+data.pomodoroCount+' tomato! Well done {score} Exp/Gold!'
                 });
             }
@@ -95,7 +95,7 @@ var PomodoroTracker = (function() {
 
         pomodoroInterrupted: function() {
             pomTracker.appBridge.trigger('controller.sendRequest', {
-                urlSuffix: pomTracker.urlPrefix+'down',
+                urlSuffix: pomTracker.urlPrefix+'score/down',
                 message: 'You broke the flow!! {score} HP...'
             });
         }

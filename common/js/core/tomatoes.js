@@ -20,7 +20,7 @@ var Tomatoes = (function() {
         overTimePenalty:true,
         normalObj: {
             "attribute": "int",
-            "id": "tomatoes",
+            "alias": "tomatoes",
             "down": true,
             "up": true,
             "type": "habit",
@@ -29,7 +29,7 @@ var Tomatoes = (function() {
         },
         comboObj: {
             "attribute": "int",
-            "id": "tomatoes-combo",
+            "alias": "tomatoes-combo",
             "down": false,
             "up": true,
             "type": "habit",
@@ -100,7 +100,7 @@ var Tomatoes = (function() {
         stoppedFromPageHandler: function() {
             tomatoes.pomodore.stop();
             tomatoes.appBridge.trigger('controller.sendRequest', {
-                urlSuffix: tomatoes.urlPrefix+'down',
+                urlSuffix: tomatoes.urlPrefix+'score/down',
                 message: 'You broke the flow!! {score} HP...'
                 });
         },
@@ -108,12 +108,12 @@ var Tomatoes = (function() {
         startedHandler: function(data) {
             if (data.type == 'break')
                 tomatoes.appBridge.trigger('controller.sendRequest', {
-                    urlSuffix: tomatoes.urlPrefix+'up',
+                    urlSuffix: tomatoes.urlPrefix+'score/up',
                     message: 'You made your '+(data.tomatoCount+1)+' tomato! Well done {score} Exp/Gold!'
                 });
             else if (data.type == 'break.big')
                 tomatoes.appBridge.trigger('controller.sendRequest', {
-                    urlSuffix: tomatoes.urlPrefixCombo+'up',
+                    urlSuffix: tomatoes.urlPrefixCombo+'score/up',
                     message: 'You made your '+((data.tomatoCount)/4)+' C-C-C-COMBO tomato! GREAT ! You gain {score} Exp/Gold!'
                 });
         },
@@ -129,7 +129,7 @@ var Tomatoes = (function() {
                     });
             else
                 tomatoes.appBridge.trigger('controller.sendRequest', {
-                    urlSuffix: tomatoes.urlPrefix+'down',
+                    urlSuffix: tomatoes.urlPrefix+'score/down',
                     message: message+' {score} HP!!'
                 });
 

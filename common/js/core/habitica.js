@@ -16,17 +16,20 @@ var habitica = (function(){
 
         character: undefined,
 
-        habitUrl: "https://habitica.com/api/v2/user",
+        habitUrl: "https://habitica.com/api/v3",
 
         appBridge: undefined,
 
         lowHP: 10,
         gold: 100,
 
+        isSendingAjax: false,
+
         init: function(bridge) {
 
             this.appBridge = bridge;
 
+            this.appBridge.addListener('controller.sendAjaxRequest', this.sendAjax);
             this.appBridge.addListener('controller.sendRequest', this.send);
             this.appBridge.addListener('controller.addTask', this.sendTask);
             this.appBridge.addListener('app.optionsChanged', this.setOptions);
@@ -90,7 +93,7 @@ var habitica = (function(){
                     callbackError: function (response) {
                         habitica.sendAjax({
                             type: 'POST',
-                            urlSuffix: '/tasks/',
+                            urlSuffix: '/tasks/user',
                             data: $.extend({}, data.object),
                             callback: function (response) {
                                 habitica.appBridge.trigger('app.notify.newtask', response);
@@ -118,6 +121,18 @@ var habitica = (function(){
                         habitica.appBridge.trigger('app.notify', data);
 
                         habitica.setCharacterData(response, true);
+                    },
+                    callbackError: function (response) {
+                        if (data.urlSuffix.indexOf('score') !== -1) {
+                            habitica.sendAjax({
+                                type: 'POST',
+                                urlSuffix: '/tasks/user',
+                                data: $.extend({}, data.object),
+                                callback: function (response) {
+                                    habitica.appBridge.trigger('app.notify.newtask', response);
+                                }
+                            });
+                        }
                     }
                 });
             }
@@ -170,11 +185,20 @@ var habitica = (function(){
         },
 
         sendAjax: function(options) {
+            if (habitica.isSendingAjax) {
+                setTimeout(function () {
+                    habitica.sendAjax(options);
+                }, 20);
+                return;
+            } else {
+                habitica.isSendingAjax = true;
+            }
+
             if (!options) options = {};
 
             var type = options.type || 'GET',
                 headers = options.headers || {'x-api-user': habitica.uid, 'x-api-key': habitica.apiToken},
-                url = habitica.habitUrl + (options.urlSuffix || ''),
+                url = habitica.habitUrl + (options.urlSuffix || '/user'),
                 data = options.data || undefined,
                 callback = options.callback || undefined,
                 errorCallback = options.callbackError || undefined;
@@ -185,8 +209,10 @@ var habitica = (function(){
                 data: data,
                 url: url
             }).done(function(response) {
-                if (callback) callback(response);
+                habitica.isSendingAjax = false;
+                if (callback) callback(response.data);
             }).fail(function(error){
+                habitica.isSendingAjax = false;
                 if(errorCallback) errorCallback(error);
             });
         }

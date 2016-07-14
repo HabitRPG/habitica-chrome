@@ -40,21 +40,21 @@ var Todos = (function() {
 
         completeHandler: function(data) {
             todos.appBridge.trigger('controller.sendRequest', {
-                urlSuffix: todos.urlPrefix+'up',
+                urlSuffix: todos.urlPrefix+'score/up',
                 message: "Yupi! Just completed a task! {score} Exp/Gold"
             });
         },
 
         unCompleteHandler: function(data) {
             todos.appBridge.trigger('controller.sendRequest', {
-                urlSuffix: todos.urlPrefix+'down',
+                urlSuffix: todos.urlPrefix+'score/down',
                 message: "I thought it was done :( {score} HP"
             });
         },
 
         dueDateOverHandler: function(data) {
             todos.appBridge.trigger('controller.sendRequest', {
-                urlSuffix: todos.urlPrefix+'down',
+                urlSuffix: todos.urlPrefix+'score/down',
                 message: "Hurry! You are late! {score} HP"
             });
         }
