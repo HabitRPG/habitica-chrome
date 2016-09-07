@@ -23,7 +23,7 @@
                             } else {
                                 setTimeout(function(){
                                     TaskListWatcher.enable(mutation.target.getElementsByTagName('iframe')[0]);
-                                }, 1000)
+                                }, 1000);
                             }
                             
                         } else if (mutation.removedNodes[0] && mutation.target.classList.contains('sn-container')) {
@@ -60,13 +60,13 @@
         handle: function(mutations) {
             mutations.forEach(function(mutation){
                 if(mutation.target.nodeName == 'TD' && mutation.target.classList.contains('i')){
-                    var el = mutation.target.querySelector('.z div')
+                    var el = mutation.target.querySelector('.z div');
                     if (el.classList.contains('d')) {
                         TaskListWatcher.complete();
                     } else if (el.classList.contains('c')){
                         TaskListWatcher.unComplete();
-                    };
-                };
+                    }
+                }
             });
         },
 
