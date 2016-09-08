@@ -38,4 +38,4 @@ All grunt command must be writen to the terminal (cmd on windows) in the root of
       grunt watch:chrome # continuous watch the chrome dependency folders 
                          # and run the chrome command on every save
                      
-If these not enough for you check the grunt file it has some others and of course fill free to expand :)
+If these not enough for you check the grunt file it has some others and of course feel free to expand :)

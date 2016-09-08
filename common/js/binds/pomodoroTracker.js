@@ -94,7 +94,7 @@ $(document).ready(function () {
                 if(event.data.args[0] == 'pomodoro') {
                     App.pomStarted(event.data.args[1]);
                 } else {
-                    App.breakStarted(event.data.args[0])
+                    App.breakStarted(event.data.args[0]);
                 }
             }
         }
