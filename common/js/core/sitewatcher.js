@@ -158,14 +158,7 @@ var SiteWatcher = (function() {
         },
 
         getHost: function(url) { 
-            var domain = url.replace(/https?:\/\/w{0,3}\.?([\w.\-]+).*/, '$1');
-            var split = domain.split('.');
-            if(split.length >= 3) {
-                if(split[split.length-2] == 'co')
-                    return split[split.length-3] + '.' + split[split.length-2] + '.' +split[split.length-1];
-
-                return split[split.length-2] + '.' +split[split.length-1];
-            }
+            var domain = url.replace(/^(([^:\/?#]+):)?(\/\/([^\/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/, '$4');            
             return domain;
         },
 
@@ -208,10 +201,19 @@ var SiteWatcher = (function() {
 
         setProductivityState: function(host, notify) {
             var state = 0, data;
-            if (this.goodHosts.indexOf(host) != -1)
-                state = 1;
-            else if (this.badHosts.indexOf(host) != -1)
-                state = -1;
+
+            var hostParts = host.split('.');
+            var totalParts = hostParts.length;
+            for( var h = 0; h < totalParts ; h++ ) {                
+                var currentHost = hostParts.join('.');
+                //check the currentHost against good & bad hosts
+                if (this.goodHosts.indexOf(currentHost) != -1 ) { state = 1; break; }
+                if (this.badHosts.indexOf(currentHost) != -1) { state = -1; break; }
+                
+                //now remove the farthest-left subdomain and continue...
+                hostParts.shift();
+            }
+            
 
             if (this.productivityState !== state) {
 
