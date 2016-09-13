@@ -199,20 +199,37 @@ var SiteWatcher = (function() {
             this.score += score;
         },
 
+        getStateFromHost: function(host) {
+            if (this.goodHosts.indexOf(host) != -1 ) { return 1; }
+            if (this.badHosts.indexOf(host) != -1) { return -1; }
+            return 0;
+        },
+
         setProductivityState: function(host, notify) {
             var state = 0, data;
 
-            var hostParts = host.split('.');
-            var totalParts = hostParts.length;
-            for( var h = 0; h < totalParts ; h++ ) {                
-                var currentHost = hostParts.join('.');
-                //check the currentHost against good & bad hosts
-                if (this.goodHosts.indexOf(currentHost) != -1 ) { state = 1; break; }
-                if (this.badHosts.indexOf(currentHost) != -1) { state = -1; break; }
-                
-                //now remove the farthest-left subdomain and continue...
-                hostParts.shift();
+            //if host is blank, check for it explicitly
+            if ( host === "" ) {
+                state = this.getStateFromHost( host );
+            } else {
+            //Otherwise, try and find the closest match
+                var hostParts = host.split('.');
+                var totalParts = hostParts.length;
+                for( var h = 0; h < totalParts ; h++ ) {                
+                    var currentHost = hostParts.join('.');
+
+                    if ( currentHost === "" ) { break; } //bail if we've gotten down to nothing
+
+                    //get the state based on the host
+                    state = this.getStateFromHost( currentHost );
+                    
+                    if ( state < 0 || state > 0 ) { break; } //found something, bail
+
+                    //now remove the farthest-left subdomain and continue...
+                    hostParts.shift();
+                }
             }
+            
             
 
             if (this.productivityState !== state) {
